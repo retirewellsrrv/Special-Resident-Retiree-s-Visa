@@ -8,7 +8,7 @@ CREATE TYPE nationality AS ENUM ('filipino', 'american', 'japanese', 'korean', '
 CREATE TYPE application_status AS ENUM ('draft', 'submitted', 'under_review', 'pending_documents', 'approved', 'rejected');
 CREATE TYPE document_status AS ENUM ('pending', 'verified', 'rejected');
 CREATE TYPE document_type AS ENUM ('passport', 'birth_certificate', 'marriage_certificate', 'bank_statement', 'medical_certificate', 'photo', 'other');
-CREATE TYPE service_type AS ENUM ('srrv_classic', 'srrv_smile', 'srrv_human_touch', 'srrv_courtesy');
+CREATE TYPE service_type AS ENUM ('basic', 'premium', 'vip');
 CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
 CREATE TYPE payment_method AS ENUM ('credit_card', 'debit_card', 'bank_transfer', 'gcash', 'maya');
 
