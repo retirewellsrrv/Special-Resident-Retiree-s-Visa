@@ -48,6 +48,17 @@ export function SignupForm({
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: '',
+      surname: '',
+      email: '',
+      birthday: '',
+      nationality: '',
+      address: '',
+      phoneNumber: '',
+      password: '',
+      confirmPassword: '',
+    },
   })
 
   async function onSubmit(data: RegisterInput) {
@@ -86,7 +97,7 @@ export function SignupForm({
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className="overflow-hidden p-0 bg-white">
+      <Card className="overflow-hidden p-0 bg-white w-full max-w-5xl">
         <CardContent className="grid p-0 md:grid-cols-2">
 
           {/* ── Left panel (branding) ── */}
@@ -136,7 +147,7 @@ export function SignupForm({
           <form
             onSubmit={handleSubmit(onSubmit)}
             noValidate
-            className="p-6 md:p-8"
+            className="p-6 md:p-8 w-full min-w-0 md:max-h-[90vh] overflow-y-auto"
           >
             <FieldGroup>
               {/* Header */}
@@ -405,7 +416,7 @@ export function SignupForm({
               {/* Server error */}
               {serverError && (
                 <Field>
-                  <FieldDescription className="text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                  <FieldDescription className="text-destructive bg-destructive/10 rounded-lg px-3 py-2 break-words">
                     {serverError}
                   </FieldDescription>
                 </Field>

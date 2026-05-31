@@ -19,8 +19,13 @@ export async function GET(request: Request) {
 
         // Also seed client_profiles for first-time OAuth users
         await supabase.from('client_profiles').upsert({
-          user_id: Number(data.user.id),
+          user_id: data.user.id,
           name: data.user.user_metadata?.full_name ?? '',
+          nationality: '',
+          address: '',
+          age: 0,
+          birthday: '',
+          sex: 'male',
         }, { onConflict: 'user_id' })
       }
 
