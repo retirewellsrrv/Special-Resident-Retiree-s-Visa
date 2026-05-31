@@ -8,6 +8,9 @@ import {
   serviceSchema,
   updateServiceSchema,
 } from '@/schemas/service'
+import { Service } from '@/types/services'
+
+const SERVICE_TYPES = ['basic', 'premium', 'vip'] as const
 
 export async function getServices() {
   const supabase = await createClient()
@@ -24,39 +27,43 @@ export async function getServices() {
   return data
 }
 
-export async function createService(
-  input: unknown
-) {
-  console.log('INPUT:', input)
-console.log(
-  'IS ARRAY:',
-  Array.isArray(input)
-)
-  const parsed =
-    serviceSchema.safeParse(input)
+export async function createService(payload: Omit<Service, 'id'>) {
+  const supabase = await createClient()  // ← missing
 
-  if (!parsed.success) {
-    return {
-      error:
-        parsed.error.issues[0]?.message,
-    }
-  }
+  const { id: _, ...safePayload } = payload as any
 
-  const supabase = await createClient()
-
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('services')
-    .insert(parsed.data)
-    .select()
-    .single()
+    .insert(safePayload)
 
-  if (error) {
-    return { error: error.message }
-  }
+  if (error) return { error: error.message }
 
   revalidatePath('/admin/services')
 
-  return { data }
+  return { success: true }
+}
+
+export async function updateService(
+  id: number,
+  payload: Partial<Omit<Service, 'id'>>
+) {
+  const supabase = await createClient()
+
+  const validated = updateServiceSchema.safeParse(payload)
+  if (!validated.success) {
+    return { error: validated.error.message }
+  }
+
+  const { error } = await supabase
+    .from('services')
+    .update(validated.data)
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/services')
+
+  return { success: true }
 }
 
 export async function deleteService(
