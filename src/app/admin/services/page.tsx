@@ -1,6 +1,6 @@
 // app/admin/services/page.tsx
 
-import { getServices } from '@/actions/service'
+import { getServices } from '@/actions/admin/service'
 import { ServiceTable } from '@/components/admin/service-table'
 import { ServiceForm } from '@/components/admin/service-form'
 
