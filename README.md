@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Special Resident Retiree's Visa (SRRV) Service Platform
 
-## Getting Started
+A web-based platform designed to help foreign retirees apply for and manage their **Special Resident Retiree's Visa (SRRV)** services online.
 
-First, run the development server:
+The platform streamlines the entire application process by providing a centralized portal where applicants can create accounts, submit applications, upload required documents, track application progress, receive updates, and complete online payments.
+
+An administrative portal is also provided for staff to review applications, manage applicant records, monitor payments, and update application statuses.
+
+## Features
+
+### Public Features
+
+* SRRV Information Pages
+* Service & Package Listings
+* Pricing Information
+* Frequently Asked Questions (FAQ)
+* Contact Page
+* User Registration & Login
+
+### Applicant Features
+
+* Secure Account Registration & Authentication
+* SRRV Application Submission
+* Document Upload & Management
+* Application Status Tracking
+* Payment Processing
+* Profile Management
+* Support & Inquiry System
+* Notification Updates
+
+### Admin Features
+
+* Applicant Management
+* Document Review & Verification
+* Application Approval Workflow
+* Status Management
+* Payment Monitoring
+* Dashboard Analytics
+* Service & Package Management
+
+## Technology Stack
+
+### Frontend
+
+* Next.js
+* TypeScript
+* Tailwind CSS
+* Shadcn/UI
+
+### Backend
+
+* Next.js Server Actions
+* Next.js API Routes
+
+### Database & Authentication
+
+* Supabase PostgreSQL
+* Supabase Auth
+
+### File Storage
+
+* Supabase Storage
+
+### Payments
+
+* Xendit Hosted Checkout
+
+### Deployment
+
+* Vercel
+
+## Repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/XjorLml/Special-Resident-Retiree-s-Visa.git
+
+cd Special-Resident-Retiree-s-Visa
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* Node.js 20+
+* PNPM
+* Supabase Project
 
-## Learn More
+### Install Dependencies
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Configure Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Copy the example file:
 
-## Deploy on Vercel
+```bash
+cp env.copy.example .env.local
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Configure your Supabase credentials:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+## Development
+
+Run the development server:
+
+```bash
+pnpm dev
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+## Production Build
+
+Build the application:
+
+```bash
+pnpm build
+```
+
+Start the production server:
+
+```bash
+pnpm start
+```
+
+## Linting
+
+```bash
+pnpm lint
+```
+
+## Application Workflow
+
+1. Applicant creates an account.
+2. Applicant verifies email address.
+3. Applicant purchases an SRRV service package.
+4. Applicant completes the application form.
+5. Applicant uploads required documents.
+6. Admin reviews submitted information.
+7. Application status is updated throughout the process.
+8. Applicant receives notifications and updates.
+9. Application proceeds until approval or completion.
+
+## Future Enhancements
+
+* Real-time notifications
+* Chatbot integration
+* Revenue analytics
+* Application conversion tracking
+* Multi-language support
+* Advanced reporting dashboard
+
+## License
+
+This project is intended for SRRV service management and application processing.
+
+Please consult the project owner before redistribution or commercial use.
