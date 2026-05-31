@@ -23,6 +23,9 @@ export async function GET(request: Request) {
           name: data.user.user_metadata?.full_name ?? '',
           nationality: '',
           address: '',
+          age: 0,
+          birthday: '',
+          sex: 'male',
         }, { onConflict: 'user_id' })
       }
 

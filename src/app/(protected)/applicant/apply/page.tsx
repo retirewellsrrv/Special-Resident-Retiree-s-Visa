@@ -117,17 +117,12 @@ export default function ApplyPage() {
         newId = maxIdData[0].id + 1
       }
 
-<<<<<<< HEAD
-      const insertData: TablesInsert<'applications'> = {
-=======
       const insertData = {
->>>>>>> 187cdab (merge: fixed merge conflict and updated the ci)
         id: newId,
         user_id: data.user_id,
         application_code: data.application_code,
         service_type: data.service_type,
-<<<<<<< HEAD
-        ...(data.status !== undefined && { status: data.status }),
+        status: data.status ?? 'processing',
       }
 =======
         status: data.status ?? 'processing',
@@ -154,13 +149,8 @@ export default function ApplyPage() {
     reset({
       user_id: app.user_id,
       application_code: app.application_code,
-<<<<<<< HEAD
-      service_type: app.service_type,
-      status: app.status || undefined,
-=======
       service_type: app.service_type as ApplicationForm['service_type'],
       status: app.status ?? undefined,
->>>>>>> 187cdab (merge: fixed merge conflict and updated the ci)
     })
   }
 
@@ -342,11 +332,7 @@ export default function ApplyPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Created At</p>
-<<<<<<< HEAD
-                    <p className="font-medium">{new Date(app.created_at).toLocaleString()}</p>
-=======
                     <p className="font-medium">{app.created_at ? new Date(app.created_at).toLocaleString() : 'N/A'}</p>
->>>>>>> 187cdab (merge: fixed merge conflict and updated the ci)
                   </div>
                   {app.updated_at && (
                     <div>
