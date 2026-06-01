@@ -24,54 +24,33 @@ export type ActionResult =
 // LOGIN
 // ─────────────────────────────────────────────
 
-export async function loginAction(
-  input: LoginInput
-): Promise<ActionResult> {
+export async function loginAction(input: LoginInput): Promise<ActionResult> {
   const parsed = loginSchema.safeParse(input)
-
   if (!parsed.success) {
-    return {
-      success: false,
-      error: parsed.error.issues[0].message,
-    }
+    return { success: false, error: parsed.error.issues[0].message }
   }
 
   const supabase = await createClient()
 
-  const { data, error } =
-    await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-    })
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  })
 
-  if (error || !data.user) {
-    return {
-      success: false,
-      error: error?.message ?? 'Login failed',
-    }
+  if (error) {
+    return { success: false, error: error.message }
   }
 
-  // Get role from users table
-  const { data: profile, error: profileError } = await supabase
-  .from('client_profiles')
-  .select('role')
-  .eq('user_id', data.user.id)
-  .single()
+  const role = data.user?.user_metadata?.role as string | undefined
 
- if (profileError || !profile) {
-  return {
-    success: false,
-    error: 'Profile not found.',
-  }
+  revalidatePath('/', 'layout')
+
+  if (role === 'admin') redirect('/admin/dashboard')
+  if (role === 'applicant') redirect('/applicant/dashboard')
+
+  redirect('/')
 }
 
-revalidatePath('/', 'layout')
-
-if (profile.role === 'admin') {
-  redirect('/admin/dashboard')
-}
-
-redirect('/applicant/dashboard')
 // ─────────────────────────────────────────────
 // REGISTER
 // ─────────────────────────────────────────────
