@@ -55,10 +55,10 @@ export function Navbar({ className }: NavbarProps) {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="outline" asChild>
+          <Button variant="outline" size="lg" asChild>
             <Link href="/login">Log In</Link>
           </Button>
-          <Button asChild>
+          <Button size="lg" asChild>
             <Link href="/register">Get Started</Link>
           </Button>
         </div>
@@ -85,12 +85,12 @@ export function Navbar({ className }: NavbarProps) {
               ))}
               <Separator className="my-4" />
               <div className="flex flex-col space-y-2">
-                <Button variant="outline" asChild className="w-full justify-start">
+                <Button variant="outline" size="lg" asChild className="w-full justify-start">
                   <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                     Log In
                   </Link>
                 </Button>
-                <Button asChild className="w-full justify-start">
+                <Button size="lg" asChild className="w-full justify-start">
                   <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
                     Get Started
                   </Link>

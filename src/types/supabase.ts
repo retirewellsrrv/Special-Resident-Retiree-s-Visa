@@ -43,7 +43,7 @@ export type Database = {
         Insert: {
           application_code: string
           created_at?: string
-          id: number
+          id?: number
           payment_id: number
           service_type: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["application_status"]
