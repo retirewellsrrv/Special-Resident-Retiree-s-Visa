@@ -43,7 +43,7 @@ export type Database = {
         Insert: {
           application_code: string
           created_at?: string
-          id: number
+          id?: number
           payment_id: number
           service_type: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["application_status"]
@@ -160,7 +160,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          id: number
+          id?: number
           is_read?: boolean
           notification: string
           user_id: string
@@ -195,7 +195,7 @@ export type Database = {
         Insert: {
           amount: number
           created_at: string
-          id: number
+          id?: number
           payment_method: Database["public"]["Enums"]["payment_methods"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
@@ -232,7 +232,7 @@ export type Database = {
         }
         Insert: {
           description?: string | null
-          id: number
+          id?: number
           is_available: boolean
           price: number
           type: Database["public"]["Enums"]["service_type"]
