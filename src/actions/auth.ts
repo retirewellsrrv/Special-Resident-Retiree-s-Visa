@@ -43,13 +43,14 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     return { success: false, error: error.message }
   }
 
-  const role = data.user?.user_metadata?.role as string | undefined
+  const role = data.user.user_metadata?.role as string | undefined
 
-  revalidatePath('/', 'layout')
+  
 
   if (role === 'admin') redirect('/admin/dashboard')
   if (role === 'applicant') redirect('/applicant/dashboard')
-
+    
+  revalidatePath('/', 'layout')
   redirect('/')
 }
 
