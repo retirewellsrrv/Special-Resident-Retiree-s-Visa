@@ -3,6 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { Menu } from "lucide-react"
+import Image from "next/image"
+import logo from "@/assets/images/logo.png"
 
 import { Button } from "@/components/ui/button"
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu"
@@ -79,7 +81,7 @@ export function Navbar({ className }: NavbarProps) {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="mr-6 flex items-center space-x-2">
-          <span className="font-bold text-xl">SRRV</span>
+          <Image src={logo} alt="SRRV" className="h-12 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}
@@ -108,7 +110,7 @@ export function Navbar({ className }: NavbarProps) {
                   <NavigationMenuLink asChild>
                     <Link
                       href={item.href}
-                      className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[active]:text-accent-foreground"
+                      className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[active]:text-accent-foreground"
                     >
                       {item.title}
                     </Link>
@@ -121,8 +123,8 @@ export function Navbar({ className }: NavbarProps) {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" asChild>
-            <Link href="/login">Sign In</Link>
+          <Button variant="outline" asChild>
+            <Link href="/login">Log In</Link>
           </Button>
           <Button asChild>
             <Link href="/signup">Get Started</Link>
@@ -143,7 +145,7 @@ export function Navbar({ className }: NavbarProps) {
                 <div key={item.href} className="flex flex-col space-y-2">
                   <Link
                     href={item.href}
-                    className="text-sm font-medium transition-colors hover:text-primary py-2"
+                    className="text-sm font-bold transition-colors hover:text-primary py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.title}
@@ -154,7 +156,7 @@ export function Navbar({ className }: NavbarProps) {
                         <Link
                           key={child.href}
                           href={child.href}
-                          className="text-xs text-muted-foreground transition-colors hover:text-foreground py-1"
+                          className="text-xs font-bold text-muted-foreground transition-colors hover:text-foreground py-1"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           {child.title}
@@ -168,7 +170,7 @@ export function Navbar({ className }: NavbarProps) {
               <div className="flex flex-col space-y-2">
                 <Button variant="outline" asChild className="w-full justify-start">
                   <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    Sign In
+                    Log In
                   </Link>
                 </Button>
                 <Button asChild className="w-full justify-start">
@@ -208,7 +210,7 @@ function ListItem({
           )}
           {...props}
         >
-          <div className="text-sm font-medium leading-none">{title}</div>
+          <div className="text-sm font-bold leading-none">{title}</div>
           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
             {children}
           </p>
