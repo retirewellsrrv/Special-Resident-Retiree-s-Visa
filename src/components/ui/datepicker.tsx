@@ -59,7 +59,7 @@ export function DatePicker({
                 type="button"
                 onClick={() => setOpen(o => !o)}
                 className={cn(
-                  "flex items-center gap-2 w-full h-8 px-2.5 text-sm rounded-lg border bg-transparent text-left transition-all outline-none",
+                  "flex items-center gap-2 w-full h-8 px-2.5 text-sm rounded-lg border bg-white text-left transition-all outline-none",
                   "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
                   open
                     ? "border-ring ring-3 ring-ring/50"
@@ -73,7 +73,7 @@ export function DatePicker({
 
             {/* Popover */}
             {open && (
-                <div className="absolute z-50 mt-1 bg-background border border-border rounded-xl overflow-hidden w-full min-w-[270px] shadow-sm">
+                <div className="absolute z-50 mt-1 bg-white border border-border rounded-xl overflow-hidden w-full min-w-[270px] shadow-sm">
 
                     {/* Header */}
                     <div className="flex items-center gap-2 p-2.5 border-b border-border">
