@@ -28,10 +28,10 @@ export async function createService(
   input: unknown
 ) {
   console.log('INPUT:', input)
-console.log(
-  'IS ARRAY:',
-  Array.isArray(input)
-)
+  console.log(
+    'IS ARRAY:',
+    Array.isArray(input)
+  )
   const parsed =
     serviceSchema.safeParse(input)
 
