@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test": "vitest --config vitest.config.mts",
+    "test:ui": "vitest --ui --config vitest.config.mts",
+    "test:coverage": "vitest run --coverage --config vitest.config.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -53,8 +53,8 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.2",
-    "@vitest/coverage-v8": "^4.1.7",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.9",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.4.0",
     "eslint-config-next": "16.2.6",
