@@ -8,6 +8,7 @@ import { registerAction, oauthAction } from '@/actions/auth'
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { User, Flag, MapPin, Mail, Lock, KeyRound } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -47,6 +48,17 @@ export function SignupForm({
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: '',
+      surname: '',
+      email: '',
+      birthday: '',
+      nationality: '',
+      address: '',
+      phoneNumber: '',
+      password: '',
+      confirmPassword: '',
+    },
   })
 
   async function onSubmit(data: RegisterInput) {
@@ -85,7 +97,7 @@ export function SignupForm({
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-hidden p-0 bg-white w-full max-w-5xl">
         <CardContent className="grid p-0 md:grid-cols-2">
 
           {/* ── Left panel (branding) ── */}
@@ -135,7 +147,7 @@ export function SignupForm({
           <form
             onSubmit={handleSubmit(onSubmit)}
             noValidate
-            className="p-6 md:p-8"
+            className="p-6 md:p-8 w-full min-w-0 md:max-h-[90vh] overflow-y-auto"
           >
             <FieldGroup>
               {/* Header */}
@@ -169,18 +181,23 @@ export function SignupForm({
                 <span className="px-4 text-sm text-brand-secondary-800">or</span>
                 <div className="flex-1 border-t border-brand-primary-500"></div>
               </div>
+              //TODO: add "Continue with Apple" button here in the future
 
               {/* First name + Surname */}
               <Field className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="firstName">First name</FieldLabel>
-                  <Input
-                    id="firstName"
-                    type="text"
-                    placeholder="John"
-                    autoComplete="given-name"
-                    {...register('firstName')}
-                  />
+                  <div className="group relative">
+                    <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="John"
+                      autoComplete="given-name"
+                      className="pl-9"
+                      {...register('firstName')}
+                    />
+                  </div>
                   {errors.firstName && (
                     <FieldDescription className="text-brand-danger-800">
                       {errors.firstName.message}
@@ -189,13 +206,17 @@ export function SignupForm({
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="surname">Surname</FieldLabel>
-                  <Input
-                    id="surname"
-                    type="text"
-                    placeholder="Smith"
-                    autoComplete="family-name"
-                    {...register('surname')}
-                  />
+                  <div className="group relative">
+                    <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                    <Input
+                      id="surname"
+                      type="text"
+                      placeholder="Smith"
+                      autoComplete="family-name"
+                      className="pl-9"
+                      {...register('surname')}
+                    />
+                  </div>
                   {errors.surname && (
                     <FieldDescription className="text-brand-danger-800">
                       {errors.surname.message}
@@ -263,13 +284,17 @@ export function SignupForm({
               <Field className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="nationality">Nationality</FieldLabel>
-                  <Input
-                    id="nationality"
-                    type="text"
-                    placeholder="Filipino"
-                    autoComplete="nationality"
-                    {...register('nationality')}
-                  />
+                  <div className="group relative">
+                    <Flag className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                    <Input
+                      id="nationality"
+                      type="text"
+                      placeholder="Filipino"
+                      autoComplete="nationality"
+                      className="pl-9"
+                      {...register('nationality')}
+                    />
+                  </div>
                   {errors.nationality && (
                     <FieldDescription className="text-brand-danger-800">
                       {errors.nationality.message}
@@ -281,13 +306,17 @@ export function SignupForm({
               {/* Address */}
               <Field>
                 <FieldLabel htmlFor="address">Address</FieldLabel>
-                <Input
-                  id="address"
-                  type="text"
-                  placeholder="Complete address"
-                  autoComplete="street-address"
-                  {...register('address')}
-                />
+                <div className="group relative">
+                  <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                  <Input
+                    id="address"
+                    type="text"
+                    placeholder="Complete address"
+                    autoComplete="street-address"
+                    className="pl-9"
+                    {...register('address')}
+                  />
+                </div>
                 {errors.address && (
                   <FieldDescription className="text-brand-danger-800">
                     {errors.address.message}
@@ -298,13 +327,17 @@ export function SignupForm({
               {/* Email — full width, has description */}
               <Field>
                 <FieldLabel htmlFor="email">Email address</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  autoComplete="email"
-                  {...register('email')}
-                />
+                <div className="group relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    autoComplete="email"
+                    className="pl-9"
+                    {...register('email')}
+                  />
+                </div>
                 <FieldDescription className="text-xs">
                   We&apos;ll use this to contact you. We will not share your email with anyone else.
                 </FieldDescription>
@@ -343,13 +376,17 @@ export function SignupForm({
               <Field className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Min. 8 characters"
-                    autoComplete="new-password"
-                    {...register('password')}
-                  />
+                  <div className="group relative">
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Min. 8 characters"
+                      autoComplete="new-password"
+                      className="pl-9"
+                      {...register('password')}
+                    />
+                  </div>
                   {errors.password && (
                     <FieldDescription className="text-brand-danger-800">
                       {errors.password.message}
@@ -358,13 +395,17 @@ export function SignupForm({
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="confirm-password">Confirm password</FieldLabel>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="Repeat password"
-                    autoComplete="new-password"
-                    {...register('confirmPassword')}
-                  />
+                  <div className="group relative">
+                    <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="Repeat password"
+                      autoComplete="new-password"
+                      className="pl-9"
+                      {...register('confirmPassword')}
+                    />
+                  </div>
                   {errors.confirmPassword && (
                     <FieldDescription className="text-brand-danger-800">
                       {errors.confirmPassword.message}
@@ -376,7 +417,7 @@ export function SignupForm({
               {/* Server error */}
               {serverError && (
                 <Field>
-                  <FieldDescription className="text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                  <FieldDescription className="text-destructive bg-destructive/10 rounded-lg px-3 py-2 break-words">
                     {serverError}
                   </FieldDescription>
                 </Field>
@@ -408,10 +449,10 @@ export function SignupForm({
 
       {/* Terms */}
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our{' '}
+        {/* By clicking continue, you agree to our{' '} //! Commented this for now
         <Link href="/terms" className="text-brand-secondary-700 hover:underline">Terms of Service</Link>{' '}
         and{' '}
-        <Link href="/privacy" className="text-brand-secondary-700 hover:underline">Privacy Policy</Link>.
+        <Link href="/privacy" className="text-brand-secondary-700 hover:underline">Privacy Policy</Link>. */}
       </FieldDescription>
     </div>
   )

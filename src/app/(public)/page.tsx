@@ -1,7 +1,34 @@
+'use client'
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { LogoutBtn } from "@/components/auth/logout-btn";
+import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { logoutAction, getSession } from '@/actions/auth'
+import type { User } from '@supabase/supabase-js'
 
 export default function Home() {
+  const router = useRouter()
+  const [pending, startTransition] = useTransition()
+  const [user, setUser] = useState<User | null>(null)
+
+  const handleLogout = () => {
+    startTransition(async () => {
+      await logoutAction()
+      router.replace('/login')
+      router.refresh()
+    })
+  }
+
+  useEffect(() => {
+    getSession().then(setUser)
+  }, [])
+
+
+  console.log('Session on home page:', getSession) //? for testing only, can be removed later
+
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
@@ -25,31 +52,13 @@ export default function Home() {
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <Button asChild size="lg" className="rounded-full">
-            <a
-              href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Image
-                className="dark:invert"
-                src="https://nextjs.org/icons/vercel.svg"
-                alt="Vercel logomark"
-                width={20}
-                height={20}
-              />
-              Deploy now
-            </a>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="rounded-full sm:min-w-44">
-            <a
-              href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Read our docs
-            </a>
-          </Button>
+
+          {/* //! temporary only, already reusable */}
+          <LogoutBtn />
+
+          {/* Display user //! Temporary only for verification */}
+          <p>Current user: {user?.email ?? 'None'}</p>
+
         </div>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">

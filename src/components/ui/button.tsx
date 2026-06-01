@@ -9,17 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-brand-primary text-white [a]:hover:bg-brand-primary/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary/80",
         outline:
-          "border-border bg-background hover:bg-brand-muted hover:text-foreground aria-expanded:bg-brand-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-brand-secondary text-white hover:bg-brand-secondary/80 aria-expanded:bg-brand-secondary aria-expanded:text-white",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
-          "hover:bg-brand-muted hover:text-foreground aria-expanded:bg-brand-muted aria-expanded:text-foreground dark:hover:bg-brand-muted/50",
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
-          "bg-brand-danger text-white hover:bg-brand-danger/80 focus-visible:border-brand-danger/40 focus-visible:ring-brand-danger/20",
+          "bg-destructive text-white hover:bg-destructive/80 focus-visible:border-destructive/40 focus-visible:ring-destructive/20",
         accent:
-          "bg-brand-accent text-foreground hover:bg-brand-accent/80 focus-visible:border-brand-accent/40 focus-visible:ring-brand-accent/20",
+          "bg-accent text-accent-foreground hover:bg-accent/80 focus-visible:border-accent/40 focus-visible:ring-accent/20",
         link: "text-brand-primary underline-offset-4 hover:underline",
       },
       size: {
