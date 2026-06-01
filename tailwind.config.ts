@@ -1,11 +1,11 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: ['class'],
+  darkMode: ["class"],
   content: [
-    './src/pages/**/*.{ts,tsx}',
-    './src/components/**/*.{ts,tsx}',
-    './src/app/**/*.{ts,tsx}',
+    "./src/pages/**/*.{ts,tsx}",
+    "./src/components/**/*.{ts,tsx}",
+    "./src/app/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {
@@ -17,6 +17,36 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        combo: "hsl(var(--combo))",
+
+        // ── Add: all missing shadcn/base-ui semantic tokens ──────────
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
+        popover: {
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
+        },
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
+        },
+        destructive: {
+          DEFAULT: "var(--destructive)",
+        },
 
         brand: {
           // ── Primary — SRRV Red #A6192E ──────────────────────────────────
@@ -86,8 +116,8 @@ const config: Config = {
           // accent
           goldAccent: {
             1: "#c9a84c",
-            2: "#c5bfa8"
-          }
+            2: "#c5bfa8",
+          },
         },
 
         // ── Heritage Trust semantic tokens ──────────────────────────────────
@@ -149,24 +179,33 @@ const config: Config = {
       },
 
       fontSize: {
-        "ht-display": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "ht-display": [
+          "48px",
+          { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" },
+        ],
         "ht-headline-lg": ["32px", { lineHeight: "40px", fontWeight: "600" }],
-        "ht-headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }],
+        "ht-headline-lg-mobile": [
+          "28px",
+          { lineHeight: "36px", fontWeight: "600" },
+        ],
         "ht-headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
         "ht-body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
         "ht-body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
-        "ht-label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500" }],
+        "ht-label-md": [
+          "14px",
+          { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500" },
+        ],
         "ht-caption": ["12px", { lineHeight: "16px", fontWeight: "400" }],
       },
 
       // ─── Border Radius ──────────────────────────────────────────────────────
       borderRadius: {
         sm: "0.125rem", // 2px
-        DEFAULT: "0.25rem",  // 4px — buttons, inputs
+        DEFAULT: "0.25rem", // 4px — buttons, inputs
         md: "0.375rem", // 6px
-        lg: "0.5rem",   // 8px — cards, image frames
-        xl: "0.75rem",  // 12px
-        full: "9999px",   // pill (avoid for primary elements)
+        lg: "0.5rem", // 8px — cards, image frames
+        xl: "0.75rem", // 12px
+        full: "9999px", // pill (avoid for primary elements)
       },
 
       // ─── Spacing ────────────────────────────────────────────────────────────
@@ -187,9 +226,11 @@ const config: Config = {
       // ─── Shadows — tonal only, no heavy drops ────────────────────────────────
       boxShadow: {
         "ht-card": "0 0 0 1px #e2e8f0",
-        "ht-hover": "0 4px 16px 0 rgba(26,28,30,0.10), 0 1px 4px 0 rgba(26,28,30,0.06)",
+        "ht-hover":
+          "0 4px 16px 0 rgba(26,28,30,0.10), 0 1px 4px 0 rgba(26,28,30,0.06)",
         "ht-focus": "0 0 0 3px rgba(166,25,46,0.30)",
-        "ht-elevated": "0 8px 32px 0 rgba(26,28,30,0.12), 0 2px 8px 0 rgba(26,28,30,0.08)",
+        "ht-elevated":
+          "0 8px 32px 0 rgba(26,28,30,0.12), 0 2px 8px 0 rgba(26,28,30,0.08)",
       },
 
       // ─── Transitions ─────────────────────────────────────────────────────────
