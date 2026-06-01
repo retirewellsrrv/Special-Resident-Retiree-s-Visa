@@ -4,11 +4,12 @@ import { cn } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterInput } from '@/schemas/auth'
-import { registerAction, oauthAction } from '@/actions/auth'
+import { registerAction, oauthAction, CreateAdminAction } from '@/actions/auth'
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { User, Flag, MapPin, Mail, Lock, KeyRound } from 'lucide-react'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -62,12 +63,11 @@ export function SignupForm({
   })
 
   async function onSubmit(data: RegisterInput) {
-    console.log('errors', errors)
-    console.log('Clicked: ', data)
     try {
       setServerError(null)
 
       const result = await registerAction(data)
+      // const result = await CreateAdminAction(data)
 
       if (!result.success) {
         toast.error(`Something went wrong: ${result.error}`)
@@ -75,9 +75,9 @@ export function SignupForm({
         return
       }
 
-      // success logic here
       toast.success("Check your email to verify account")
     } catch (error) {
+      if (isRedirectError(error)) throw error
       console.error(error)
       setServerError('Something went wrong.')
     }
@@ -181,7 +181,6 @@ export function SignupForm({
                 <span className="px-4 text-sm text-brand-secondary-800">or</span>
                 <div className="flex-1 border-t border-brand-primary-500"></div>
               </div>
-              //TODO: add "Continue with Apple" button here in the future
 
               {/* First name + Surname */}
               <Field className="grid grid-cols-2 gap-4">
@@ -247,6 +246,7 @@ export function SignupForm({
                     </FieldDescription>
                   )}
                 </Field>
+                
                 <Field>
                   <FieldLabel htmlFor="sex">Sex</FieldLabel>
                   <Controller

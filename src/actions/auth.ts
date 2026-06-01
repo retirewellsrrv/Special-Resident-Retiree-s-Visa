@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { Provider } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase/client'
+
 
 import {
   loginSchema,
@@ -72,12 +74,39 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
   console.log(parsed.data.email)
   console.log(parsed.data.birthday)
 
+  // check user if existing first
+  const { data: userData, error: userDataError } = await supabaseAdmin().auth.admin.listUsers()
 
+  if (userDataError) {
+    console.error('Error fetching users:', userDataError)
+    return { success: false, error: 'An error occurred while checking existing users.' }
+  }
+
+  const existingUser = userData.users.find(
+    (user) => user.email?.toLowerCase() === parsed.data?.email
+  )
+
+  if (existingUser) {
+    if (existingUser.email_confirmed_at) {
+      return {
+        success: false,
+        error: 'An account with this email already exists.',
+      }
+    }
+    return {
+      success: false,
+      error:
+        'This email is already registered but has not been confirmed yet. Please check your inbox.',
+    }
+  }
+
+  // if no existing user, proceed to sign up
   const { data, error: signUpError } = await supabase.auth.signUp({
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
     options: {
       data: {
+        role: 'applicant',
         name: fullName,
         sex: parsed.data.sex,
         birthday: parsed.data.birthday,
@@ -93,40 +122,85 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     return { success: false, error: signUpError.message }
   }
 
-  if (!data.user) {
-    return { success: false, error: 'Failed to create account. Please try again.' }
-  }
-
-  if (data.user && !data.session) {
-    console.error('A confirmation email has been sent. Please verify your email before logging in.')
-    return { success: false, error: 'A confirmation email has been sent. Please verify your email before logging in.' }
-  }
-
-  // ! no need to manual insert bcoz of options and triggers 
-  // const { error: profileError } = await supabase
-  //   .from('client_profiles')
-  //   .insert({
-  //     user_id: data.user.id,
-  //     name: fullName,
-  //     sex: parsed.data.sex,
-  //     birthday: parsed.data.birthday,
-  //     nationality: parsed.data.nationality,
-  //     age: parsed.data.age,
-  //     address: parsed.data.address,
-  //   })
-
-  // if (profileError) {
-  //   console.error('Profile insert error:', profileError) 
-  //   return { success: false, error: profileError.message }
-  // }
+  console.log('signUp data:', JSON.stringify(data, null, 2))
+  console.log('signUp error:', signUpError)
 
   revalidatePath('/', 'layout')
   redirect('/confirm-email')
 }
 
 // ─────────────────────────────────────────────
-// LOGOUT
+// Create Admin
 // ─────────────────────────────────────────────
+
+
+export async function CreateAdminAction(input: RegisterInput): Promise<ActionResult> {
+  const parsed = registerSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const supabase = await createClient()
+
+  const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+  const firstName = capitalize(parsed.data?.firstName);
+  const surname = capitalize(parsed.data?.surname);
+  const fullName = `${firstName} ${surname}`; // capitalize first leetter and combine firsname and lastname 
+  console.log(fullName)
+  console.log(parsed.data.email)
+  console.log(parsed.data.birthday)
+
+  // check user if existing first
+  const { data: userData, error: userDataError } = await supabaseAdmin().auth.admin.listUsers()
+
+  if (userDataError) {
+    console.error('Error fetching users:', userDataError)
+    return { success: false, error: 'An error occurred while checking existing users.' }
+  }
+
+  const existingUser = userData.users.find(
+    (user) => user.email?.toLowerCase() === parsed.data?.email
+  )
+
+  if (existingUser) {
+    if (existingUser.email_confirmed_at) {
+      return {
+        success: false,
+        error: 'An account with this email already exists.',
+      }
+    }
+    return {
+      success: false,
+      error:
+        'This email is already registered but has not been confirmed yet. Please check your inbox.',
+    }
+  }
+
+  // if no existing user, proceed to sign up
+  const { data, error: signUpError } = await supabase.auth.signUp({
+    email: parsed.data.email.toLowerCase(),
+    password: parsed.data.password,
+    options: {
+      data: {
+        role: 'admin',
+        name: fullName,
+      },
+    },
+  })
+
+  if (signUpError) {
+    console.error('signup error:', signUpError)
+    return { success: false, error: signUpError.message }
+  }
+
+  console.log('signUp data:', JSON.stringify(data, null, 2))
+  console.log('signUp error:', signUpError)
+
+  revalidatePath('/', 'layout')
+  redirect('/confirm-email')
+}
+
 
 export async function logoutAction(): Promise<void> {
   const supabase = await createClient()
