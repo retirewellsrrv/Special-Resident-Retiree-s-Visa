@@ -160,7 +160,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          id: number
+          id?: number
           is_read?: boolean
           notification: string
           user_id: string
@@ -195,7 +195,7 @@ export type Database = {
         Insert: {
           amount: number
           created_at: string
-          id: number
+          id?: number
           payment_method: Database["public"]["Enums"]["payment_methods"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
