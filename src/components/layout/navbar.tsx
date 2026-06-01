@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { title: "Services", href: "/view-services" },
+  { title: "Services", href: "/services" },
   { title: "Pricing/Packages", href: "/pricing" },
   { title: "About Us", href: "/about" },
   { title: "FAQs", href: "/faqs" },
