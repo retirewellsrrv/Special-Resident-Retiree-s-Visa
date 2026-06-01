@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/supabase'
 
 const PROTECTED_PREFIXES = ['/applicant']
-const PUBLIC_ONLY_PATHS = ['/login', '/register']
+const PUBLIC_ONLY_PATHS = ['/login', '/register', '/about', '/contact', '/pricing', '/view-services']
 
 function isProtected(pathname: string) {
   return PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))
