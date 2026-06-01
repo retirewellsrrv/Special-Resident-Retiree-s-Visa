@@ -232,7 +232,7 @@ export type Database = {
         }
         Insert: {
           description?: string | null
-          id: number
+          id?: number
           is_available: boolean
           price: number
           type: Database["public"]["Enums"]["service_type"]
