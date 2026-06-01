@@ -181,6 +181,7 @@ export function SignupForm({
                 <span className="px-4 text-sm text-brand-secondary-800">or</span>
                 <div className="flex-1 border-t border-brand-primary-500"></div>
               </div>
+              //TODO: add "Continue with Apple" button here in the future
 
               {/* First name + Surname */}
               <Field className="grid grid-cols-2 gap-4">

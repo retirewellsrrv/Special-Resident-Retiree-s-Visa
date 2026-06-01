@@ -78,12 +78,12 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     password: parsed.data.password,
     options: {
       data: {
-      name: fullName,
-      sex: parsed.data.sex,
-      birthday: parsed.data.birthday,
-      nationality: parsed.data.nationality,
-      age: 25,
-      address: parsed.data.address,
+        name: fullName,
+        sex: parsed.data.sex,
+        birthday: parsed.data.birthday,
+        nationality: parsed.data.nationality,
+        age: 25,
+        address: parsed.data.address,
       },
     },
   })
@@ -97,9 +97,9 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     return { success: false, error: 'Failed to create account. Please try again.' }
   }
 
-  if(data.user && !data.session) {
+  if (data.user && !data.session) {
     console.error('A confirmation email has been sent. Please verify your email before logging in.')
-    return { success: false, error: 'A confirmation email has been sent. Please verify your email before logging in.'}
+    return { success: false, error: 'A confirmation email has been sent. Please verify your email before logging in.' }
   }
 
   // ! no need to manual insert bcoz of options and triggers 
