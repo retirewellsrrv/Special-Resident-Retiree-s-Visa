@@ -4,12 +4,16 @@ import React, { useState } from 'react';
 import { Search, ChevronDown, FileText, Calculator, Calendar, ArrowRight } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar'
 import {
-    Field,
-    FieldDescription,
-    FieldGroup,
-    FieldLabel,
+  Field,
+
 } from '@/components/ui/field'
-import { Input } from '@/components/ui/input';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import AccordionCard from '@/components/faqs/accordion-card';
 
 export default function FAQPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -18,6 +22,19 @@ export default function FAQPage() {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  const items: AccordionData[] = [
+    {
+      value: 'item-1',
+      trigger: 'What is SRRV?',
+      content: 'The Special Resident Retiree\'s Visa is a non-immigrant visa for foreign nationals who want to retire in the Philippines. It is issued by the Philippines Retirement Authority (PRA) and offers multiple-entry privileges with the right to stay permanently in the country.'
+    },
+    {
+      value: 'item-2',
+      trigger: 'Can I work or study with an SRRV?',
+      content: 'Yes, SRRV holders can study or work in the Philippines. However, to work, you mush obtain an Alien Employment Permit (AEP) from the Department of Labor and Employment.'
+    }
+  ]
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-800">
       {/* Navigation */}
@@ -25,17 +42,17 @@ export default function FAQPage() {
       {/* Hero Section */}
       <section className="bg-[#F6F5F2] pt-20 pb-16 px-6 text-center">
         <h1 className="text-4xl md:text-5xl font-serif text-gray-900 mb-8">Frequently Asked Questions</h1>
-          <Field className="max-w-2xl mx-auto relative">
-                                <div className="group relative">
-                                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                    <input
-                                        id="search"
-                                        type="text"
-                                        placeholder="Search for answers (e.g., eligibility, visa fees, timeline)..."
-                                        className="w-full pl-12 pr-4 py-4 rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#A6192E] focus:border-transparent w-full"
-                                    />
-                                </div>
-                            </Field>
+        <Field className="max-w-2xl mx-auto relative">
+          <div className="group relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              id="search"
+              type="text"
+              placeholder="Search for answers (e.g., eligibility, visa fees, timeline)..."
+              className="w-full pl-12 pr-4 py-4 rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#A6192E] focus:border-transparent w-full"
+            />
+          </div>
+        </Field>
       </section>
 
       {/* FAQ Content Section */}
@@ -73,24 +90,12 @@ export default function FAQPage() {
           <h2 className="text-2xl font-serif text-gray-900 mb-6">General Information</h2>
           <div className="space-y-4">
             {/* Question 1 */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-              <button 
-                onClick={() => toggleAccordion(0)}
-                className="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none"
-              >
-                <span className="font-serif text-lg text-gray-800">What is the SRRV?</span>
-                <ChevronDown className={`w-5 h-5 text-[#A6192E] transition-transform duration-200 ${openIndex === 0 ? 'rotate-180' : ''}`} />
-              </button>
-              {openIndex === 0 && (
-                <div className="px-6 pb-5 text-gray-600 text-sm leading-relaxed border-t border-gray-100 pt-4">
-                  The Special Resident Retiree's Visa (SRRV) is a non-immigrant visa issued by the Philippine Retirement Authority (PRA). It entitles foreign nationals and former Filipino citizens to reside permanently in the Philippines with multiple-entry privileges.
-                </div>
-              )}
-            </div>
+            <AccordionCard items={items} />
+
 
             {/* Question 2 */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-              <button 
+              <button
                 onClick={() => toggleAccordion(1)}
                 className="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none"
               >
@@ -118,12 +123,11 @@ export default function FAQPage() {
                 Chat with an Expert
               </button>
               <button className="px-6 py-3 border border-white/40 text-white text-sm font-semibold rounded hover:bg-white/10 transition whitespace-nowrap">
-              
-              Contact Us
+                Contact Us
               </button>
             </div>
           </div>
-          </div>
+        </div>
       </section>
 
       {/* Resource Cards */}
@@ -177,7 +181,7 @@ export default function FAQPage() {
       <footer className="bg-[#FAFAFA] border-t border-gray-200 py-12 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-1">
-             <div className="text-[#A6192E] font-bold text-xl tracking-tighter mb-4">
+            <div className="text-[#A6192E] font-bold text-xl tracking-tighter mb-4">
               SRRV <span className="text-xs font-normal text-gray-500 uppercase block leading-none">Global Consulting</span>
             </div>
             <p className="text-sm text-gray-500 leading-relaxed pr-4">
