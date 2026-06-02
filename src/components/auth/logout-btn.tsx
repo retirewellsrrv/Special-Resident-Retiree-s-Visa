@@ -30,7 +30,7 @@ export function LogoutBtn() {
             onClick={handleLogout}
             disabled={pending || !user}
         >
-            {pending ? 'Logging out…' : user ? 'Logout' : 'No user'}
+            {pending ? 'Logging out…' : user ? 'Logout'+ ' ' + user.user_metadata.role + ' ' + user.email : 'No user'}
         </Button>
     )
 }
