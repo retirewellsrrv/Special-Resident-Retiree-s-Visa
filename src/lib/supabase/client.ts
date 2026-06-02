@@ -7,3 +7,10 @@ export function createClient() {
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     )
 }
+
+export function supabaseAdmin() {
+    return createBrowserClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+}

@@ -6,6 +6,19 @@ vi.mock('../lib/supabase/server', () => ({
   createClient: vi.fn(),
 }))
 
+vi.mock('../lib/supabase/client', () => ({
+  supabaseAdmin: vi.fn(() => ({
+    auth: {
+      admin: {
+        listUsers: vi.fn().mockResolvedValue({
+          data: { users: [] },
+          error: null,
+        }),
+      },
+    },
+  })),
+}))
+
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
 }))
@@ -41,7 +54,7 @@ function mockRedirectThrows() {
 
 describe('loginAction', () => {
   beforeEach(() => {
-    vi.resetAllMocks()
+    vi.clearAllMocks()
     mockRedirectThrows()
   })
 
@@ -136,7 +149,7 @@ describe('loginAction', () => {
 
 describe('registerAction', () => {
   beforeEach(() => {
-    vi.resetAllMocks()
+    vi.clearAllMocks()
     mockRedirectThrows()
   })
 
@@ -257,7 +270,7 @@ describe('registerAction', () => {
 
 describe('logoutAction', () => {
   beforeEach(() => {
-    vi.resetAllMocks()
+    vi.clearAllMocks()
     mockRedirectThrows()
   })
 

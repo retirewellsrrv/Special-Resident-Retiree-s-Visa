@@ -1,16 +1,16 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Field,
   FieldLabel,
   FieldGroup,
   FieldError,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Combobox,
   ComboboxContent,
@@ -18,31 +18,38 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-} from '@/components/ui/combobox'
-import { toast } from 'sonner'
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase'
+} from "@/components/ui/combobox";
+import { toast } from "sonner";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import type { Tables, TablesInsert, TablesUpdate } from "@/types/supabase";
 
-// Validation schema for application
 const applicationSchema = z.object({
-  user_id: z.string().min(1, 'User ID is required'),
-  application_code: z.string().min(1, 'Application code is required'),
-  service_type: z.enum(['basic', 'premium', 'vip']),
-  status: z.enum(['processing', 'paused', 'approved', 'rejected']).optional(),
-})
+  user_id: z.string().min(1, "User ID is required"),
+  application_code: z.string().min(1, "Application code is required"),
+  service_type: z.enum(["basic", "premium", "vip"]),
+  status: z.enum(["processing", "paused", "approved", "rejected"]).optional(),
+  payment_id: z.number().int().positive("Payment ID is required"),
+});
 
-type ApplicationForm = z.infer<typeof applicationSchema>
+type ApplicationForm = z.infer<typeof applicationSchema>;
 
-const SERVICE_TYPE_OPTIONS = ['basic', 'premium', 'vip'] as const
-const STATUS_OPTIONS = ['processing', 'paused', 'approved', 'rejected'] as const
+const SERVICE_TYPE_OPTIONS = ["basic", "premium", "vip"] as const;
+const STATUS_OPTIONS = [
+  "processing",
+  "paused",
+  "approved",
+  "rejected",
+] as const;
 
 export default function ApplyPage() {
-  const supabase = createClient()
-  const [applications, setApplications] = useState<Tables<'applications'>[]>([])
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient();
+  const [applications, setApplications] = useState<Tables<"applications">[]>(
+    [],
+  );
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
     register,
@@ -53,118 +60,109 @@ export default function ApplyPage() {
   } = useForm<ApplicationForm>({
     resolver: zodResolver(applicationSchema),
     defaultValues: {
-      user_id: '',
-      application_code: '',
-      service_type: 'basic',
+      user_id: "",
+      application_code: "",
+      service_type: "basic",
+      payment_id: 0,
     },
-  })
+  });
 
-
-  // Fetch applications on mount
   useEffect(() => {
-    fetchApplications()
-  }, [])
+    fetchApplications();
+  }, []);
 
   const fetchApplications = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     const { data, error } = await supabase
-      .from('applications')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from("applications")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      toast.error('Failed to load applications: ' + error.message)
+      toast.error("Failed to load applications: " + error.message);
     } else {
-      setApplications(data ?? [])
+      setApplications(data ?? []);
     }
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
-  // Create or Update
   async function onSubmit(data: ApplicationForm) {
     if (editingId) {
-      // Update existing application
-      const updateData: TablesUpdate<'applications'> = {
+      const updateData: TablesUpdate<"applications"> = {
         service_type: data.service_type,
         user_id: data.user_id,
         application_code: data.application_code,
+        payment_id: data.payment_id,
         ...(data.status !== undefined && { status: data.status }),
-      }
+      };
 
       const { error } = await supabase
-        .from('applications')
+        .from("applications")
         .update(updateData)
-        .eq('id', editingId)
+        .eq("id", editingId);
 
       if (error) {
-        toast.error('Update failed: ' + error.message)
+        toast.error("Update failed: " + error.message);
       } else {
-        toast.success('Application updated successfully')
-        setEditingId(null)
-        reset()
-        fetchApplications()
+        toast.success("Application updated successfully");
+        setEditingId(null);
+        reset();
+        fetchApplications();
       }
     } else {
-      // Create new application - get next available ID
       const { data: maxIdData } = await supabase
-        .from('applications')
-        .select('id')
-        .order('id', { ascending: false })
-        .limit(1)
+        .from("applications")
+        .select("id")
+        .order("id", { ascending: false })
+        .limit(1);
 
-      let newId = 1
+      let newId = 1;
       if (maxIdData && maxIdData.length > 0) {
-        newId = maxIdData[0].id + 1
+        newId = maxIdData[0].id + 1;
       }
 
-      const insertData = {
+      const insertData: TablesInsert<"applications"> = {
         id: newId,
         user_id: data.user_id,
         application_code: data.application_code,
         service_type: data.service_type,
-        status: data.status ?? 'processing',
-      }
+        status: data.status ?? "processing",
+        payment_id: data.payment_id,
+      };
 
-      const { error } = await supabase
-        .from('applications')
-        .insert(insertData)
+      const { error } = await supabase.from("applications").insert(insertData);
 
       if (error) {
-        toast.error('Create failed: ' + error.message)
+        toast.error("Create failed: " + error.message);
       } else {
-        toast.success('Application created successfully')
-        reset()
-        fetchApplications()
+        toast.success("Application created successfully");
+        reset();
+        fetchApplications();
       }
     }
   }
 
-  // Edit handler - populate form
-  function handleEdit(app: Tables<'applications'>) {
-    setEditingId(app.id)
+  function handleEdit(app: Tables<"applications">) {
+    setEditingId(app.id);
     reset({
       user_id: app.user_id,
       application_code: app.application_code,
-      service_type: app.service_type as ApplicationForm['service_type'],
+      service_type: app.service_type as ApplicationForm["service_type"],
       status: app.status ?? undefined,
-    })
+      payment_id: app.payment_id,
+    });
   }
 
-  // Delete handler
   async function handleDelete(id: number) {
-    if (!confirm('Are you sure you want to delete this application?')) {
-      return
-    }
-    const { error } = await supabase
-      .from('applications')
-      .delete()
-      .eq('id', id)
+    if (!confirm("Are you sure you want to delete this application?")) return;
+
+    const { error } = await supabase.from("applications").delete().eq("id", id);
 
     if (error) {
-      toast.error('Delete failed: ' + error.message)
+      toast.error("Delete failed: " + error.message);
     } else {
-      toast.success('Application deleted successfully')
-      fetchApplications()
+      toast.success("Application deleted successfully");
+      fetchApplications();
     }
   }
 
@@ -172,10 +170,11 @@ export default function ApplyPage() {
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Manage Applications</h1>
 
-      {/* Create/Update Form */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>{editingId ? 'Edit Application' : 'Create New Application'}</CardTitle>
+          <CardTitle>
+            {editingId ? "Edit Application" : "Create New Application"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -185,22 +184,35 @@ export default function ApplyPage() {
                 <Input
                   id="user_id"
                   placeholder="Enter user ID"
-                  {...register('user_id')}
+                  {...register("user_id")}
                 />
-                {errors.user_id && (
-                  <FieldError errors={[errors.user_id]} />
+                {errors.user_id && <FieldError errors={[errors.user_id]} />}
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="application_code">
+                  Application Code
+                </FieldLabel>
+                <Input
+                  id="application_code"
+                  placeholder="Enter application code"
+                  {...register("application_code")}
+                />
+                {errors.application_code && (
+                  <FieldError errors={[errors.application_code]} />
                 )}
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="application_code">Application Code</FieldLabel>
+                <FieldLabel htmlFor="payment_id">Payment ID</FieldLabel>
                 <Input
-                  id="application_code"
-                  placeholder="Enter application code"
-                  {...register('application_code')}
+                  id="payment_id"
+                  type="number"
+                  placeholder="Enter payment ID"
+                  {...register("payment_id", { valueAsNumber: true })}
                 />
-                {errors.application_code && (
-                  <FieldError errors={[errors.application_code]} />
+                {errors.payment_id && (
+                  <FieldError errors={[errors.payment_id]} />
                 )}
               </Field>
 
@@ -213,13 +225,20 @@ export default function ApplyPage() {
                     <Combobox
                       items={SERVICE_TYPE_OPTIONS}
                       value={field.value}
-                      onValueChange={(value) => field.onChange(value as 'basic' | 'premium' | 'vip')}
+                      onValueChange={(value, _eventDetails) => {
+                        if (value !== null) {
+                          field.onChange(value as "basic" | "premium" | "vip");
+                        }
+                      }}
                     >
-                      <ComboboxInput id="service_type" placeholder="Select service type" />
+                      <ComboboxInput
+                        id="service_type"
+                        placeholder="Select service type"
+                      />
                       <ComboboxContent>
                         <ComboboxEmpty>No options found.</ComboboxEmpty>
                         <ComboboxList>
-                          {(item) => (
+                          {(item: string) => (
                             <ComboboxItem key={item} value={item}>
                               {item}
                             </ComboboxItem>
@@ -242,16 +261,27 @@ export default function ApplyPage() {
                   render={({ field }) => (
                     <Combobox
                       items={STATUS_OPTIONS}
-                      value={field.value ?? ''}
-                      onValueChange={(value) => field.onChange(
-                        value === '' ? undefined : (value as 'processing' | 'paused' | 'approved' | 'rejected')
-                      )}
+                      value={field.value ?? ""}
+                      onValueChange={(value, _eventDetails) =>
+                        field.onChange(
+                          value === "" || value === null
+                            ? undefined
+                            : (value as
+                                | "processing"
+                                | "paused"
+                                | "approved"
+                                | "rejected"),
+                        )
+                      }
                     >
-                      <ComboboxInput id="status" placeholder="Select status (optional)" />
+                      <ComboboxInput
+                        id="status"
+                        placeholder="Select status (optional)"
+                      />
                       <ComboboxContent>
                         <ComboboxEmpty>No options found.</ComboboxEmpty>
                         <ComboboxList>
-                          {(item) => (
+                          {(item: string) => (
                             <ComboboxItem key={item} value={item}>
                               {item}
                             </ComboboxItem>
@@ -261,28 +291,26 @@ export default function ApplyPage() {
                     </Combobox>
                   )}
                 />
-                {errors.status && (
-                  <FieldError errors={[errors.status]} />
-                )}
+                {errors.status && <FieldError errors={[errors.status]} />}
               </Field>
 
               <div className="flex gap-2">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting
                     ? editingId
-                      ? 'Updating...'
-                      : 'Creating...'
+                      ? "Updating..."
+                      : "Creating..."
                     : editingId
-                    ? 'Update Application'
-                    : 'Create Application'}
+                      ? "Update Application"
+                      : "Create Application"}
                 </Button>
                 {editingId && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => {
-                      setEditingId(null)
-                      reset()
+                      setEditingId(null);
+                      reset();
                     }}
                   >
                     Cancel
@@ -294,7 +322,6 @@ export default function ApplyPage() {
         </CardContent>
       </Card>
 
-      {/* Applications List */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Existing Applications</h2>
         {isLoading ? (
@@ -311,7 +338,9 @@ export default function ApplyPage() {
                     <p className="font-medium">{app.id}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Application Code</p>
+                    <p className="text-sm text-muted-foreground">
+                      Application Code
+                    </p>
                     <p className="font-medium">{app.application_code}</p>
                   </div>
                   <div>
@@ -319,21 +348,35 @@ export default function ApplyPage() {
                     <p className="font-medium">{app.user_id}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Service Type</p>
+                    <p className="text-sm text-muted-foreground">Payment ID</p>
+                    <p className="font-medium">{app.payment_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Service Type
+                    </p>
                     <p className="font-medium">{app.service_type}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Status</p>
-                    <p className="font-medium">{app.status || 'N/A'}</p>
+                    <p className="font-medium">{app.status || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Created At</p>
-                    <p className="font-medium">{app.created_at ? new Date(app.created_at).toLocaleString() : 'N/A'}</p>
+                    <p className="font-medium">
+                      {app.created_at
+                        ? new Date(app.created_at).toLocaleString()
+                        : "N/A"}
+                    </p>
                   </div>
                   {app.updated_at && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Updated At</p>
-                      <p className="font-medium">{new Date(app.updated_at).toLocaleString()}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Updated At
+                      </p>
+                      <p className="font-medium">
+                        {new Date(app.updated_at).toLocaleString()}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -351,5 +394,5 @@ export default function ApplyPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
