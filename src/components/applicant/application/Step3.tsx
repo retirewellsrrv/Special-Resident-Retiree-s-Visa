@@ -1,15 +1,15 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { VisaPlan } from "./types";
-import { visaPlans } from "./visa-plans";
+import { ServicePlan } from "./types";
+import { servicePlans } from "./service-plans";
 
 export function Step3({
   selected,
   onSelect,
 }: {
-  selected: VisaPlan;
-  onSelect: (plan: VisaPlan) => void;
+  selected: ServicePlan;
+  onSelect: (plan: ServicePlan) => void;
 }) {
   return (
     <>
@@ -23,7 +23,7 @@ export function Step3({
       </div>
 
       <div className="flex flex-col gap-4">
-        {visaPlans.map((plan) => {
+        {servicePlans.map((plan) => {
           const isSelected = selected === plan.id;
           return (
             <button

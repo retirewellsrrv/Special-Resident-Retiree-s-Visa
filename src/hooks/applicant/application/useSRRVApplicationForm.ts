@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Step1Data, Step2Data, Step4Data, VisaPlan } from "@/components/applicant/application/types";
+import {
+  Step1Data,
+  Step2Data,
+  Step4Data,
+  ServicePlan,
+} from "@/components/applicant/application/types";
 
 export function useSRRVApplicationForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -27,7 +32,7 @@ export function useSRRVApplicationForm() {
     ecPhone: "",
   });
 
-  const [selectedVisa, setSelectedVisa] = useState<VisaPlan>("");
+  const [selectedService, setSelectedService] = useState<ServicePlan>("");
 
   const [step4Data, setStep4Data] = useState<Step4Data>({
     passportBio: { file: null, name: "" },
@@ -63,8 +68,8 @@ export function useSRRVApplicationForm() {
     step1Change: handleStep1Change,
     step2Data,
     step2Change: handleStep2Change,
-    selectedVisa,
-    setSelectedVisa,
+    selectedService,
+    setSelectedService,
     step4Data,
     docUpload: handleDocUpload,
     next: handleNext,

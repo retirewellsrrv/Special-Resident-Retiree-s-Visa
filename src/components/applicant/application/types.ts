@@ -21,7 +21,7 @@ export type Step2Data = {
   ecPhone: string;
 };
 
-export type VisaPlan = "basic" | "premium" | "vip" | "";
+export type ServicePlan = "basic" | "premium" | "vip" | "";
 
 export type DocumentFile = {
   file: File | null;
