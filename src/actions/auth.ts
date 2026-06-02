@@ -45,12 +45,11 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
 
   const role = data.user.user_metadata?.role as string | undefined
 
-  
+  // revalidatePath must run before any redirect()
+  revalidatePath('/', 'layout')
 
   if (role === 'admin') redirect('/admin/dashboard')
   if (role === 'applicant') redirect('/applicant/dashboard')
-    
-  revalidatePath('/', 'layout')
   redirect('/')
 }
 
@@ -70,7 +69,7 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
 
   const firstName = capitalize(parsed.data?.firstName);
   const surname = capitalize(parsed.data?.surname);
-  const fullName = `${firstName} ${surname}`; // capitalize first leetter and combine firsname and lastname 
+  const fullName = `${firstName} ${surname}`;
   console.log(fullName)
   console.log(parsed.data.email)
   console.log(parsed.data.birthday)
@@ -123,8 +122,13 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     return { success: false, error: signUpError.message }
   }
 
-  console.log('signUp data:', JSON.stringify(data, null, 2))
-  console.log('signUp error:', signUpError)
+  if (!data.user) {
+    return { success: false, error: 'Failed to create account. Please try again.' }
+  }
+
+  if (!data.session) {
+    return { success: false, error: 'Please check your inbox for a confirmation email.' }
+  }
 
   revalidatePath('/', 'layout')
   redirect('/confirm-email')
@@ -147,7 +151,7 @@ export async function CreateAdminAction(input: RegisterInput): Promise<ActionRes
 
   const firstName = capitalize(parsed.data?.firstName);
   const surname = capitalize(parsed.data?.surname);
-  const fullName = `${firstName} ${surname}`; // capitalize first leetter and combine firsname and lastname 
+  const fullName = `${firstName} ${surname}`;
   console.log(fullName)
   console.log(parsed.data.email)
   console.log(parsed.data.birthday)
@@ -195,8 +199,13 @@ export async function CreateAdminAction(input: RegisterInput): Promise<ActionRes
     return { success: false, error: signUpError.message }
   }
 
-  console.log('signUp data:', JSON.stringify(data, null, 2))
-  console.log('signUp error:', signUpError)
+  if (!data.user) {
+    return { success: false, error: 'Failed to create account. Please try again.' }
+  }
+
+  if (!data.session) {
+    return { success: false, error: 'Please check your inbox for a confirmation email.' }
+  }
 
   revalidatePath('/', 'layout')
   redirect('/confirm-email')
