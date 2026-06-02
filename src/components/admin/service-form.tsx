@@ -4,15 +4,18 @@ import { useId, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { createService } from '@/actions/admin/service'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog, DialogTrigger, DialogContent,
+  DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog'
 import { Loader2, Plus } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 type ServiceType = 'basic' | 'premium' | 'vip'
 
@@ -22,19 +25,30 @@ const SERVICE_TYPES: { value: ServiceType; label: string }[] = [
   { value: 'vip', label: 'VIP' },
 ]
 
+const TYPE_BADGE: Record<ServiceType, 'outline' | 'default' | 'destructive'> = {
+  basic: 'outline',
+  premium: 'default',
+  vip: 'destructive',
+}
+
 const DEFAULT_STATE = { type: 'basic' as ServiceType, price: '', description: '' }
 
 export function ServiceForm() {
+  const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [fields, setFields] = useState(DEFAULT_STATE)
 
-  // Stable IDs for label association
   const typeId = useId()
   const priceId = useId()
   const descriptionId = useId()
 
   function set<K extends keyof typeof fields>(key: K, value: typeof fields[K]) {
     setFields((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function reset() {
+    setFields(DEFAULT_STATE)
+    setOpen(false)
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -60,37 +74,52 @@ export function ServiceForm() {
       }
 
       toast.success('Service created')
-      setFields(DEFAULT_STATE)
+      reset()
     })
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Service</CardTitle>
-      </CardHeader>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4" />
+          Add Service
+        </Button>
+      </DialogTrigger>
 
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create Service</DialogTitle>
+          <DialogDescription>
+            Add a new service package for applicants to choose from.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <label htmlFor={typeId} className="text-sm font-medium">
               Service Type
             </label>
-            <Select
-              value={fields.type}
-              onValueChange={(v) => set('type', v as ServiceType)}
-            >
-              <SelectTrigger id={typeId}>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {SERVICE_TYPES.map(({ value, label }) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-3">
+              <Select
+                value={fields.type}
+                onValueChange={(v) => set('type', v as ServiceType)}
+              >
+                <SelectTrigger id={typeId} className="w-full">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SERVICE_TYPES.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Badge variant={TYPE_BADGE[fields.type]} className="capitalize shrink-0">
+                {fields.type}
+              </Badge>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -102,7 +131,7 @@ export function ServiceForm() {
               type="number"
               min="1"
               step="1"
-              placeholder="1000"
+              placeholder="e.g. 1000"
               value={fields.price}
               onChange={(e) => set('price', e.target.value)}
             />
@@ -115,7 +144,7 @@ export function ServiceForm() {
             </label>
             <Textarea
               id={descriptionId}
-              placeholder="Service description…"
+              placeholder="Describe what this service includes…"
               value={fields.description}
               onChange={(e) => set('description', e.target.value)}
             />
@@ -124,30 +153,22 @@ export function ServiceForm() {
           <Button
             type="submit"
             disabled={isPending}
-            className={cn(
-              "w-full inline-flex items-center justify-center gap-2",
-              "px-4 py-2.5 text-sm font-medium tracking-wide",
-              "bg-neutral-900 text-white border border-neutral-900",
-              "hover:bg-neutral-700 hover:border-neutral-700",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
-              "transition-all duration-150 rounded-md",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
-            )}
+            className="w-full"
           >
             {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Creating…</span>
+                Creating…
               </>
             ) : (
               <>
                 <Plus className="h-4 w-4" />
-                <span>Create Service</span>
+                Create Service
               </>
             )}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   )
 }

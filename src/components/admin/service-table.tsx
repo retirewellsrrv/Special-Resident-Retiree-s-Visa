@@ -3,10 +3,10 @@
 import { useState, useTransition, useOptimistic } from 'react'
 import { toast } from 'sonner'
 import { Loader2, Trash2, Pencil, Check, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import type { Service } from '@/types/services'
 import { deleteService, toggleServiceAvailability, updateService } from '@/actions/admin/service'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import {
   Select, SelectContent, SelectItem,
@@ -19,6 +19,12 @@ import {
 import { Switch } from '@/components/ui/switch'
 
 type ServiceType = 'basic' | 'premium' | 'vip'
+
+const TYPE_BADGE: Record<ServiceType, 'outline' | 'default' | 'destructive'> = {
+  basic: 'outline',
+  premium: 'default',
+  vip: 'destructive',
+}
 
 interface EditState {
   type: ServiceType
@@ -122,24 +128,24 @@ export function ServiceTable({ services }: Props) {
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
+            <TableHead className="w-12">ID</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Price</TableHead>
-            <TableHead>Description</TableHead>
+            <TableHead className="max-w-[260px]">Description</TableHead>
             <TableHead>Available</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
           {services.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
-                No services found
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
+                No services found. Click &quot;Add Service&quot; to create one.
               </TableCell>
             </TableRow>
           ) : (
@@ -153,9 +159,10 @@ export function ServiceTable({ services }: Props) {
 
               return (
                 <TableRow key={service.id} className={isDeleting ? 'opacity-50' : ''}>
-                  <TableCell>{service.id}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {service.id}
+                  </TableCell>
 
-                  {/* Type */}
                   <TableCell>
                     {isEditing ? (
                       <Select
@@ -174,12 +181,13 @@ export function ServiceTable({ services }: Props) {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <span className="capitalize">{service.type}</span>
+                      <Badge variant={TYPE_BADGE[service.type as ServiceType]} className="capitalize">
+                        {service.type}
+                      </Badge>
                     )}
                   </TableCell>
 
-                  {/* Price */}
-                  <TableCell>
+                  <TableCell className="font-medium">
                     {isEditing ? (
                       <Input
                         type="number"
@@ -198,7 +206,6 @@ export function ServiceTable({ services }: Props) {
                     )}
                   </TableCell>
 
-                  {/* Description */}
                   <TableCell className="max-w-[260px]">
                     {isEditing ? (
                       <Input
@@ -215,33 +222,29 @@ export function ServiceTable({ services }: Props) {
                     )}
                   </TableCell>
 
-                  {/* Toggle */}
-                  <TableCell>
-                    <Switch
-                      checked={isAvailable}
-                      disabled={isBusy || isEditing}
-                      aria-label={`Toggle availability for service ${service.id}`}
-                      onCheckedChange={(value) => handleToggle(service.id, value)}
-                    />
-                  </TableCell>
-
-                  {/* Actions */}
                   <TableCell>
                     <div className="flex items-center gap-2">
+                      <Switch
+                        checked={isAvailable}
+                        disabled={isBusy || isEditing}
+                        aria-label={`Toggle availability for service ${service.id}`}
+                        onCheckedChange={(value) => handleToggle(service.id, value)}
+                      />
+                      <span className={`text-xs font-medium ${isAvailable ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        {isToggling ? '…' : isAvailable ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
                       {isEditing ? (
                         <>
-                          {/* Save */}
                           <Button
                             size="sm"
+                            variant="default"
                             disabled={isSaving}
                             onClick={() => handleSave(service.id)}
-                            className={cn(
-                              'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium',
-                              'bg-neutral-900 text-white border border-neutral-900',
-                              'hover:bg-neutral-700 hover:border-neutral-700',
-                              'disabled:opacity-50 disabled:cursor-not-allowed',
-                              'transition-all duration-150 rounded-md'
-                            )}
                           >
                             {isSaving ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
@@ -251,18 +254,11 @@ export function ServiceTable({ services }: Props) {
                             {isSaving ? 'Saving…' : 'Save'}
                           </Button>
 
-                          {/* Cancel */}
                           <Button
                             size="sm"
+                            variant="ghost"
                             disabled={isSaving}
                             onClick={cancelEdit}
-                            className={cn(
-                              'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium',
-                              'bg-transparent text-muted-foreground border border-input',
-                              'hover:bg-muted hover:text-foreground',
-                              'disabled:opacity-50 disabled:cursor-not-allowed',
-                              'transition-all duration-150 rounded-md'
-                            )}
                           >
                             <X className="h-3 w-3" />
                             Cancel
@@ -270,35 +266,21 @@ export function ServiceTable({ services }: Props) {
                         </>
                       ) : (
                         <>
-                          {/* Edit */}
                           <Button
                             size="sm"
+                            variant="ghost"
                             disabled={isBusy || editingId !== null}
                             onClick={() => startEdit(service)}
-                            className={cn(
-                              'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium',
-                              'bg-transparent text-muted-foreground border border-input',
-                              'hover:bg-muted hover:text-foreground',
-                              'disabled:opacity-50 disabled:cursor-not-allowed',
-                              'transition-all duration-150 rounded-md'
-                            )}
                           >
                             <Pencil className="h-3 w-3" />
                             Edit
                           </Button>
 
-                          {/* Delete */}
                           <Button
                             size="sm"
+                            variant="destructive"
                             disabled={isBusy || editingId !== null}
                             onClick={() => handleDelete(service.id)}
-                            className={cn(
-                              'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium tracking-wide',
-                              'bg-red-50 text-red-700 border border-red-200',
-                              'hover:bg-red-600 hover:text-white hover:border-red-600',
-                              'disabled:opacity-40 disabled:cursor-not-allowed',
-                              'transition-all duration-150 rounded-md'
-                            )}
                           >
                             {isDeleting ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
