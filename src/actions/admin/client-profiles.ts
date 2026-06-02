@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import {
     clientProfileSchema,
     ClientStatusEnum,
-} from '@/schemas/client-profile'
+} from '@/schemas/client-profiles'
 
 export type ActionState = { error: string | null; success: boolean }
 
