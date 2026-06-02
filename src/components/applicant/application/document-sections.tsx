@@ -15,8 +15,8 @@ export const documentSections = [
         required: true,
       },
       {
-        key: "validVisa" as keyof Step4Data,
-        title: "VALID VISA PAGE",
+        key: "validService" as keyof Step4Data,
+        title: "VALID SERVICE PAGE",
         description:
           "Page containing your current Bureau of Immigration entry stamp.",
         required: true,

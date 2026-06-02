@@ -9,6 +9,6 @@ export const LABEL_CLASS = "text-sm font-medium text-neutral-700 mb-1.5 block";
 export const steps = [
   { id: 1, label: "Personal Details" },
   { id: 2, label: "Contact Information" },
-  { id: 3, label: "Visa Selection" },
+  { id: 3, label: "Service Selection" },
   { id: 4, label: "Document Checklist" },
 ];

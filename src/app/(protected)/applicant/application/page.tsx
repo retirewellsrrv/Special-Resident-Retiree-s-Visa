@@ -22,8 +22,8 @@ export default function SRRVApplicationPage() {
     step1Change,
     step2Data,
     step2Change,
-    selectedVisa,
-    setSelectedVisa,
+    selectedService,
+    setSelectedService,
     step4Data,
     docUpload,
     next,
@@ -97,7 +97,10 @@ export default function SRRVApplicationPage() {
                 <Step2 data={step2Data} onChange={step2Change} />
               )}
               {currentStep === 3 && (
-                <Step3 selected={selectedVisa} onSelect={setSelectedVisa} />
+                <Step3
+                  selected={selectedService}
+                  onSelect={setSelectedService}
+                />
               )}
               {currentStep === 4 && (
                 <Step4 data={step4Data} onUpload={docUpload} />
