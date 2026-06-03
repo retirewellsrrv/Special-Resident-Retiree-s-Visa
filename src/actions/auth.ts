@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { Provider } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/supabase/client'
+import { headers } from 'next/headers'
 
 
 import {
@@ -14,6 +15,35 @@ import {
   type RegisterInput,
 } from '@/schemas/auth'
 import { getUserRole } from '@/utils/auth/getUser'
+
+const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
+
+/*
+[/register page]
+      │
+      ▼
+User fills form → registerAction()
+      │
+      ├─ validation fails  → show error on form
+      │
+      └─ signUp() success
+            │
+            ▼
+      redirect('/confirm-email')   ← "Check your email" page
+            │
+            │   [meanwhile Supabase sends the email]
+            │
+            ▼
+      User opens email → clicks "Confirm email" button
+            │
+            ▼
+      GET /api/auth/callback?token_hash=xxx&type=email
+            │
+            └─ verifyOtp()
+                  ├─ success + role === 'applicant' → /applicant/dashboard
+                  ├─ success + role === 'admin'     → /admin/dashboard
+                  └─ error/expired                  → /confirm-email?error=expired
+*/
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -44,7 +74,8 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     return { success: false, error: error.message }
   }
 
-  const role = await getUserRole() as string | undefined
+  const role = data.user.user_metadata?.role as string | undefined
+
 
   // revalidatePath must run before any redirect()
   revalidatePath('/', 'layout')
@@ -70,7 +101,8 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
 
   const firstName = capitalize(parsed.data?.firstName);
   const surname = capitalize(parsed.data?.surname);
-  const fullName = `${firstName} ${surname}`;
+  const fullName = `${firstName} ${surname}`; //? parse and capitize 
+
   console.log(fullName)
   console.log(parsed.data.email)
   console.log(parsed.data.birthday)
@@ -101,18 +133,33 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     }
   }
 
+  // birhtday //? parse it before using 
+  const birthday = parsed.data.birthday.split("T")[0]; //? sample output "2026-05-30"
+
+  // accurate age
+  const dob = new Date(birthday);
+  const today = new Date();
+  let userAge = today.getFullYear() - dob.getFullYear();
+  const hasBirthdayPassed =
+    today.getMonth() > dob.getMonth() ||
+    (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+  if (!hasBirthdayPassed) userAge--;
+
+  parsed.data.age = userAge;
+
   // if no existing user, proceed to sign up
   const { data, error: signUpError } = await supabase.auth.signUp({
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
     options: {
+      emailRedirectTo: `${origin}/applicant/dashboard`,
       data: {
         role: 'applicant',
         name: fullName,
         sex: parsed.data.sex,
         birthday: parsed.data.birthday,
-        nationality: parsed.data.nationality,
-        age: 25,
+        nationality: capitalize(parsed.data.nationality),
+        age: userAge,
       },
     },
   })
@@ -122,16 +169,9 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     return { success: false, error: signUpError.message }
   }
 
-  if (!data.user) {
-    return { success: false, error: 'Failed to create account. Please try again.' }
-  }
-
-  if (!data.session) {
-    return { success: false, error: 'Please check your inbox for a confirmation email.' }
-  }
-
   revalidatePath('/', 'layout')
-  redirect('/confirm-email')
+  // redirect('/confirm-email')
+  return { success: true, message: 'Please check your email to confirm your account' }
 }
 
 // ─────────────────────────────────────────────
@@ -187,6 +227,7 @@ export async function CreateAdminAction(input: RegisterInput): Promise<ActionRes
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
     options: {
+      emailRedirectTo: `${origin}/admin/dashboard`,
       data: {
         role: 'admin',
         name: fullName,
@@ -208,7 +249,8 @@ export async function CreateAdminAction(input: RegisterInput): Promise<ActionRes
   }
 
   revalidatePath('/', 'layout')
-  redirect('/confirm-email')
+  // redirect('/confirm-email')
+  return { success: true, message: 'Please check your email to confirm your account' }
 }
 
 
@@ -217,6 +259,28 @@ export async function logoutAction(): Promise<void> {
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
   redirect('/login')
+}
+
+// ─────────────────────────────────────────────
+// RESEND CONFIRMATION
+// ─────────────────────────────────────────────
+
+export async function resendConfirmationAction(email: string): Promise<ActionResult> {
+  if (!email) return { success: false, error: 'Email is required.' }
+
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${origin}/api/auth/callback`,
+    },
+  })
+
+  if (error) return { success: false, error: error.message }
+  return { success: true, message: 'Confirmation email resent!' }
 }
 
 // ─────────────────────────────────────────────
