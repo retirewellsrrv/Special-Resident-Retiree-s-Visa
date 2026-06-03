@@ -21,6 +21,8 @@ export async function GET(request: Request) {
         await supabase.from('client_profiles').upsert({
           user_id: data.user.id,
           name: data.user.user_metadata?.full_name ?? '',
+          nationality: '',
+          address: '',
         }, { onConflict: 'user_id' })
       }
 
