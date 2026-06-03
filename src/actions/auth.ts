@@ -13,6 +13,7 @@ import {
   type LoginInput,
   type RegisterInput,
 } from '@/schemas/auth'
+import { getUserRole } from '@/utils/auth/getUser'
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -43,7 +44,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     return { success: false, error: error.message }
   }
 
-  const role = data.user.user_metadata?.role as string | undefined
+  const role = await getUserRole() as string | undefined
 
   // revalidatePath must run before any redirect()
   revalidatePath('/', 'layout')
