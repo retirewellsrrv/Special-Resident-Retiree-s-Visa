@@ -75,8 +75,8 @@ export function Step2({
               id="phone"
               type="tel"
               placeholder="Phone Number"
-              value={data.phone}
-              onChange={(e) => onChange("phone", e.target.value)}
+              value={data.phoneNumber}
+              onChange={(e) => onChange("phoneNumber", e.target.value)}
               className={INPUT_CLASS}
             />
           </div>
@@ -91,8 +91,8 @@ export function Step2({
         <Input
           id="street"
           placeholder="House No., Street name, Apartment"
-          value={data.street}
-          onChange={(e) => onChange("street", e.target.value)}
+          value={data.streetAddress}
+          onChange={(e) => onChange("streetAddress", e.target.value)}
           className={INPUT_CLASS}
         />
       </div>
@@ -179,8 +179,8 @@ export function Step2({
             <Input
               id="ecName"
               placeholder="Full legal name"
-              value={data.ecName}
-              onChange={(e) => onChange("ecName", e.target.value)}
+              value={data.emergencyName}
+              onChange={(e) => onChange("emergencyName", e.target.value)}
               className={INPUT_CLASS}
             />
           </div>
@@ -191,8 +191,10 @@ export function Step2({
             <Input
               id="ecRelationship"
               placeholder="e.g. Spouse, Son, Lawyer"
-              value={data.ecRelationship}
-              onChange={(e) => onChange("ecRelationship", e.target.value)}
+              value={data.emergencyRelationship}
+              onChange={(e) =>
+                onChange("emergencyRelationship", e.target.value)
+              }
               className={INPUT_CLASS}
             />
           </div>
@@ -205,8 +207,8 @@ export function Step2({
             id="ecPhone"
             type="tel"
             placeholder="Include country code"
-            value={data.ecPhone}
-            onChange={(e) => onChange("ecPhone", e.target.value)}
+            value={data.emergencyPhone}
+            onChange={(e) => onChange("emergencyPhone", e.target.value)}
             className={INPUT_CLASS}
           />
         </div>

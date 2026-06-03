@@ -10,9 +10,9 @@ export function useSRRVApplicationForm() {
   const [currentStep, setCurrentStep] = useState(1);
 
   const [step1Data, setStep1Data] = useState<Step1Data>({
-    fullName: "",
-    dateOfBirth: "",
-    gender: "",
+    name: "",
+    birthday: "",
+    sex: "",
     nationality: "",
     maritalStatus: "",
   });
@@ -20,16 +20,16 @@ export function useSRRVApplicationForm() {
   const [step2Data, setStep2Data] = useState<Step2Data>({
     email: "",
     phoneCode: "+1",
-    phone: "",
-    street: "",
+    phoneNumber: "",
+    streetAddress: "",
     city: "",
     state: "",
     zip: "",
     country: "",
     phAddress: "",
-    ecName: "",
-    ecRelationship: "",
-    ecPhone: "",
+    emergencyName: "",
+    emergencyRelationship: "",
+    emergencyPhone: "",
   });
 
   const [selectedService, setSelectedService] = useState<ServicePlan>("");
@@ -52,7 +52,29 @@ export function useSRRVApplicationForm() {
     setStep4Data((prev) => ({ ...prev, [key]: { file, name: file.name } }));
 
   const handleNext = () => {
-    if (currentStep < 4) setCurrentStep((s) => s + 1);
+    if (currentStep < 4) {
+      setCurrentStep((s) => s + 1);
+      return;
+    }
+
+    // Last step — assemble and log payload
+    const payload = {
+      personal: step1Data,
+      contact: step2Data,
+      selectedService,
+      documents: Object.fromEntries(
+        Object.entries(step4Data).map(([key, val]) => [
+          key,
+          {
+            name: val.name,
+            size: val.file?.size ?? null,
+            type: val.file?.type ?? null,
+          },
+        ]),
+      ),
+    };
+
+    console.log("📋 SRRV Application Payload:", payload);
   };
 
   const handleBack = () => {
