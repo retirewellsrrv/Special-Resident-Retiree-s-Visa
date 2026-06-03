@@ -113,7 +113,6 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
         birthday: parsed.data.birthday,
         nationality: parsed.data.nationality,
         age: 25,
-        address: parsed.data.address,
       },
     },
   })

@@ -66,8 +66,8 @@ export function SignupForm({
     try {
       setServerError(null)
 
-      // const result = await registerAction(data)
-      const result = await CreateAdminAction(data)
+      const result = await registerAction(data)
+      // const result = await CreateAdminAction(data) //* to create an admin
 
       if (!result.success) {
         toast.error(`Something went wrong: ${result.error}`)
