@@ -3,15 +3,17 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Combobox,
+  ComboboxContent,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  ComboboxTrigger,
+  ComboboxInput,
+} from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
 import { Step1Data } from "./types";
-import { INPUT_CLASS, SELECT_TRIGGER_CLASS, LABEL_CLASS } from "./constants";
+import { INPUT_CLASS, LABEL_CLASS } from "./constants";
 
 export function Step1({
   data,
@@ -33,14 +35,14 @@ export function Step1({
       </div>
 
       <div className="mb-6">
-        <Label htmlFor="fullName" className={LABEL_CLASS}>
+        <Label htmlFor="name" className={LABEL_CLASS}>
           Full Name (As shown in Passport)
         </Label>
         <Input
-          id="fullName"
+          id="name"
           placeholder="Enter your full legal name"
-          value={data.fullName}
-          onChange={(e) => onChange("fullName", e.target.value)}
+          value={data.name}
+          onChange={(e) => onChange("name", e.target.value)}
           className={INPUT_CLASS}
         />
       </div>
@@ -53,26 +55,31 @@ export function Step1({
           <Input
             id="dob"
             type="date"
-            value={data.dateOfBirth}
-            onChange={(e) => onChange("dateOfBirth", e.target.value)}
+            value={data.birthday}
+            onChange={(e) => onChange("birthday", e.target.value)}
             className={cn(INPUT_CLASS, "text-neutral-700")}
           />
         </div>
         <div>
           <Label className={LABEL_CLASS}>Gender</Label>
-          <Select
-            value={data.gender}
-            onValueChange={(v) => onChange("gender", v)}
+          <Combobox
+            value={data.sex}
+            onValueChange={(v) => v && onChange("sex", v)}
           >
-            <SelectTrigger className={SELECT_TRIGGER_CLASS}>
-              <SelectValue placeholder="Select Gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-              <SelectItem value="prefer-not">Prefer not to say</SelectItem>
-            </SelectContent>
-          </Select>
+            <ComboboxInput
+              className={INPUT_CLASS}
+              placeholder="Select Gender"
+            />
+            <ComboboxContent>
+              <ComboboxList>
+                <ComboboxItem value="male">Male</ComboboxItem>
+                <ComboboxItem value="female">Female</ComboboxItem>
+                <ComboboxItem value="prefer-not">
+                  Prefer not to say
+                </ComboboxItem>
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </div>
       </div>
 
@@ -91,21 +98,24 @@ export function Step1({
         </div>
         <div>
           <Label className={LABEL_CLASS}>Marital Status</Label>
-          <Select
+          <Combobox
             value={data.maritalStatus}
-            onValueChange={(v) => onChange("maritalStatus", v)}
+            onValueChange={(v) => v && onChange("maritalStatus", v)}
           >
-            <SelectTrigger className={SELECT_TRIGGER_CLASS}>
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="single">Single</SelectItem>
-              <SelectItem value="married">Married</SelectItem>
-              <SelectItem value="widowed">Widowed</SelectItem>
-              <SelectItem value="divorced">Divorced</SelectItem>
-              <SelectItem value="separated">Separated</SelectItem>
-            </SelectContent>
-          </Select>
+            <ComboboxInput
+              className={INPUT_CLASS}
+              placeholder="Select Status"
+            />
+            <ComboboxContent>
+              <ComboboxList>
+                <ComboboxItem value="single">Single</ComboboxItem>
+                <ComboboxItem value="married">Married</ComboboxItem>
+                <ComboboxItem value="widowed">Widowed</ComboboxItem>
+                <ComboboxItem value="divorced">Divorced</ComboboxItem>
+                <ComboboxItem value="separated">Separated</ComboboxItem>
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         </div>
       </div>
     </>

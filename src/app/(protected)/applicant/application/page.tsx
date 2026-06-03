@@ -13,7 +13,7 @@ import { Step1 } from "@/components/applicant/application/Step1";
 import { Step2 } from "@/components/applicant/application/Step2";
 import { Step3 } from "@/components/applicant/application/Step3";
 import { Step4 } from "@/components/applicant/application/Step4";
-import { useSRRVApplicationForm } from "@/hooks/applicant/application/useSRRVApplicationForm";
+import { useSRRVApplicationForm } from "@/hooks/applicant/application/useApplicationForm";
 
 export default function SRRVApplicationPage() {
   const {

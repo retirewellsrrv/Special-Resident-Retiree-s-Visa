@@ -1,7 +1,7 @@
 export type Step1Data = {
-  fullName: string;
-  dateOfBirth: string;
-  gender: string;
+  name: string;
+  birthday: string;
+  sex: string;
   nationality: string;
   maritalStatus: string;
 };
@@ -9,16 +9,16 @@ export type Step1Data = {
 export type Step2Data = {
   email: string;
   phoneCode: string;
-  phone: string;
-  street: string;
+  phoneNumber: string;
+  streetAddress: string;
   city: string;
   state: string;
   zip: string;
   country: string;
   phAddress: string;
-  ecName: string;
-  ecRelationship: string;
-  ecPhone: string;
+  emergencyName: string;
+  emergencyRelationship: string;
+  emergencyPhone: string;
 };
 
 export type ServicePlan = "basic" | "premium" | "vip" | "";

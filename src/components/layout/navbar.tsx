@@ -1,16 +1,28 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { Menu } from "lucide-react"
-import Image from "next/image"
-import logo from "@/assets/images/logo.png"
+import * as React from "react";
+import Link from "next/link";
+import { Menu } from "lucide-react";
+import Image from "next/image";
+import logo from "@/assets/images/logo.png";
 
-import { Button } from "@/components/ui/button"
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from "@/components/ui/navigation-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import type { User } from "@supabase/supabase-js";
+import { LogoutBtn } from "@/components/auth/logout-btn";
+
+interface NavbarProps {
+  className?: string;
+  user: User | null;
+}
 
 const navItems = [
   { title: "Services", href: "/services" },
@@ -18,17 +30,18 @@ const navItems = [
   { title: "About Us", href: "/about" },
   { title: "FAQs", href: "/faqs" },
   { title: "Contact", href: "/contact" },
-]
+];
 
-interface NavbarProps {
-  className?: string
-}
-
-export function Navbar({ className }: NavbarProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+export function Navbar({ className, user }: NavbarProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   return (
-    <header className={cn("sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_1px_0_0_rgba(0,0,0,0.06),0_4px_6px_-1px_rgba(0,0,0,0.07),0_2px_4px_-2px_rgba(0,0,0,0.05)]", className)}>
+    <header
+      className={cn(
+        "sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-[0_1px_0_0_rgba(0,0,0,0.06),0_4px_6px_-1px_rgba(0,0,0,0.07),0_2px_4px_-2px_rgba(0,0,0,0.05)]",
+        className,
+      )}
+    >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="mr-6 flex items-center space-x-2">
@@ -55,12 +68,19 @@ export function Navbar({ className }: NavbarProps) {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="outline" size="lg" asChild>
-            <Link href="/login">Log In</Link>
-          </Button>
-          <Button size="lg" asChild>
-            <Link href="/register">Get Started</Link>
-          </Button>
+          {user ? (
+            <LogoutBtn />
+          ) : (
+            <>
+              <Button variant="outline" size="lg" asChild>
+                <Link href="/login">Log In</Link>
+              </Button>
+
+              <Button size="lg" asChild>
+                <Link href="/register">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Trigger */}
@@ -85,21 +105,41 @@ export function Navbar({ className }: NavbarProps) {
               ))}
               <Separator className="my-4" />
               <div className="flex flex-col space-y-2">
-                <Button variant="outline" size="lg" asChild className="w-full justify-start">
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    Log In
-                  </Link>
-                </Button>
-                <Button size="lg" asChild className="w-full justify-start">
-                  <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                    Get Started
-                  </Link>
-                </Button>
+                {user ? (
+                  <LogoutBtn
+                    className="w-full justify-start"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      asChild
+                      className="w-full justify-start"
+                    >
+                      <Link
+                        href="/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Log In
+                      </Link>
+                    </Button>
+                    <Button size="lg" asChild className="w-full justify-start">
+                      <Link
+                        href="/register"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Get Started
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </SheetContent>
         </Sheet>
       </div>
     </header>
-  )
+  );
 }
