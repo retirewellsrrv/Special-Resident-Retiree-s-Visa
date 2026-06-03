@@ -22,19 +22,6 @@ export default function FAQPage() {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  const items: AccordionData[] = [
-    {
-      value: 'item-1',
-      trigger: 'What is SRRV?',
-      content: 'The Special Resident Retiree\'s Visa is a non-immigrant visa for foreign nationals who want to retire in the Philippines. It is issued by the Philippines Retirement Authority (PRA) and offers multiple-entry privileges with the right to stay permanently in the country.'
-    },
-    {
-      value: 'item-2',
-      trigger: 'Can I work or study with an SRRV?',
-      content: 'Yes, SRRV holders can study or work in the Philippines. However, to work, you mush obtain an Alien Employment Permit (AEP) from the Department of Labor and Employment.'
-    }
-  ]
-
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-800">
       {/* Navigation */}
@@ -90,8 +77,7 @@ export default function FAQPage() {
           <h2 className="text-2xl font-serif text-gray-900 mb-6">General Information</h2>
           <div className="space-y-4">
             {/* Question 1 */}
-            <AccordionCard items={items} />
-
+            <AccordionCard />
 
             {/* Question 2 */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
