@@ -32,31 +32,58 @@ export type Database = {
       applications: {
         Row: {
           application_code: string
-          created_at: string
+          country: string
+          created_at: string | null
+          emergency_name: string | null
+          emergency_phone: string | null
+          emergency_relationship: string | null
           id: number
+          marital_status: Database["public"]["Enums"]["marital_status"]
           payment_id: number
+          ph_address: string | null
+          phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
+          state: string
           status: Database["public"]["Enums"]["application_status"]
+          street_address: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
           application_code: string
-          created_at?: string
+          country: string
+          created_at?: string | null
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relationship?: string | null
           id?: number
+          marital_status: Database["public"]["Enums"]["marital_status"]
           payment_id: number
+          ph_address?: string | null
+          phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
+          state: string
           status?: Database["public"]["Enums"]["application_status"]
+          street_address: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
           application_code?: string
-          created_at?: string
+          country?: string
+          created_at?: string | null
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relationship?: string | null
           id?: number
+          marital_status?: Database["public"]["Enums"]["marital_status"]
           payment_id?: number
+          ph_address?: string | null
+          phone_number?: string
           service_type?: Database["public"]["Enums"]["service_type"]
+          state?: string
           status?: Database["public"]["Enums"]["application_status"]
+          street_address?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -86,7 +113,6 @@ export type Database = {
       }
       client_profiles: {
         Row: {
-          address: string
           age: number
           birthday: string
           name: string
@@ -95,7 +121,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          address: string
           age: number
           birthday: string
           name: string
@@ -104,7 +129,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          address?: string
           age?: number
           birthday?: string
           name?: string
@@ -121,16 +145,16 @@ export type Database = {
           id: number
           path: string
           status: Database["public"]["Enums"]["document_status"]
-          type: string
+          type: Database["public"]["Enums"]["document_type"]
           updated_at: string | null
         }
         Insert: {
           application_id: number
           created_at?: string
-          id: number
+          id?: number
           path: string
           status: Database["public"]["Enums"]["document_status"]
-          type: string
+          type: Database["public"]["Enums"]["document_type"]
           updated_at?: string | null
         }
         Update: {
@@ -139,7 +163,7 @@ export type Database = {
           id?: number
           path?: string
           status?: Database["public"]["Enums"]["document_status"]
-          type?: string
+          type?: Database["public"]["Enums"]["document_type"]
           updated_at?: string | null
         }
         Relationships: [
@@ -256,6 +280,8 @@ export type Database = {
     Enums: {
       application_status: "processing" | "paused" | "approved" | "rejected"
       document_status: "processing" | "accepted" | "rejected" | "action need"
+      document_type: "passport" | "visa" | "nbi" | "pension" | "medical"
+      marital_status: "single" | "married" | "widowed" | "divorced"
       payment_methods: "credit card" | "debit card" | "e-wallet"
       payment_status: "processing" | "pending" | "cancelled" | "success"
       service_type: "basic" | "premium" | "vip"
@@ -389,6 +415,8 @@ export const Constants = {
     Enums: {
       application_status: ["processing", "paused", "approved", "rejected"],
       document_status: ["processing", "accepted", "rejected", "action need"],
+      document_type: ["passport", "visa", "nbi", "pension", "medical"],
+      marital_status: ["single", "married", "widowed", "divorced"],
       payment_methods: ["credit card", "debit card", "e-wallet"],
       payment_status: ["processing", "pending", "cancelled", "success"],
       service_type: ["basic", "premium", "vip"],

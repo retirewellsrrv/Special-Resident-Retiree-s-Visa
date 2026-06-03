@@ -8,8 +8,7 @@ export const clientProfileSchema = z.object({
     sex: SexEnum,
     birthday: z.coerce.date().transform((d) => d.toISOString()),
     nationality: z.string().max(100),
-    age: z.number().int().min(0).max(32767),
-    address: z.string().max(500).optional().transform((v) => v ?? undefined),
+    age: z.number().int().min(0).max(32767)
 })
 
 export type ClientProfileInput = z.infer<typeof clientProfileSchema>

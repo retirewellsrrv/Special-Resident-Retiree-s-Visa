@@ -22,7 +22,6 @@ export async function GET(request: Request) {
           user_id: data.user.id,
           name: data.user.user_metadata?.full_name ?? '',
           nationality: '',
-          address: '',
           age: 0,
           birthday: '',
           sex: 'male',

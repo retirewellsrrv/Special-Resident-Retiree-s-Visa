@@ -140,7 +140,7 @@ export async function updateClientProfile(
         birthday: formData.get('birthday'),
         nationality: formData.get('nationality'),
         age: Number(formData.get('age')),
-        address: formData.get('address') || undefined,
+
     }
 
     const parsed = clientProfileSchema.safeParse(raw)
@@ -202,7 +202,6 @@ export async function createClientProfile(
         birthday: formData.get('birthday'),
         nationality: formData.get('nationality'),
         age: Number(formData.get('age')),
-        address: (formData.get('address') as string) ?? '',  // always a string
     }
 
     const parsed = clientProfileSchema.safeParse(raw)
@@ -215,7 +214,6 @@ export async function createClientProfile(
         .insert({
             ...parsed.data,
             user_id: user.id,
-            address: (formData.get('address') as string | null) ?? '',
         })
 
     if (error) return { error: error.message, success: false }
