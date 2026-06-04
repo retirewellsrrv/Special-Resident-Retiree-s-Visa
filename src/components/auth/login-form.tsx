@@ -5,11 +5,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginInput } from '@/schemas/auth'
 import { loginAction, oauthAction } from '@/actions/auth'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck, AlertCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,14 +26,30 @@ import { Checkbox } from '@/components/ui/checkbox'
 const LOGO_SRC =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAhr8iSPgv2rvBaNxbMastI29NPlsj3rAAnA5k7xKA-US3je9ux-SB0DqlmZIDC2c3TDnxqmzM-mfutVmRKUOiY1QF-LfVsFb3B1Ej-GKOXlTnlewshBtZiVBw_CnU3K7hC4QT3t8bR_76XZTYnSVUQSSRUcuGSX5PPWXt7jwyuG7wvbB0GWcfaIGwQuOXbcC2RDQ5SC8FLqZ5PFv9v0eg5Ouk5QlhlWQP9B20N9Z6lajJGWNl0_igVCtyvduaofHaDMZA_agV8qrnu'
 
+const ERROR_MESSAGES: Record<string, string> = {
+    oauth_failed: 'OAuth sign-in failed. Please try again.',
+    auth_failed: 'Authentication failed. Please try again.',
+    expired: 'The confirmation link has expired. Please register again.',
+}
+
+interface LoginFormProps extends React.ComponentProps<'div'> {
+    error?: string
+}
 
 export function LoginForm({
     className,
+    error: urlError,
     ...props
-}: React.ComponentProps<'div'>) {
-    const [serverError, setServerError] = useState<string | null>(null)
+}: LoginFormProps) {
+    const [serverError, setServerError] = useState<string | null>(urlError ? (ERROR_MESSAGES[urlError] ?? urlError) : null)
     const [oauthPending, setOauthPending] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+
+    useEffect(() => {
+        if (urlError) {
+            setServerError(ERROR_MESSAGES[urlError] ?? urlError)
+        }
+    }, [urlError])
 
     const {
         register,
@@ -97,6 +113,13 @@ export function LoginForm({
 
                     <form onSubmit={handleSubmit(onSubmit)} noValidate>
                         <FieldGroup>
+                            {/* Error banner */}
+                            {serverError && (
+                                <div className="flex items-start gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                                    <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                                    <span>{serverError}</span>
+                                </div>
+                            )}
                             {/* Google OAuth */}
                             <Field>
                                 <Button

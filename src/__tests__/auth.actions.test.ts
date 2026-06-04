@@ -165,7 +165,6 @@ describe('registerAction', () => {
     email: 'john@example.com',
     birthday: '1990-01-01',
     nationality: 'American',
-    address: '123 Main St',
     phoneNumber: '1234567890',
     password: 'Password123',
     confirmPassword: 'Password123',
@@ -197,9 +196,9 @@ describe('registerAction', () => {
       phoneNumber: '+15551234567',
     }
 
-    const result = await registerAction(input)
-
-    expect(result).toEqual({ success: true, message: 'Please check your email to confirm your account' })
+    await expect(registerAction(input)).rejects.toThrow('NEXT_REDIRECT')
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining('/confirm-email?email='))
   })
 
   it('returns error for invalid email', async () => {
@@ -222,7 +221,7 @@ describe('registerAction', () => {
       }),
     })
 
-    await registerAction({ ...baseInput, firstName: 'jOHN', surname: 'dOE' })
+    await expect(registerAction({ ...baseInput, firstName: 'jOHN', surname: 'dOE' })).rejects.toThrow('NEXT_REDIRECT')
 
     const client = await createClient()
     expect(client.auth.signUp).toHaveBeenCalledWith(
@@ -254,8 +253,9 @@ describe('registerAction', () => {
       }),
     })
 
-    const result = await registerAction({ ...baseInput, email: 'fail@example.com' })
-    expect(result).toEqual({ success: true, message: 'Please check your email to confirm your account' })
+    await expect(registerAction({ ...baseInput, email: 'fail@example.com' })).rejects.toThrow('NEXT_REDIRECT')
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining('/confirm-email?email='))
   })
 
   it('returns error for missing firstName', async () => {
