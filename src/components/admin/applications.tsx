@@ -161,7 +161,9 @@ export function ApplicationsClient({
                     {row.application_code}
                   </TableCell>
                   <TableCell className="font-medium">{row.name}</TableCell>
-                  <TableCell className="text-ht-body-md">{row.service_type}</TableCell>
+                  <TableCell>
+                    <span className="capitalize">{row.service_plan_name ?? row.service_type}</span>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={STATUS_BADGE[row.status] ?? 'outline'}>
                       {STATUS_LABELS[row.status] ?? row.status}

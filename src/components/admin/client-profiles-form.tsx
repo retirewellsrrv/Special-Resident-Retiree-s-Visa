@@ -71,7 +71,7 @@ function ClientDirectoryRow({ row }: { row: ClientRow }) {
                     </div>
                 </div>
             </td>
-            <td className="py-4 pr-4 text-sm capitalize">{row.service_type}</td>
+            <td className="py-4 pr-4 text-sm capitalize">{row.service_plan_name ?? row.service_type}</td>
             <td className="py-4 pr-4">
                 <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[row.status] ?? 'bg-gray-100 text-gray-700'}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[row.status] ?? 'bg-gray-400'}`} />

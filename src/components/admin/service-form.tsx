@@ -2,7 +2,7 @@
 
 import { useId, useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { createService } from '@/actions/admin/service'
+import { createServicePlan } from '@/actions/admin/service'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -15,7 +15,8 @@ import {
   Dialog, DialogTrigger, DialogContent,
   DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
-import { Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus, X } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 
 type ServiceType = 'basic' | 'premium' | 'vip'
 
@@ -31,23 +32,60 @@ const TYPE_BADGE: Record<ServiceType, 'outline' | 'default' | 'destructive'> = {
   vip: 'destructive',
 }
 
-const DEFAULT_STATE = { type: 'basic' as ServiceType, price: '', description: '' }
+interface FieldState {
+  type: ServiceType
+  name: string
+  subtitle: string
+  price: string
+  price_note: string
+  description: string
+  tags: string[]
+  highlighted: boolean
+}
+
+const DEFAULT_STATE: FieldState = {
+  type: 'basic',
+  name: '',
+  subtitle: '',
+  price: '',
+  price_note: '',
+  description: '',
+  tags: [],
+  highlighted: false,
+}
 
 export function ServiceForm() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [fields, setFields] = useState(DEFAULT_STATE)
+  const [fields, setFields] = useState<FieldState>(DEFAULT_STATE)
+  const [tagInput, setTagInput] = useState('')
 
   const typeId = useId()
+  const nameId = useId()
+  const subtitleId = useId()
   const priceId = useId()
+  const priceNoteId = useId()
   const descriptionId = useId()
 
-  function set<K extends keyof typeof fields>(key: K, value: typeof fields[K]) {
+  function set<K extends keyof FieldState>(key: K, value: FieldState[K]) {
     setFields((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function addTag() {
+    const trimmed = tagInput.trim()
+    if (trimmed && !fields.tags.includes(trimmed)) {
+      set('tags', [...fields.tags, trimmed])
+    }
+    setTagInput('')
+  }
+
+  function removeTag(tag: string) {
+    set('tags', fields.tags.filter((t) => t !== tag))
   }
 
   function reset() {
     setFields(DEFAULT_STATE)
+    setTagInput('')
     setOpen(false)
   }
 
@@ -59,12 +97,29 @@ export function ServiceForm() {
       toast.error('Price must be a positive number')
       return
     }
+    if (!fields.name.trim()) {
+      toast.error('Name is required')
+      return
+    }
+    if (!fields.subtitle.trim()) {
+      toast.error('Subtitle is required')
+      return
+    }
+    if (!fields.description.trim()) {
+      toast.error('Description is required')
+      return
+    }
 
     startTransition(async () => {
-      const result = await createService({
+      const result = await createServicePlan({
         type: fields.type,
+        name: fields.name.trim(),
+        subtitle: fields.subtitle.trim(),
         price: parsedPrice,
-        description: fields.description.trim() || null,
+        price_note: fields.price_note.trim() || null,
+        description: fields.description.trim(),
+        tags: fields.tags,
+        highlighted: fields.highlighted,
         is_available: true,
       })
 
@@ -73,7 +128,7 @@ export function ServiceForm() {
         return
       }
 
-      toast.success('Service created')
+      toast.success('Service plan created')
       reset()
     })
   }
@@ -83,13 +138,13 @@ export function ServiceForm() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4" />
-          Add Service
+          Add Service Plan
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Service</DialogTitle>
+          <DialogTitle>Create Service Plan</DialogTitle>
           <DialogDescription>
             Add a new service package for applicants to choose from.
           </DialogDescription>
@@ -123,31 +178,119 @@ export function ServiceForm() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor={priceId} className="text-sm font-medium">
-              Price (₱)
+            <label htmlFor={nameId} className="text-sm font-medium">
+              Name
             </label>
             <Input
-              id={priceId}
-              type="number"
-              min="1"
-              step="1"
-              placeholder="e.g. 1000"
-              value={fields.price}
-              onChange={(e) => set('price', e.target.value)}
+              id={nameId}
+              placeholder="e.g. Basic SRRV"
+              value={fields.name}
+              onChange={(e) => set('name', e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor={subtitleId} className="text-sm font-medium">
+              Subtitle
+            </label>
+            <Input
+              id={subtitleId}
+              placeholder="e.g. FOR ACTIVE RETIREES"
+              value={fields.subtitle}
+              onChange={(e) => set('subtitle', e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor={priceId} className="text-sm font-medium">
+                Price
+              </label>
+              <Input
+                id={priceId}
+                type="number"
+                min="1"
+                step="0.01"
+                placeholder="e.g. 10000"
+                value={fields.price}
+                onChange={(e) => set('price', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor={priceNoteId} className="text-sm font-medium">
+                Price Note
+                <span className="ml-1 text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <Input
+                id={priceNoteId}
+                placeholder="e.g. Required Deposit"
+                value={fields.price_note}
+                onChange={(e) => set('price_note', e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
             <label htmlFor={descriptionId} className="text-sm font-medium">
               Description
-              <span className="ml-1 text-muted-foreground font-normal">(optional)</span>
             </label>
             <Textarea
               id={descriptionId}
               placeholder="Describe what this service includes…"
+              rows={3}
               value={fields.description}
               onChange={(e) => set('description', e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Tags
+            </label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Type a tag and press Add"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addTag()
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={addTag}>
+                Add
+              </Button>
+            </div>
+            {fields.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {fields.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="gap-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Switch
+              id="highlighted"
+              checked={fields.highlighted}
+              onCheckedChange={(v) => set('highlighted', v)}
+            />
+            <label htmlFor="highlighted" className="text-sm font-medium cursor-pointer">
+              Highlight this plan
+            </label>
           </div>
 
           <Button
@@ -163,7 +306,7 @@ export function ServiceForm() {
             ) : (
               <>
                 <Plus className="h-4 w-4" />
-                Create Service
+                Create Service Plan
               </>
             )}
           </Button>
