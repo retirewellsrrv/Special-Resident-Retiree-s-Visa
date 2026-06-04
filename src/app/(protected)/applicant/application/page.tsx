@@ -5,7 +5,7 @@ import markerImage from "@/assets/images/marker.png";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Mail, Phone, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Mail, Phone, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { steps } from "@/components/applicant/application/constants";
@@ -29,7 +29,32 @@ export default function SRRVApplicationPage() {
     next,
     back,
     isLastStep,
+    submitState,
+    submitPending,
+    handleSubmit,
   } = useSRRVApplicationForm();
+
+  if (submitState.success) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f9f6f1] py-10 px-4">
+        <div className="max-w-lg mx-auto">
+          <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
+            <CardContent className="p-10 text-center">
+              <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-neutral-900 mb-2">Application Submitted!</h1>
+              <p className="text-sm text-neutral-500 mb-6">
+                Your SRRV application has been received. We will review it and get back to you
+                within 3-5 business days. You can track the status from your dashboard.
+              </p>
+              <Button asChild>
+                <a href="/applicant/dashboard">Go to Dashboard</a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f9f6f1] py-10 px-4">
@@ -89,6 +114,12 @@ export default function SRRVApplicationPage() {
 
               <Separator className="mb-6" />
 
+              {submitState.error && (
+                <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                  {submitState.error}
+                </div>
+              )}
+
               {/* Active step content */}
               {currentStep === 1 && (
                 <Step1 data={step1Data} onChange={step1Change} />
@@ -123,13 +154,28 @@ export default function SRRVApplicationPage() {
                     Back
                   </Button>
                 )}
-                <Button
-                  onClick={next}
-                  className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors"
-                >
-                  {isLastStep ? "Submit Application" : "Save & Continue"}
-                  {!isLastStep && <ArrowRight className="w-4 h-4" />}
-                </Button>
+                <form action={handleSubmit}>
+                  <Button
+                    type={isLastStep ? "submit" : "button"}
+                    onClick={isLastStep ? undefined : next}
+                    disabled={submitPending}
+                    className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors disabled:opacity-50"
+                  >
+                    {submitPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : isLastStep ? (
+                      "Submit Application"
+                    ) : (
+                      <>
+                        Save & Continue
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
               </div>
             </CardContent>
           </Card>

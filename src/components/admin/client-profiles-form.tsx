@@ -13,16 +13,20 @@ const SERVICE_TYPES = ['basic', 'premium', 'vip'] as const
 
 const STATUS_STYLES: Record<string, string> = {
     approved: 'bg-green-100 text-green-800',
-    processing: 'bg-blue-100 text-blue-800',
-    paused: 'bg-yellow-100 text-yellow-800',
+    submitted: 'bg-blue-100 text-blue-800',
+    under_review: 'bg-purple-100 text-purple-800',
+    pending_documents: 'bg-yellow-100 text-yellow-800',
     rejected: 'bg-red-100 text-red-700',
+    draft: 'bg-gray-100 text-gray-700',
 }
 
 const STATUS_DOT: Record<string, string> = {
     approved: 'bg-green-500',
-    processing: 'bg-blue-400',
-    paused: 'bg-yellow-400',
+    submitted: 'bg-blue-400',
+    under_review: 'bg-purple-400',
+    pending_documents: 'bg-yellow-400',
     rejected: 'bg-red-500',
+    draft: 'bg-gray-400',
 }
 
 function initials(name: string) {
@@ -36,7 +40,7 @@ function StatCard({ label, value, badge, highlight }: {
         <Card className={`p-5 space-y-3 ${highlight ? 'border-red-300' : ''}`}>
             <div className="flex items-start justify-between">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${highlight ? 'bg-red-100' : 'bg-muted'}`}>
-                    {highlight ? '⚠️' : '👥'}
+                    {highlight ? '\u26A0\uFE0F' : '\uD83D\uDC65'}
                 </div>
                 {badge && (
                     <Badge variant={highlight ? 'destructive' : 'secondary'}>
@@ -56,7 +60,7 @@ const initialState: ActionState = { error: null, success: false }
 
 function ClientDirectoryRow({ row }: { row: ClientRow }) {
     const [state, formAction, pending] = useActionState(resolveReview, initialState)
-    const isPaused = row.status === 'paused'  // ← was 'Review Required'
+    const needsReview = row.status === 'pending_documents'
 
     return (
         <tr className="border-b last:border-0 hover:bg-muted/20 transition-colors">
@@ -75,24 +79,24 @@ function ClientDirectoryRow({ row }: { row: ClientRow }) {
             <td className="py-4 pr-4">
                 <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[row.status] ?? 'bg-gray-100 text-gray-700'}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[row.status] ?? 'bg-gray-400'}`} />
-                    {row.status}
+                    {row.status.replace(/_/g, ' ')}
                 </span>
             </td>
             <td className="py-4 pr-4 text-sm text-muted-foreground">
                 {row.updated_at
                     ? new Date(row.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                    : '—'}
+                    : '\u2014'}
             </td>
             <td className="py-4">
-                {isPaused ? (
+                {needsReview ? (
                     <form action={formAction}>
-                        <input type="hidden" name="user_id" value={row.user_id} />  {/* ← was client_id */}
+                        <input type="hidden" name="user_id" value={row.user_id} />
                         <Button
                             type="submit"
                             size="sm"
                             disabled={pending}
                         >
-                            {pending ? 'Resolving…' : 'Resolve'}
+                            {pending ? 'Resolving\u2026' : 'Resolve'}
                         </Button>
                         {state.error && <p className="text-xs text-red-500 mt-1">{state.error}</p>}
                     </form>
@@ -107,14 +111,14 @@ function ClientDirectoryRow({ row }: { row: ClientRow }) {
 }
 
 export function ClientProfilesClient({
-    stats, rows, total, page, filter, serviceType,  // ← was visaType
+    stats, rows, total, page, filter, serviceType,
 }: {
     stats: ClientStats
     rows: ClientRow[]
     total: number
     page: number
-    filter: 'all' | 'new'                           // ← removed 'vip'
-    serviceType?: string                             // ← was visaType
+    filter: 'all' | 'new'
+    serviceType?: string
 }) {
     const router = useRouter()
     const pathname = usePathname()
@@ -162,7 +166,7 @@ export function ClientProfilesClient({
                 <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                     <div className="flex items-center gap-2">
                         <h2 className="text-lg font-bold mr-3">Client Directory</h2>
-                        {(['all', 'new'] as const).map((f) => (  // ← removed 'vip'
+                        {(['all', 'new'] as const).map((f) => (
                             <Button
                                 key={f}
                                 variant={filter === f ? 'secondary' : 'ghost'}
@@ -193,7 +197,7 @@ export function ClientProfilesClient({
                             onClick={() => navigate({ filter: 'all', service_type: undefined, page: '1' })}
                             title="Reset filters"
                         >
-                            ↺
+                            {'\u21BA'}
                         </Button>
                     </div>
                 </div>
@@ -235,7 +239,7 @@ export function ClientProfilesClient({
                     </p>
                     <div className="flex items-center gap-1">
                         <Button variant="outline" size="sm" disabled={page <= 1}
-                            onClick={() => navigate({ page: String(page - 1) })}>‹</Button>
+                            onClick={() => navigate({ page: String(page - 1) })}>{'\u2039'}</Button>
                         {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map((p) => (
                             <Button
                                 key={p}
@@ -247,7 +251,7 @@ export function ClientProfilesClient({
                             </Button>
                         ))}
                         <Button variant="outline" size="sm" disabled={page >= totalPages}
-                            onClick={() => navigate({ page: String(page + 1) })}>›</Button>
+                            onClick={() => navigate({ page: String(page + 1) })}>{'\u203A'}</Button>
                     </div>
                 </div>
             </Card>

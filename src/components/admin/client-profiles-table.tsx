@@ -4,14 +4,13 @@ import { useActionState, useState } from 'react'
 import { updateClientProfile, type ActionState } from '../../actions/admin/client-profiles'
 import { Table } from '../ui/table'
 
-
 type Profile = {
     user_id: string
     name: string
-    sex: 'male' | 'female'
+    gender: 'male' | 'female' | 'other' | 'prefer_not'
     birthday: string
     nationality: string
-    age: number
+    age: number | null
     address: string | null
 }
 
@@ -29,7 +28,7 @@ export function ClientsTable({ profiles }: { profiles: Profile[] }) {
             <Table className="w-full text-sm border-collapse">
                 <thead>
                     <tr className="border-b text-left">
-                        {['Name', 'Sex', 'Birthday', 'Nationality', 'Age', 'Address', ''].map(
+                        {['Name', 'Gender', 'Birthday', 'Nationality', 'Age', 'Address', ''].map(
                             (h) => <th key={h} className="py-2 pr-4 font-medium">{h}</th>
                         )}
                     </tr>
@@ -46,10 +45,12 @@ export function ClientsTable({ profiles }: { profiles: Profile[] }) {
                                             <input name="name" defaultValue={p.name} required />
                                         </Field>
 
-                                        <Field label="Sex">
-                                            <select name="sex" defaultValue={p.sex}>
+                                        <Field label="Gender">
+                                            <select name="gender" defaultValue={p.gender}>
                                                 <option value="male">Male</option>
                                                 <option value="female">Female</option>
+                                                <option value="other">Other</option>
+                                                <option value="prefer_not">Prefer not to say</option>
                                             </select>
                                         </Field>
 
@@ -67,7 +68,7 @@ export function ClientsTable({ profiles }: { profiles: Profile[] }) {
                                         </Field>
 
                                         <Field label="Age">
-                                            <input name="age" type="number" defaultValue={p.age} required />
+                                            <input name="age" type="number" defaultValue={p.age ?? ''} />
                                         </Field>
 
                                         <Field label="Address">
@@ -80,7 +81,7 @@ export function ClientsTable({ profiles }: { profiles: Profile[] }) {
                                                 disabled={pending}
                                                 className="px-3 py-1 bg-blue-600 text-white rounded text-xs disabled:opacity-50"
                                             >
-                                                {pending ? 'Saving…' : 'Save'}
+                                                {pending ? 'Saving\u2026' : 'Save'}
                                             </button>
                                             <button
                                                 type="button"
@@ -96,11 +97,11 @@ export function ClientsTable({ profiles }: { profiles: Profile[] }) {
                         ) : (
                             <tr key={p.user_id} className="border-b hover:bg-muted/40">
                                 <td className="py-2 pr-4">{p.name}</td>
-                                <td className="py-2 pr-4 capitalize">{p.sex}</td>
+                                <td className="py-2 pr-4 capitalize">{p.gender?.replace('_', ' ')}</td>
                                 <td className="py-2 pr-4">{p.birthday?.slice(0, 10)}</td>
                                 <td className="py-2 pr-4">{p.nationality}</td>
-                                <td className="py-2 pr-4">{p.age}</td>
-                                <td className="py-2 pr-4">{p.address ?? '—'}</td>
+                                <td className="py-2 pr-4">{p.age ?? '\u2014'}</td>
+                                <td className="py-2 pr-4">{p.address ?? '\u2014'}</td>
                                 <td className="py-2">
                                     <button
                                         onClick={() => setEditingId(p.user_id)}
