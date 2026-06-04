@@ -16,8 +16,6 @@ import {
 } from '@/schemas/auth'
 import { getUserRole } from '@/utils/auth/getUser'
 
-const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
-
 /*
 [/register page]
       │
@@ -148,6 +146,8 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
   parsed.data.age = userAge;
 
   // if no existing user, proceed to sign up
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
+
   const { data, error: signUpError } = await supabase.auth.signUp({
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
@@ -223,6 +223,8 @@ export async function CreateAdminAction(input: RegisterInput): Promise<ActionRes
   }
 
   // if no existing user, proceed to sign up
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
+
   const { data, error: signUpError } = await supabase.auth.signUp({
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
