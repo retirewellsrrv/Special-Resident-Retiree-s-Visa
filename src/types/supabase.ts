@@ -32,60 +32,63 @@ export type Database = {
       applications: {
         Row: {
           application_code: string
+          city: string
           country: string
-          created_at: string | null
+          created_at: string
           emergency_name: string | null
           emergency_phone: string | null
           emergency_relationship: string | null
           id: number
-          marital_status: Database["public"]["Enums"]["marital_status"]
           payment_id: number
           ph_address: string | null
           phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
           state: string
           status: Database["public"]["Enums"]["application_status"]
-          street_address: string
+          street: string
           updated_at: string | null
           user_id: string
+          zip: string
         }
         Insert: {
           application_code: string
+          city: string
           country: string
-          created_at?: string | null
+          created_at?: string
           emergency_name?: string | null
           emergency_phone?: string | null
           emergency_relationship?: string | null
           id?: number
-          marital_status: Database["public"]["Enums"]["marital_status"]
           payment_id: number
           ph_address?: string | null
           phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
           state: string
           status?: Database["public"]["Enums"]["application_status"]
-          street_address: string
+          street: string
           updated_at?: string | null
           user_id: string
+          zip: string
         }
         Update: {
           application_code?: string
+          city?: string
           country?: string
-          created_at?: string | null
+          created_at?: string
           emergency_name?: string | null
           emergency_phone?: string | null
           emergency_relationship?: string | null
           id?: number
-          marital_status?: Database["public"]["Enums"]["marital_status"]
           payment_id?: number
           ph_address?: string | null
           phone_number?: string
           service_type?: Database["public"]["Enums"]["service_type"]
           state?: string
           status?: Database["public"]["Enums"]["application_status"]
-          street_address?: string
+          street?: string
           updated_at?: string | null
           user_id?: string
+          zip?: string
         }
         Relationships: [
           {
@@ -115,6 +118,7 @@ export type Database = {
         Row: {
           age: number
           birthday: string
+          marital_status: Database["public"]["Enums"]["marital_status"]
           name: string
           nationality: string
           sex: Database["public"]["Enums"]["sex"]
@@ -123,6 +127,7 @@ export type Database = {
         Insert: {
           age: number
           birthday: string
+          marital_status?: Database["public"]["Enums"]["marital_status"]
           name: string
           nationality: string
           sex: Database["public"]["Enums"]["sex"]
@@ -131,6 +136,7 @@ export type Database = {
         Update: {
           age?: number
           birthday?: string
+          marital_status?: Database["public"]["Enums"]["marital_status"]
           name?: string
           nationality?: string
           sex?: Database["public"]["Enums"]["sex"]

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import {
     clientProfileSchema,
-    ClientStatusEnum,
+    ApplicationStatusEnum,
 } from '@/schemas/client-profiles'
 
 export type ActionState = { error: string | null; success: boolean }
@@ -33,21 +33,21 @@ export async function getClientStats(): Promise<ClientStats> {
 
     const [
         { count: total },
-        { count: processing },
+        { count: submitted },
         { count: approved },
         { count: rejected },
         { count: paused },
     ] = await Promise.all([
         supabase.from('client_profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'paused'),
         supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'processing'),
         supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
         supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'paused'),
     ])
 
     return {
         total: total ?? 0,
-        processing: processing ?? 0,
+        processing: (submitted ?? 0) + (paused ?? 0),
         approved: approved ?? 0,
         rejected: rejected ?? 0,
         paused: paused ?? 0,
@@ -80,7 +80,7 @@ export async function getClientDirectory({
             status,
             updated_at,
             created_at,
-            client_profiles!inner (
+            client_profiles!applications_user_id_fkey (
                 name
             )
             `,
@@ -89,7 +89,7 @@ export async function getClientDirectory({
         .order('updated_at', { ascending: false })
         .range(from, to)
 
-    if (service_type) query = query.eq('service_type', service_type as 'basic' | 'premium' | 'vip')
+    if (service_type) query = query.eq('service_type', service_type as any)
     if (filter === 'new') {
         const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString()
         query = query.gte('created_at', cutoff)
@@ -100,7 +100,7 @@ export async function getClientDirectory({
 
     const rows: ClientRow[] = (data ?? []).map((row: any) => ({
         user_id: row.user_id,
-        name: row.client_profiles.name,
+        name: row.client_profiles?.name ?? 'Unknown',
         application_code: row.application_code,
         service_type: row.service_type,
         status: row.status,
@@ -115,7 +115,7 @@ export async function getClientProfiles() {
 
     const { data, error } = await supabase
         .from('client_profiles')
-        .select('user_id, name, sex, birthday, nationality, age, address')
+        .select('user_id, name, sex, birthday, nationality, age')
         .order('name', { ascending: true })
 
     if (error) throw new Error(error.message)
@@ -139,14 +139,13 @@ export async function updateClientProfile(
         sex: formData.get('sex'),
         birthday: formData.get('birthday'),
         nationality: formData.get('nationality'),
-        age: Number(formData.get('age')),
-
+        age: formData.get('age') ? Number(formData.get('age')) : undefined,
     }
 
     const parsed = clientProfileSchema.safeParse(raw)
     if (!parsed.success) {
         return {
-            error: parsed.error.message,
+            error: parsed.error.issues[0]?.message ?? 'Validation failed',
             success: false,
         }
     }
@@ -158,7 +157,7 @@ export async function updateClientProfile(
 
     if (error) return { error: error.message, success: false }
 
-    revalidatePath('/admin/applicants')
+    revalidatePath('/admin/profiles')
     return { error: null, success: true }
 }
 
@@ -168,8 +167,8 @@ export async function resolveReview(
 ): Promise<ActionState> {
     const supabase = await createClient()
 
-    const user_id = formData.get('user_id')
-    if (!user_id || typeof user_id !== 'string')
+    const client_id = formData.get('user_id')
+    if (!client_id || typeof client_id !== 'string')
         return { error: 'Missing user ID', success: false }
 
     const { error } = await supabase
@@ -178,12 +177,12 @@ export async function resolveReview(
             status: 'processing',
             updated_at: new Date().toISOString(),
         })
-        .eq('user_id', user_id)
-        .eq('status', 'paused')
+        .eq('user_id', client_id)
+        .eq('status', 'pending_documents' as any)
 
     if (error) return { error: error.message, success: false }
 
-    revalidatePath('/admin/applicants')
+    revalidatePath('/admin/profiles')
     return { error: null, success: true }
 }
 
@@ -201,24 +200,25 @@ export async function createClientProfile(
         sex: formData.get('sex'),
         birthday: formData.get('birthday'),
         nationality: formData.get('nationality'),
-        age: Number(formData.get('age')),
+        age: formData.get('age') ? Number(formData.get('age')) : undefined,
     }
 
     const parsed = clientProfileSchema.safeParse(raw)
     if (!parsed.success) {
-        return { error: parsed.error.message, success: false }
+        return { error: parsed.error.issues[0]?.message ?? 'Validation failed', success: false }
     }
 
     const { error } = await supabase
         .from('client_profiles')
         .insert({
             ...parsed.data,
+            age: parsed.data.age ?? 0,
             user_id: user.id,
         })
 
     if (error) return { error: error.message, success: false }
 
-    revalidatePath('/admin/applicants')
+    revalidatePath('/admin/profiles')
     return { error: null, success: true }
 }
 
@@ -228,13 +228,13 @@ export async function updateApplicationStatus(
 ): Promise<ActionState> {
     const supabase = await createClient()
 
-    const user_id = formData.get('user_id')
+    const client_id = formData.get('user_id')
     const status = formData.get('status')
 
-    if (!user_id || typeof user_id !== 'string')
+    if (!client_id || typeof client_id !== 'string')
         return { error: 'Missing user ID', success: false }
 
-    const parsed = ClientStatusEnum.safeParse(status)
+    const parsed = ApplicationStatusEnum.safeParse(status)
     if (!parsed.success)
         return { error: 'Invalid status value', success: false }
 
@@ -244,10 +244,10 @@ export async function updateApplicationStatus(
             status: parsed.data,
             updated_at: new Date().toISOString(),
         })
-        .eq('user_id', user_id)
+        .eq('user_id', client_id)
 
     if (error) return { error: error.message, success: false }
 
-    revalidatePath('/admin/applicants')
+    revalidatePath('/admin/profiles')
     return { error: null, success: true }
 }
