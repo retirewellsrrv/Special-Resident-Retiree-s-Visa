@@ -1,17 +1,13 @@
-import { useState, useActionState } from "react";
+import { useState } from "react";
 import {
   Step1Data,
   Step2Data,
   Step4Data,
   ServicePlan,
 } from "@/components/applicant/application/types";
-import { submitApplication, type SubmitState } from "@/actions/applicant/application";
-
-const initialSubmitState: SubmitState = { error: null, success: false };
 
 export function useSRRVApplicationForm() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [submitState, formAction, submitPending] = useActionState(submitApplication, initialSubmitState);
 
   const [step1Data, setStep1Data] = useState<Step1Data>({
     name: "",
@@ -87,29 +83,6 @@ export function useSRRVApplicationForm() {
 
   const isLastStep = currentStep === 4;
 
-  const handleSubmit = async (formData: FormData) => {
-    formData.append("serviceType", selectedService);
-    formData.append("fullName", step1Data.fullName);
-    formData.append("dateOfBirth", step1Data.dateOfBirth);
-    formData.append("gender", step1Data.gender);
-    formData.append("nationality", step1Data.nationality);
-    formData.append("maritalStatus", step1Data.maritalStatus);
-    formData.append("email", step2Data.email);
-    formData.append("phoneCode", step2Data.phoneCode);
-    formData.append("phone", step2Data.phone);
-    formData.append("street", step2Data.street);
-    formData.append("city", step2Data.city);
-    formData.append("state", step2Data.state);
-    formData.append("zip", step2Data.zip);
-    formData.append("country", step2Data.country);
-    formData.append("phAddress", step2Data.phAddress);
-    formData.append("ecName", step2Data.ecName);
-    formData.append("ecRelationship", step2Data.ecRelationship);
-    formData.append("ecPhone", step2Data.ecPhone);
-
-    return formAction(formData);
-  };
-
   return {
     currentStep,
     setCurrentStep,
@@ -124,8 +97,5 @@ export function useSRRVApplicationForm() {
     next: handleNext,
     back: handleBack,
     isLastStep,
-    submitState,
-    submitPending,
-    handleSubmit,
   };
 }
