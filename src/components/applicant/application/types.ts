@@ -8,7 +8,6 @@ export type Step1Data = {
 
 export type Step2Data = {
   email: string;
-  phoneCode: string;
   phoneNumber: string;
   streetAddress: string;
   city: string;
@@ -21,7 +20,7 @@ export type Step2Data = {
   emergencyPhone: string;
 };
 
-export type ServicePlan = "basic" | "premium" | "vip" | "";
+export type ServiceType = "basic" | "premium" | "vip" | "";
 
 export type DocumentFile = {
   file: File | null;

@@ -29,6 +29,7 @@ export default function SRRVApplicationPage() {
     next,
     back,
     isLastStep,
+    errors,
   } = useSRRVApplicationForm();
 
   return (
@@ -91,15 +92,16 @@ export default function SRRVApplicationPage() {
 
               {/* Active step content */}
               {currentStep === 1 && (
-                <Step1 data={step1Data} onChange={step1Change} />
+                <Step1 data={step1Data} onChange={step1Change} errors={errors} />
               )}
               {currentStep === 2 && (
-                <Step2 data={step2Data} onChange={step2Change} />
+                <Step2 data={step2Data} onChange={step2Change} errors={errors} />
               )}
               {currentStep === 3 && (
                 <Step3
                   selected={selectedService}
                   onSelect={setSelectedService}
+                  error={errors.serviceType}
                 />
               )}
               {currentStep === 4 && (

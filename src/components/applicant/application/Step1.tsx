@@ -7,8 +7,6 @@ import {
   ComboboxContent,
   ComboboxItem,
   ComboboxList,
-  ComboboxValue,
-  ComboboxTrigger,
   ComboboxInput,
 } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
@@ -18,9 +16,11 @@ import { INPUT_CLASS, LABEL_CLASS } from "./constants";
 export function Step1({
   data,
   onChange,
+  errors = {},
 }: {
   data: Step1Data;
   onChange: (field: keyof Step1Data, value: string) => void;
+  errors?: Record<string, string>;
 }) {
   return (
     <>
@@ -43,8 +43,11 @@ export function Step1({
           placeholder="Enter your full legal name"
           value={data.name}
           onChange={(e) => onChange("name", e.target.value)}
-          className={INPUT_CLASS}
+          className={cn(INPUT_CLASS, errors.name && "border-red-500")}
         />
+        {errors.name && (
+          <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
@@ -57,29 +60,36 @@ export function Step1({
             type="date"
             value={data.birthday}
             onChange={(e) => onChange("birthday", e.target.value)}
-            className={cn(INPUT_CLASS, "text-neutral-700")}
+            className={cn(
+              INPUT_CLASS,
+              "text-neutral-700",
+              errors.birthday && "border-red-500",
+            )}
           />
+          {errors.birthday && (
+            <p className="text-sm text-red-500 mt-1">{errors.birthday}</p>
+          )}
         </div>
         <div>
-          <Label className={LABEL_CLASS}>Gender</Label>
+          <Label className={LABEL_CLASS}>Sex</Label>
           <Combobox
             value={data.sex}
             onValueChange={(v) => v && onChange("sex", v)}
           >
             <ComboboxInput
-              className={INPUT_CLASS}
-              placeholder="Select Gender"
+              className={cn(INPUT_CLASS, errors.sex && "border-red-500")}
+              placeholder="Select Sex"
             />
             <ComboboxContent>
               <ComboboxList>
                 <ComboboxItem value="male">Male</ComboboxItem>
                 <ComboboxItem value="female">Female</ComboboxItem>
-                <ComboboxItem value="prefer-not">
-                  Prefer not to say
-                </ComboboxItem>
               </ComboboxList>
             </ComboboxContent>
           </Combobox>
+          {errors.sex && (
+            <p className="text-sm text-red-500 mt-1">{errors.sex}</p>
+          )}
         </div>
       </div>
 
@@ -93,8 +103,11 @@ export function Step1({
             placeholder="e.g. United Kingdom"
             value={data.nationality}
             onChange={(e) => onChange("nationality", e.target.value)}
-            className={INPUT_CLASS}
+            className={cn(INPUT_CLASS, errors.nationality && "border-red-500")}
           />
+          {errors.nationality && (
+            <p className="text-sm text-red-500 mt-1">{errors.nationality}</p>
+          )}
         </div>
         <div>
           <Label className={LABEL_CLASS}>Marital Status</Label>
@@ -103,7 +116,10 @@ export function Step1({
             onValueChange={(v) => v && onChange("maritalStatus", v)}
           >
             <ComboboxInput
-              className={INPUT_CLASS}
+              className={cn(
+                INPUT_CLASS,
+                errors.maritalStatus && "border-red-500",
+              )}
               placeholder="Select Status"
             />
             <ComboboxContent>
@@ -116,6 +132,9 @@ export function Step1({
               </ComboboxList>
             </ComboboxContent>
           </Combobox>
+          {errors.maritalStatus && (
+            <p className="text-sm text-red-500 mt-1">{errors.maritalStatus}</p>
+          )}
         </div>
       </div>
     </>

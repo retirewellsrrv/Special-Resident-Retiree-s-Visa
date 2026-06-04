@@ -1,9 +1,9 @@
 import { Clock, Banknote, Building2, Star, Stethoscope } from "lucide-react";
-import { ServicePlan } from "./types";
+import { ServiceType } from "./types";
 
 export const servicePlans = [
   {
-    id: "basic" as ServicePlan,
+    id: "basic" as ServiceType,
     name: "Basic",
     subtitle: "FOR ACTIVE RETIREES",
     price: "$20,000.00",
@@ -17,7 +17,7 @@ export const servicePlans = [
     highlighted: false,
   },
   {
-    id: "premium" as ServicePlan,
+    id: "premium" as ServiceType,
     name: "Premium",
     subtitle: "INVESTMENT FLEXIBILITY",
     price: "$10,000.00*",
@@ -34,7 +34,7 @@ export const servicePlans = [
     highlighted: true,
   },
   {
-    id: "vip" as ServicePlan,
+    id: "vip" as ServiceType,
     name: "VIP",
     subtitle: "MEDICAL CARE FOCUS",
     price: "$10,000.00",
