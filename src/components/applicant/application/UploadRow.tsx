@@ -1,9 +1,53 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Upload, CheckCircle2 } from "lucide-react";
+import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
 import { DocumentFile } from "./types";
+
+// Accepted file types: PDF, DOC, DOCX, and common image formats
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/bmp",
+  "image/webp",
+  "image/tiff",
+  "image/tif",
+];
+const ACCEPTED_DOC_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+const ALL_ACCEPTED_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_DOC_TYPES];
+
+// Also support file extensions for fallback
+const ACCEPTED_EXTENSIONS = [
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".bmp",
+  ".webp",
+  ".tiff",
+  ".tif",
+];
+
+function isValidFileType(file: File): boolean {
+  // Check MIME type first
+  if (ALL_ACCEPTED_TYPES.includes(file.type)) {
+    return true;
+  }
+
+  // Fallback: check file extension for cases where MIME type is not recognized
+  const fileName = file.name.toLowerCase();
+  return ACCEPTED_EXTENSIONS.some((ext) => fileName.endsWith(ext));
+}
 
 export function UploadRow({
   title,
@@ -20,6 +64,27 @@ export function UploadRow({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const hasFile = !!file.file;
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    // Clear previous error
+    setError(null);
+
+    // Validate file type
+    if (!isValidFileType(f)) {
+      setError(
+        "Invalid file type. Please upload a PDF, DOC, DOCX, or image file (JPG, PNG, GIF, BMP, WEBP, TIFF).",
+      );
+      // Reset the input value so the same file can be selected again if needed
+      e.target.value = "";
+      return;
+    }
+
+    onUpload(f);
+  };
 
   return (
     <div className="flex items-start justify-between gap-4 py-4">
@@ -38,7 +103,13 @@ export function UploadRow({
           )}
         </div>
         <p className="text-xs text-neutral-400 leading-relaxed">{description}</p>
-        {hasFile && (
+        {error && (
+          <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            {error}
+          </p>
+        )}
+        {hasFile && !error && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
             {file.file!.name}
@@ -50,11 +121,8 @@ export function UploadRow({
           ref={inputRef}
           type="file"
           className="hidden"
-          accept=".pdf,.jpg,.jpeg,.png"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) onUpload(f);
-          }}
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
+          onChange={handleFileChange}
         />
         <Button
           variant="outline"

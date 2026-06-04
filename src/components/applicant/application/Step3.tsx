@@ -1,15 +1,17 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ServicePlan } from "./types";
+import { ServiceType } from "./types";
 import { servicePlans } from "./service-plans";
 
 export function Step3({
   selected,
   onSelect,
+  error,
 }: {
-  selected: ServicePlan;
-  onSelect: (plan: ServicePlan) => void;
+  selected: ServiceType;
+  onSelect: (plan: ServiceType) => void;
+  error?: string;
 }) {
   return (
     <>
@@ -21,6 +23,10 @@ export function Step3({
           Select the SRRV category that best fits your retirement plan.
         </p>
       </div>
+
+      {error && (
+        <p className="text-sm text-red-500 mb-4">{error}</p>
+      )}
 
       <div className="flex flex-col gap-4">
         {servicePlans.map((plan) => {
