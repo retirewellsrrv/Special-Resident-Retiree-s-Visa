@@ -45,8 +45,6 @@ export const registerSchema = z
       .optional(),
     nationality: z
       .string(),
-    address: z
-      .string(),
     phoneNumber: z
       .string()
       .min(1, 'Phone number is required'),

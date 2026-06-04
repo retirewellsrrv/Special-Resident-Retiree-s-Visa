@@ -1,7 +1,3 @@
-export type Service = {
-  id: number
-  type: 'basic' | 'premium' | 'vip'
-  price: number
-  description: string | null
-  is_available: boolean
-}
+import type { Database } from './supabase'
+
+export type Service = Database['public']['Tables']['services']['Row']
