@@ -32,60 +32,63 @@ export type Database = {
       applications: {
         Row: {
           application_code: string
+          city: string
           country: string
-          created_at: string | null
+          created_at: string
           emergency_name: string | null
           emergency_phone: string | null
           emergency_relationship: string | null
           id: number
-          marital_status: Database["public"]["Enums"]["marital_status"]
           payment_id: number
           ph_address: string | null
           phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
           state: string
           status: Database["public"]["Enums"]["application_status"]
-          street_address: string
+          street: string
           updated_at: string | null
           user_id: string
+          zip: string
         }
         Insert: {
           application_code: string
+          city: string
           country: string
-          created_at?: string | null
+          created_at?: string
           emergency_name?: string | null
           emergency_phone?: string | null
           emergency_relationship?: string | null
           id?: number
-          marital_status: Database["public"]["Enums"]["marital_status"]
           payment_id: number
           ph_address?: string | null
           phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
           state: string
           status?: Database["public"]["Enums"]["application_status"]
-          street_address: string
+          street: string
           updated_at?: string | null
           user_id: string
+          zip: string
         }
         Update: {
           application_code?: string
+          city?: string
           country?: string
-          created_at?: string | null
+          created_at?: string
           emergency_name?: string | null
           emergency_phone?: string | null
           emergency_relationship?: string | null
           id?: number
-          marital_status?: Database["public"]["Enums"]["marital_status"]
           payment_id?: number
           ph_address?: string | null
           phone_number?: string
           service_type?: Database["public"]["Enums"]["service_type"]
           state?: string
           status?: Database["public"]["Enums"]["application_status"]
-          street_address?: string
+          street?: string
           updated_at?: string | null
           user_id?: string
+          zip?: string
         }
         Relationships: [
           {
@@ -113,30 +116,30 @@ export type Database = {
       }
       client_profiles: {
         Row: {
-          age: number | null
-          birthday: string | null
+          age: number
+          birthday: string
+          marital_status: Database["public"]["Enums"]["marital_status"]
           name: string
-          nationality: string | null
-          gender: Database["public"]["Enums"]["gender"]
-          address: string | null
+          nationality: string
+          sex: Database["public"]["Enums"]["sex"]
           user_id: string
         }
         Insert: {
-          age?: number | null
-          birthday?: string | null
+          age: number
+          birthday: string
+          marital_status?: Database["public"]["Enums"]["marital_status"]
           name: string
-          nationality?: string | null
-          gender: Database["public"]["Enums"]["gender"]
-          address?: string | null
+          nationality: string
+          sex: Database["public"]["Enums"]["sex"]
           user_id: string
         }
         Update: {
-          age?: number | null
-          birthday?: string | null
+          age?: number
+          birthday?: string
+          marital_status?: Database["public"]["Enums"]["marital_status"]
           name?: string
-          nationality?: string | null
-          gender?: Database["public"]["Enums"]["gender"]
-          address?: string | null
+          nationality?: string
+          sex?: Database["public"]["Enums"]["sex"]
           user_id?: string
         }
         Relationships: []
@@ -213,7 +216,7 @@ export type Database = {
           amount: number
           created_at: string
           id: number
-          payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_method: Database["public"]["Enums"]["payment_methods"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
           updated_at: string | null
@@ -223,7 +226,7 @@ export type Database = {
           amount: number
           created_at: string
           id?: number
-          payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_method: Database["public"]["Enums"]["payment_methods"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
           updated_at?: string | null
@@ -233,7 +236,7 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: number
-          payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_method?: Database["public"]["Enums"]["payment_methods"]
           status?: Database["public"]["Enums"]["payment_status"]
           transaction_code?: string
           updated_at?: string | null
@@ -281,15 +284,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      application_status: "draft" | "submitted" | "under_review" | "pending_documents" | "approved" | "rejected"
-      document_status: "pending" | "verified" | "rejected"
-      document_type: "passport" | "birth_certificate" | "marriage_certificate" | "bank_statement" | "medical_certificate" | "photo" | "other"
-      gender: "male" | "female" | "other" | "prefer_not"
-      marital_status: "single" | "married" | "widowed" | "divorced" | "separated"
-      payment_method: "credit_card" | "debit_card" | "bank_transfer" | "gcash" | "maya"
-      payment_status: "pending" | "paid" | "failed" | "refunded"
+      application_status: "processing" | "paused" | "approved" | "rejected"
+      document_status: "processing" | "accepted" | "rejected" | "action need"
+      document_type: "passport" | "visa" | "nbi" | "pension" | "medical"
+      marital_status: "single" | "married" | "widowed" | "divorced"
+      payment_methods: "credit card" | "debit card" | "e-wallet"
+      payment_status: "processing" | "pending" | "cancelled" | "success"
       service_type: "basic" | "premium" | "vip"
-      user_role: "admin" | "applicant"
+      sex: "male" | "female"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -417,15 +419,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      application_status: ["draft", "submitted", "under_review", "pending_documents", "approved", "rejected"],
-      document_status: ["pending", "verified", "rejected"],
-      document_type: ["passport", "birth_certificate", "marriage_certificate", "bank_statement", "medical_certificate", "photo", "other"],
-      gender: ["male", "female", "other", "prefer_not"],
-      marital_status: ["single", "married", "widowed", "divorced", "separated"],
-      payment_method: ["credit_card", "debit_card", "bank_transfer", "gcash", "maya"],
-      payment_status: ["pending", "paid", "failed", "refunded"],
+      application_status: ["processing", "paused", "approved", "rejected"],
+      document_status: ["processing", "accepted", "rejected", "action need"],
+      document_type: ["passport", "visa", "nbi", "pension", "medical"],
+      marital_status: ["single", "married", "widowed", "divorced"],
+      payment_methods: ["credit card", "debit card", "e-wallet"],
+      payment_status: ["processing", "pending", "cancelled", "success"],
       service_type: ["basic", "premium", "vip"],
-      user_role: ["admin", "applicant"],
+      sex: ["male", "female"],
     },
   },
 } as const

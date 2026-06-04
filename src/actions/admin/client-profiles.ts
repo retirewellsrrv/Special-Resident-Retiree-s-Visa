@@ -39,10 +39,10 @@ export async function getClientStats(): Promise<ClientStats> {
         { count: paused },
     ] = await Promise.all([
         supabase.from('client_profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'submitted'),
+        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'paused'),
+        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'processing'),
         supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
         supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'pending_documents'),
     ])
 
     return {
@@ -115,7 +115,7 @@ export async function getClientProfiles() {
 
     const { data, error } = await supabase
         .from('client_profiles')
-        .select('user_id, name, gender, birthday, nationality, age, address')
+        .select('user_id, name, sex, birthday, nationality, age')
         .order('name', { ascending: true })
 
     if (error) throw new Error(error.message)
@@ -136,7 +136,7 @@ export async function updateClientProfile(
 
     const raw = {
         name: formData.get('name'),
-        gender: formData.get('gender'),
+        sex: formData.get('sex'),
         birthday: formData.get('birthday'),
         nationality: formData.get('nationality'),
         age: formData.get('age') ? Number(formData.get('age')) : undefined,
@@ -174,7 +174,7 @@ export async function resolveReview(
     const { error } = await supabase
         .from('applications')
         .update({
-            status: 'submitted',
+            status: 'processing',
             updated_at: new Date().toISOString(),
         })
         .eq('user_id', client_id)
@@ -197,7 +197,7 @@ export async function createClientProfile(
 
     const raw = {
         name: formData.get('name'),
-        gender: formData.get('gender'),
+        sex: formData.get('sex'),
         birthday: formData.get('birthday'),
         nationality: formData.get('nationality'),
         age: formData.get('age') ? Number(formData.get('age')) : undefined,
@@ -212,6 +212,7 @@ export async function createClientProfile(
         .from('client_profiles')
         .insert({
             ...parsed.data,
+            age: parsed.data.age ?? 0,
             user_id: user.id,
         })
 

@@ -17,9 +17,8 @@ export type AppRow = {
 
 export type AppStats = {
     total: number
-    submitted: number
-    under_review: number
-    pending_docs: number
+    paused: number
+    processing: number
     approved: number
     rejected: number
 }
@@ -31,25 +30,22 @@ export async function getApplicationStats(): Promise<AppStats> {
 
     const [
         { count: total },
-        { count: submitted },
-        { count: under_review },
-        { count: pending_docs },
+        { count: paused },
+        { count: processing },
         { count: approved },
         { count: rejected },
     ] = await Promise.all([
         supabase.from('applications').select('*', { count: 'exact', head: true }),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'submitted'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'under_review'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'pending_documents'),
+        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'paused'),
+        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'processing'),
         supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
         supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
     ])
 
     return {
         total: total ?? 0,
-        submitted: submitted ?? 0,
-        under_review: under_review ?? 0,
-        pending_docs: pending_docs ?? 0,
+        paused: paused ?? 0,
+        processing: processing ?? 0,
         approved: approved ?? 0,
         rejected: rejected ?? 0,
     }

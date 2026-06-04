@@ -56,12 +56,14 @@ export async function submitApplication(
   const { error: profileError } = await supabase.from('client_profiles').upsert({
     user_id: user.id,
     name: personalParsed.data.fullName,
-    gender: personalParsed.data.gender as any,
+    sex: personalParsed.data.gender as any,
     birthday: personalParsed.data.dateOfBirth,
     nationality: personalParsed.data.nationality,
-    age: null,
+    age: personalParsed.data.dateOfBirth
+      ? Math.floor((Date.now() - new Date(personalParsed.data.dateOfBirth).getTime()) / (365.25 * 86400000))
+      : 0,
     address: `${contactParsed.data.street}, ${contactParsed.data.city}, ${contactParsed.data.state} ${contactParsed.data.zip}, ${contactParsed.data.country}`,
-  }, { onConflict: 'user_id' })
+  } as any, { onConflict: 'user_id' })
 
   if (profileError) return { error: profileError.message, success: false }
 

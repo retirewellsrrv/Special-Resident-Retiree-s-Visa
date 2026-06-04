@@ -13,20 +13,16 @@ const SERVICE_TYPES = ['basic', 'premium', 'vip'] as const
 
 const STATUS_STYLES: Record<string, string> = {
     approved: 'bg-green-100 text-green-800',
-    submitted: 'bg-blue-100 text-blue-800',
-    under_review: 'bg-purple-100 text-purple-800',
-    pending_documents: 'bg-yellow-100 text-yellow-800',
+    paused: 'bg-blue-100 text-blue-800',
+    processing: 'bg-purple-100 text-purple-800',
     rejected: 'bg-red-100 text-red-700',
-    draft: 'bg-gray-100 text-gray-700',
 }
 
 const STATUS_DOT: Record<string, string> = {
     approved: 'bg-green-500',
-    submitted: 'bg-blue-400',
-    under_review: 'bg-purple-400',
-    pending_documents: 'bg-yellow-400',
+    paused: 'bg-blue-400',
+    processing: 'bg-purple-400',
     rejected: 'bg-red-500',
-    draft: 'bg-gray-400',
 }
 
 function initials(name: string) {

@@ -33,9 +33,8 @@ import { ChevronLeft, ChevronRight, FileText } from 'lucide-react'
 import { updateAppStatus, type AppStats, type AppRow } from '@/actions/admin/applications-admin'
 
 const STATUS_LABELS: Record<string, string> = {
-  submitted: 'Submitted',
-  under_review: 'Under Review',
-  pending_documents: 'Pending Documents',
+  paused: 'Paused',
+  processing: 'Processing',
   approved: 'Approved',
   rejected: 'Rejected',
 }
@@ -93,9 +92,8 @@ export function ApplicationsClient({
 
   const statCards = [
     { label: 'Total', value: stats.total },
-    { label: 'Submitted', value: stats.submitted },
-    { label: 'Under Review', value: stats.under_review },
-    { label: 'Pending Docs', value: stats.pending_docs },
+    { label: 'Paused', value: stats.paused },
+    { label: 'Processing', value: stats.processing },
     { label: 'Approved', value: stats.approved },
     { label: 'Rejected', value: stats.rejected },
   ]

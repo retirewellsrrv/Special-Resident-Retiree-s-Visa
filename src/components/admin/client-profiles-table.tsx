@@ -7,7 +7,7 @@ import { Table } from '../ui/table'
 type Profile = {
     user_id: string
     name: string
-    gender: 'male' | 'female' | 'other' | 'prefer_not'
+    sex: 'male' | 'female'
     birthday: string
     nationality: string
     age: number | null
@@ -46,11 +46,9 @@ export function ClientsTable({ profiles }: { profiles: Profile[] }) {
                                         </Field>
 
                                         <Field label="Gender">
-                                            <select name="gender" defaultValue={p.gender}>
+                                            <select name="sex" defaultValue={p.sex}>
                                                 <option value="male">Male</option>
                                                 <option value="female">Female</option>
-                                                <option value="other">Other</option>
-                                                <option value="prefer_not">Prefer not to say</option>
                                             </select>
                                         </Field>
 
@@ -97,7 +95,7 @@ export function ClientsTable({ profiles }: { profiles: Profile[] }) {
                         ) : (
                             <tr key={p.user_id} className="border-b hover:bg-muted/40">
                                 <td className="py-2 pr-4">{p.name}</td>
-                                <td className="py-2 pr-4 capitalize">{p.gender?.replace('_', ' ')}</td>
+                                <td className="py-2 pr-4 capitalize">{p.sex}</td>
                                 <td className="py-2 pr-4">{p.birthday?.slice(0, 10)}</td>
                                 <td className="py-2 pr-4">{p.nationality}</td>
                                 <td className="py-2 pr-4">{p.age ?? '\u2014'}</td>

@@ -63,7 +63,6 @@ describe('registerSchema', () => {
     sex: 'male',
     birthday: '1990-01-15',
     nationality: 'American',
-    address: '123 Main St',
     phoneNumber: '+1234567890',
     password: 'SecurePass123',
     confirmPassword: 'SecurePass123',
