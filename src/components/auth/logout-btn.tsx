@@ -1,11 +1,10 @@
 "use client";
 
-import { useTransition, useEffect, useState } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { logoutAction, getSession } from "@/actions/auth";
+import { logoutAction } from "@/actions/auth";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import type { User } from "@supabase/supabase-js";
 import type { MouseEventHandler } from "react";
 
 interface LogoutBtnProps {
@@ -16,7 +15,6 @@ interface LogoutBtnProps {
 export function LogoutBtn({ className, onClick }: LogoutBtnProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [user, setUser] = useState<User | null>(null);
   const handleLogout = () => {
     startTransition(async () => {
       await logoutAction();
@@ -24,9 +22,6 @@ export function LogoutBtn({ className, onClick }: LogoutBtnProps) {
       router.refresh();
     });
   };
-  useEffect(() => {
-    getSession().then(setUser);
-  }, []);
 
   return (
     <Button
@@ -37,7 +32,7 @@ export function LogoutBtn({ className, onClick }: LogoutBtnProps) {
         onClick?.(e);
         handleLogout();
       }}
-      disabled={pending || !user}
+      disabled={pending}
     >
       {pending ? "Logging out…" : "Log out"}
     </Button>

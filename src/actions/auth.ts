@@ -16,32 +16,8 @@ import {
 } from '@/schemas/auth'
 import { getUserRole } from '@/utils/auth/getUser'
 
-/*
-[/register page]
-      │
-      ▼
-User fills form → registerAction()
-      │
-      ├─ validation fails  → show error on form
-      │
-      └─ signUp() success
-            │
-            ▼
-      redirect('/confirm-email')   ← "Check your email" page
-            │
-            │   [meanwhile Supabase sends the email]
-            │
-            ▼
-      User opens email → clicks "Confirm email" button
-            │
-            ▼
-      GET /api/auth/callback?token_hash=xxx&type=email
-            │
-            └─ verifyOtp()
-                  ├─ success + role === 'applicant' → /applicant/dashboard
-                  ├─ success + role === 'admin'     → /admin/dashboard
-                  └─ error/expired                  → /confirm-email?error=expired
-*/
+// Register flow: registerAction() → signUp() → redirect /confirm-email
+// Email flow: user clicks link → Supabase verifies → callback?code=xxx → exchangeCodeForSession() → dashboard
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -152,7 +128,7 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${origin}/applicant/dashboard`,
+      emailRedirectTo: `${origin}/api/auth/callback?roleType=applicant`,
       data: {
         role: 'applicant',
         name: fullName,
@@ -170,8 +146,8 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
   }
 
   revalidatePath('/', 'layout')
-  // redirect('/confirm-email')
-  return { success: true, message: 'Please check your email to confirm your account' }
+  redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
+  // return { success: true, message: 'Please check your email to confirm your account' }
 }
 
 // ─────────────────────────────────────────────
@@ -229,7 +205,7 @@ export async function CreateAdminAction(input: RegisterInput): Promise<ActionRes
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${origin}/admin/dashboard`,
+      emailRedirectTo: `${origin}/api/auth/callback?roleType=admin`,
       data: {
         role: 'admin',
         name: fullName,
@@ -242,17 +218,9 @@ export async function CreateAdminAction(input: RegisterInput): Promise<ActionRes
     return { success: false, error: signUpError.message }
   }
 
-  if (!data.user) {
-    return { success: false, error: 'Failed to create account. Please try again.' }
-  }
-
-  if (!data.session) {
-    return { success: false, error: 'Please check your inbox for a confirmation email.' }
-  }
-
   revalidatePath('/', 'layout')
-  // redirect('/confirm-email')
-  return { success: true, message: 'Please check your email to confirm your account' }
+  redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
+  // return { success: true, message: 'Please check your email to confirm your account' }
 }
 
 

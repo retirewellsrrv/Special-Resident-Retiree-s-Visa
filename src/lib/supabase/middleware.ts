@@ -47,7 +47,7 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const user = await getUser();
+  const user = await getSession();
   const { pathname } = request.nextUrl;
   console.log("🔵 middleware hit:", pathname);
   console.log("👤 user:", user?.id ?? "null");

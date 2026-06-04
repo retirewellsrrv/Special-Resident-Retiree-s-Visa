@@ -3,7 +3,13 @@ import { LoginForm } from "@/components/auth/login-form";
 
 import bgImage from "@/assets/images/bg-rice-terraces.png"
 
-export default function LoginPage() {
+interface Props {
+  searchParams: Promise<{ error?: string }>
+}
+
+export default async function LoginPage({ searchParams }: Props) {
+  const { error } = await searchParams
+
   return (
     <main
       className="relative flex min-h-screen w-full items-center justify-center px-4 py-8"
@@ -13,7 +19,7 @@ export default function LoginPage() {
         backgroundPosition: "center",
       }}
     >
-      <LoginForm />
+      <LoginForm error={error} />
 
       {/* Bottom legal info */}
       <footer className="pointer-events-none absolute bottom-6 w-full px-4 text-center">
