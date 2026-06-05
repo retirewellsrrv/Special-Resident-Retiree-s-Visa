@@ -362,7 +362,7 @@ export function SignupForm({
                       value={field.value ?? ''}
                       onChange={field.onChange}
                       inputComponent={Input}
-                      numberInputProps={{ className: 'h-11' }}
+                      numberInputProps={{ className: 'h-11', placeholder: '09XX XXX XXXX' }}
                     />
                   )}
                 />
