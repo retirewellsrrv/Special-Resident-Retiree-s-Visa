@@ -1,5 +1,4 @@
 import ConfirmEmailForm from '@/components/auth/confirm-email'
-import bgImage from '@/assets/images/bg-rice-terraces.png'
 import Link from 'next/link'
 
 interface Props {
@@ -10,14 +9,7 @@ export default async function ConfirmEmailPage({ searchParams }: Props) {
   const { email } = await searchParams
 
   return (
-    <main
-      className="relative flex min-h-screen w-full items-center justify-center px-4 py-8"
-      style={{
-        backgroundImage: `linear-gradient(rgba(11, 28, 48, 0.45), rgba(11, 28, 48, 0.45)), url('${bgImage.src}')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
+    <>
       <ConfirmEmailForm
         email={email ?? ''}
       />
@@ -34,6 +26,6 @@ export default async function ConfirmEmailPage({ searchParams }: Props) {
           </Link>
         </p>
       </footer>
-    </main>
+    </>
   )
 }
