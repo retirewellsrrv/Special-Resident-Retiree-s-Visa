@@ -218,10 +218,11 @@ export async function forgotPasswordAction(email: string): Promise<ActionResult>
     return { success: false, error: 'Please enter a valid email address.' }
   }
 
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
+    redirectTo: `${origin}/reset-password`,
   })
 
   if (error) {
@@ -268,11 +269,12 @@ export async function getSession() {
 
 export async function oauthAction(provider: Provider): Promise<ActionResult> {
   const supabase = await createClient()
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
+      redirectTo: `${origin}/api/auth/callback`,
     },
   })
 
