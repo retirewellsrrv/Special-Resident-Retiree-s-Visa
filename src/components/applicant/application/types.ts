@@ -1,3 +1,5 @@
+import type { DocumentType } from "@/schemas/document";
+
 export type Step1Data = {
   name: string;
   birthday: string;
@@ -27,10 +29,4 @@ export type DocumentFile = {
   name: string;
 };
 
-export type Step4Data = {
-  passportBio: DocumentFile;
-  validVisa: DocumentFile;
-  nbiClearance: DocumentFile;
-  pensionCert: DocumentFile;
-  medicalExam: DocumentFile;
-};
+export type Step4Data = Record<DocumentType, DocumentFile>;

@@ -3,8 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { personalInfoSchema, contactInfoSchema } from '@/schemas/application'
+import { DocumentTypeEnum, DocumentFormatEnum, documentInsertSchema } from '@/schemas/document'
 
 export type SubmitState = { error: string | null; success: boolean }
+
+const DOC_TYPES = ["passport", "visa", "nbi", "pension", "medical"] as const
 
 export async function submitApplication(
   _prev: SubmitState,
@@ -67,14 +70,63 @@ export async function submitApplication(
 
   if (profileError) return { error: profileError.message, success: false }
 
-  const { error: appError } = await supabase.from('applications').insert({
+  const { data: app, error: appError } = await supabase.from('applications').insert({
     user_id: user.id,
     service_type: serviceType as any,
     application_code: code,
     status: 'submitted',
-  } as any)
+  } as any).select('id').single()
 
-  if (appError) return { error: appError.message, success: false }
+  if (appError || !app) return { error: appError?.message ?? 'Failed to create application', success: false }
+
+  // ── Validate and insert documents ──────────────────────────────────────────
+  const docErrors: string[] = []
+
+  for (const docType of DOC_TYPES) {
+    const file = formData.get(`doc_${docType}_file`) as File | null
+    const name = formData.get(`doc_${docType}_name`) as string | null
+    const formatRaw = formData.get(`doc_${docType}_format`) as string | null
+
+    if (!file || !name) continue
+
+    const typeParsed = DocumentTypeEnum.safeParse(docType)
+    if (!typeParsed.success) {
+      docErrors.push(`Invalid document type: ${docType}`)
+      continue
+    }
+
+    const formatParsed = DocumentFormatEnum.safeParse(formatRaw)
+    if (!formatParsed.success) {
+      docErrors.push(`Invalid file format for ${docType}: ${formatRaw}`)
+      continue
+    }
+
+    const path = `pending/${docType}/${app.id}-${name}`
+
+    const docInsert = {
+      application_id: app.id,
+      format: formatParsed.data,
+      name,
+      path,
+      status: 'processing' as const,
+      type: typeParsed.data,
+    }
+
+    const docParsed = documentInsertSchema.safeParse(docInsert)
+    if (!docParsed.success) {
+      docErrors.push(`Invalid document data for ${docType}`)
+      continue
+    }
+
+    const { error: docError } = await supabase.from('documents').insert(docParsed.data as any)
+    if (docError) {
+      docErrors.push(`Failed to save ${docType}: ${docError.message}`)
+    }
+  }
+
+  if (docErrors.length > 0) {
+    return { error: docErrors.join('; '), success: false }
+  }
 
   revalidatePath('/applicant/application')
   return { error: null, success: true }

@@ -102,7 +102,7 @@ export type Database = {
             foreignKeyName: "applications_service_type_fkey"
             columns: ["service_type"]
             isOneToOne: false
-            referencedRelation: "services"
+            referencedRelation: "service_plans"
             referencedColumns: ["type"]
           },
           {
@@ -148,7 +148,9 @@ export type Database = {
         Row: {
           application_id: number
           created_at: string
+          format: Database["public"]["Enums"]["document_format"]
           id: number
+          name: string
           path: string
           status: Database["public"]["Enums"]["document_status"]
           type: Database["public"]["Enums"]["document_type"]
@@ -157,7 +159,9 @@ export type Database = {
         Insert: {
           application_id: number
           created_at?: string
+          format: Database["public"]["Enums"]["document_format"]
           id?: number
+          name: string
           path: string
           status: Database["public"]["Enums"]["document_status"]
           type: Database["public"]["Enums"]["document_type"]
@@ -166,7 +170,9 @@ export type Database = {
         Update: {
           application_id?: number
           created_at?: string
+          format?: Database["public"]["Enums"]["document_format"]
           id?: number
+          name?: string
           path?: string
           status?: Database["public"]["Enums"]["document_status"]
           type?: Database["public"]["Enums"]["document_type"]
@@ -252,6 +258,51 @@ export type Database = {
           },
         ]
       }
+      service_plans: {
+        Row: {
+          created_at: string
+          description: string
+          highlighted: boolean
+          id: number
+          is_available: boolean
+          name: string
+          price: number
+          price_note: string | null
+          subtitle: string
+          tags: string[]
+          type: Database["public"]["Enums"]["service_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          highlighted?: boolean
+          id?: number
+          is_available?: boolean
+          name: string
+          price: number
+          price_note?: string | null
+          subtitle: string
+          tags?: string[]
+          type: Database["public"]["Enums"]["service_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          highlighted?: boolean
+          id?: number
+          is_available?: boolean
+          name?: string
+          price?: number
+          price_note?: string | null
+          subtitle?: string
+          tags?: string[]
+          type?: Database["public"]["Enums"]["service_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           description: string | null
@@ -285,6 +336,18 @@ export type Database = {
     }
     Enums: {
       application_status: "processing" | "paused" | "approved" | "rejected"
+      document_format:
+        | "pdf"
+        | "doc"
+        | "docx"
+        | "jpg"
+        | "png"
+        | "gif"
+        | "bmp"
+        | "webp"
+        | "tiff"
+        | "tif"
+        | "jpeg"
       document_status: "processing" | "accepted" | "rejected" | "action need"
       document_type: "passport" | "visa" | "nbi" | "pension" | "medical"
       marital_status: "single" | "married" | "widowed" | "divorced"
@@ -420,6 +483,19 @@ export const Constants = {
   public: {
     Enums: {
       application_status: ["processing", "paused", "approved", "rejected"],
+      document_format: [
+        "pdf",
+        "doc",
+        "docx",
+        "jpg",
+        "png",
+        "gif",
+        "bmp",
+        "webp",
+        "tiff",
+        "tif",
+        "jpeg",
+      ],
       document_status: ["processing", "accepted", "rejected", "action need"],
       document_type: ["passport", "visa", "nbi", "pension", "medical"],
       marital_status: ["single", "married", "widowed", "divorced"],
