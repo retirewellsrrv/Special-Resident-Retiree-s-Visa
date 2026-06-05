@@ -34,10 +34,9 @@ export const metadata: Metadata = {
   description: "Your trusted partner for visa and immigration services",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const user = await getSession();
   return (
     <html
       lang="en"
