@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import type { Provider } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase/client'
 
 import { headers } from 'next/headers'
 
@@ -252,7 +253,7 @@ export async function savePasswordChange(email: string): Promise<ActionResult> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/change-password`,
+    redirectTo: `${origin}/reset-password`,
   })
 
   if (error) {
