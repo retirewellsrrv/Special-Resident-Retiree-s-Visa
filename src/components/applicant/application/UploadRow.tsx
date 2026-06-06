@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
-import { DocumentFile } from "./types";
+type DocumentFile = { file: File | null; name: string };
 
 // Accepted file types: PDF, DOC, DOCX, and common image formats
 const ACCEPTED_IMAGE_TYPES = [
@@ -54,31 +54,33 @@ export function UploadRow({
   description,
   required,
   file,
+  externalError,
   onUpload,
 }: {
   title: string;
   description: string;
   required: boolean;
   file: DocumentFile;
+  externalError?: string;       // ← new
   onUpload: (f: File) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const hasFile = !!file.file;
-  const [error, setError] = useState<string | null>(null);
+  const [internalError, setInternalError] = useState<string | null>(null);
+
+  // Internal type-error takes priority; fall back to external (missing file) error
+  const displayError = internalError ?? externalError ?? null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
 
-    // Clear previous error
-    setError(null);
+    setInternalError(null);
 
-    // Validate file type
     if (!isValidFileType(f)) {
-      setError(
+      setInternalError(
         "Invalid file type. Please upload a PDF, DOC, DOCX, or image file (JPG, PNG, GIF, BMP, WEBP, TIFF).",
       );
-      // Reset the input value so the same file can be selected again if needed
       e.target.value = "";
       return;
     }
@@ -87,7 +89,12 @@ export function UploadRow({
   };
 
   return (
-    <div className="flex items-start justify-between gap-4 py-4">
+    <div
+      className={cn(
+        "flex items-start justify-between gap-4 py-4",
+        displayError && !hasFile && "rounded-lg bg-red-50/50",
+      )}
+    >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">
@@ -103,19 +110,24 @@ export function UploadRow({
           )}
         </div>
         <p className="text-xs text-neutral-400 leading-relaxed">{description}</p>
-        {error && (
+
+        {/* Error: internal type-check or external missing-file */}
+        {displayError && (
           <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
             <AlertCircle className="w-3 h-3" />
-            {error}
+            {displayError}
           </p>
         )}
-        {hasFile && !error && (
+
+        {/* Success state — only when no errors */}
+        {hasFile && !displayError && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
             {file.file!.name}
           </p>
         )}
       </div>
+
       <div className="shrink-0">
         <input
           ref={inputRef}
@@ -132,7 +144,9 @@ export function UploadRow({
             "text-xs font-semibold flex items-center gap-1.5 border rounded-md px-3 py-1.5 transition-colors",
             hasFile
               ? "border-green-400 text-green-600 hover:bg-green-50"
-              : "border-[#8B1A2B]/50 text-[#8B1A2B] hover:bg-[#8B1A2B]/5",
+              : displayError
+                ? "border-red-400 text-red-600 hover:bg-red-50"
+                : "border-[#8B1A2B]/50 text-[#8B1A2B] hover:bg-[#8B1A2B]/5",
           )}
         >
           <Upload className="w-3.5 h-3.5" />

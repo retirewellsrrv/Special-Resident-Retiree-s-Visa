@@ -1,14 +1,19 @@
 import { Separator } from "@/components/ui/separator";
 import { UploadRow } from "./UploadRow";
 import { documentSections } from "./document-sections";
-import { Step4Data } from "./types";
+import type { DocumentType } from "@/schemas/document";
+
+type DocumentFile = { file: File | null; name: string };
+type Step4Data = Record<DocumentType, DocumentFile>;
 
 export function Step4({
   data,
   onUpload,
+  errors = {},
 }: {
   data: Step4Data;
   onUpload: (key: keyof Step4Data, file: File) => void;
+  errors?: Record<string, string>;
 }) {
   return (
     <>
@@ -45,6 +50,7 @@ export function Step4({
                       description={doc.description}
                       required={doc.required}
                       file={data[doc.key]}
+                      externalError={errors[doc.key]}
                       onUpload={(f) => onUpload(doc.key, f)}
                     />
                   </div>

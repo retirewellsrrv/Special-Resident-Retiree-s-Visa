@@ -30,6 +30,7 @@ export default function SRRVApplicationPage() {
     back,
     isLastStep,
     errors,
+    submitError,
   } = useSRRVApplicationForm();
 
   return (
@@ -92,20 +93,35 @@ export default function SRRVApplicationPage() {
 
               {/* Active step content */}
               {currentStep === 1 && (
-                <Step1 data={step1Data} onChange={step1Change} errors={errors} />
+                <Step1
+                  data={step1Data}
+                  onChange={step1Change}
+                  errors={errors}
+                />
               )}
               {currentStep === 2 && (
-                <Step2 data={step2Data} onChange={step2Change} errors={errors} />
+                <Step2
+                  data={step2Data}
+                  onChange={step2Change}
+                  errors={errors}
+                />
               )}
               {currentStep === 3 && (
                 <Step3
                   selected={selectedService}
                   onSelect={setSelectedService}
-                  error={errors.serviceType}
+                  error={errors.service_type}
                 />
               )}
               {currentStep === 4 && (
-                <Step4 data={step4Data} onUpload={docUpload} />
+                <Step4 data={step4Data} onUpload={docUpload} errors={errors} />
+              )}
+
+              {/* Submit error banner */}
+              {submitError && (
+                <div className="mt-6 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                  {submitError}
+                </div>
               )}
 
               {/* Navigation buttons */}

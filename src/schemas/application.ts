@@ -8,10 +8,10 @@ export const ServiceTypeEnum = z.enum(["basic", "premium", "vip"], {
   error: "Please select a valid service type: Basic, Premium, or VIP",
 });
 export const ApplicationStatusEnum = z.enum([
-  "processing",
   "paused",
   "approved",
   "rejected",
+  "pending",
 ]);
 
 // ─────────────────────────────────────────────
@@ -47,48 +47,7 @@ export const applicationUpdateSchema = applicationInsertSchema
 // APPLICATION FORM SCHEMA (Multi-step form)
 // ─────────────────────────────────────────────
 
-export const personalInfoSchema = z.object({
-  fullName: z.string().min(1, "Full name is required"),
-  dateOfBirth: z
-    .string()
-    .min(1, "Date of birth is required")
-    .refine((val) => {
-      const date = new Date(val);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return date < today;
-    }, "Date of birth must be valid"),
-  gender: z.enum(["male", "female"], {
-    error: "Please select a valid gender",
-  }),
-  nationality: z.string().min(1, "Nationality is required"),
-  maritalStatus: z.string().min(1, "Marital status is required"),
-});
-
-export const contactInfoSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Invalid email address")
-    .max(254, "Email address is too long"),
-  phoneCode: z.string().optional(),
-  phone: z
-    .string()
-    .min(1, "Phone number is required")
-    .regex(/^\+?[1-9]\d{6,14}$/, { message: "Invalid phone number format" }),
-  street: z.string().min(1, "Street address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State/Province is required"),
-  zip: z.string().min(1, "ZIP/Postal code is required"),
-  country: z.string().min(1, "Country is required"),
-  phAddress: z.string().nullable(),
-  ecName: z.string().nullable(),
-  ecRelationship: z.string().nullable(),
-  ecPhone: z.string().nullable(),
-});
-
 export const applicationFormSchema = z.object({
-  // Personal Information (Step 1)
   name: z.string().min(1, "Name is required"),
   birthday: z
     .string()
@@ -103,28 +62,26 @@ export const applicationFormSchema = z.object({
     error: "Please select a valid sex",
   }),
   nationality: z.string().min(1, "Nationality is required"),
-  maritalStatus: z.string().min(1, "Marital status is required"),
+  marital_status: z.string().min(1, "Marital status is required"),
   email: z
     .string()
     .min(1, "Email is required")
     .email("Invalid email address")
     .max(254, "Email address is too long"),
-  phoneNumber: z
+  phone_number: z
     .string()
     .min(1, "Phone number is required")
     .regex(/^\+?[1-9]\d{6,14}$/, { message: "Invalid phone number format" }),
-  streetAddress: z.string().min(1, "Street address is required"),
+  street: z.string().min(1, "Street address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State/Province is required"),
   zip: z.string().min(1, "ZIP/Postal code is required"),
   country: z.string().min(1, "Country is required"),
-  phAddress: z.string().nullable(),
-  emergencyName: z.string().nullable(),
-  emergencyRelationship: z.string().nullable(),
-  emergencyPhone: z.string().nullable(),
-
-  // Service Selection (Step 3)
-  serviceType: ServiceTypeEnum,
+  ph_address: z.string().nullable(),
+  emergency_name: z.string().nullable(),
+  emergency_relationship: z.string().nullable(),
+  emergency_phone: z.string().nullable(),
+  service_type: ServiceTypeEnum,
 });
 
 export type ApplicationInsertInput = z.infer<typeof applicationInsertSchema>;

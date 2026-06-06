@@ -6,8 +6,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig = {
     allowedDevOrigins: ['http://localhost:3000', 'https://srrv.vercel.app', '192.168.254.103', '10.229.139.153'],
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '50mb',
+        },
+    },
     turbopack: {
-        root: __dirname, // makes the project folder as root
+        root: __dirname,
     },
 };
 
