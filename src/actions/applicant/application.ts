@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { applicationFormSchema } from "@/schemas/application";
 import {
   DocumentTypeEnum,
@@ -107,8 +107,30 @@ export async function submitApplication(
       success: false,
     };
 
-  // ── Validate and insert documents ──────────────────────────────────────────
+  // ── Upload documents to Supabase Storage & insert DB records ──────────────
   const docErrors: string[] = [];
+  const storageAdmin = createAdminClient();
+  const BUCKET = "documents";
+
+  // Ensure the storage bucket exists with correct config
+  const { data: buckets } = await storageAdmin.storage.listBuckets();
+  const bucketExists = buckets?.some((b) => b.name === BUCKET);
+  if (bucketExists) {
+    await storageAdmin.storage.updateBucket(BUCKET, {
+      public: false,
+      allowedMimeTypes: null,
+      fileSizeLimit: 52428800,
+    });
+  } else {
+    const { error: bucketError } = await storageAdmin.storage.createBucket(BUCKET, {
+      public: false,
+      allowedMimeTypes: null,
+      fileSizeLimit: 52428800,
+    });
+    if (bucketError) {
+      return { error: `Failed to create storage bucket: ${bucketError.message}`, success: false };
+    }
+  }
 
   for (const docType of DOC_TYPES) {
     const file = formData.get(`doc_${docType}_file`) as File | null;
@@ -129,13 +151,26 @@ export async function submitApplication(
       continue;
     }
 
-    const path = `pending/${docType}/${app.id}-${name}`;
+    // Upload file to Supabase Storage
+    const storagePath = `${user.id}/${app.id}/${docType}/${name}`;
+
+    const { error: uploadError } = await storageAdmin.storage
+      .from(BUCKET)
+      .upload(storagePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      docErrors.push(`Failed to upload ${docType}: ${uploadError.message}`);
+      continue;
+    }
 
     const docInsert = {
       application_id: app.id,
       format: formatParsed.data,
       name,
-      path,
+      path: storagePath,
       type: typeParsed.data,
     };
 
