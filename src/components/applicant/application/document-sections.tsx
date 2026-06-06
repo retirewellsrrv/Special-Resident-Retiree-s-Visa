@@ -1,5 +1,7 @@
 import { FileText, ShieldCheck, Banknote, Stethoscope } from "lucide-react";
-import { Step4Data } from "./types";
+import type { DocumentType } from "@/schemas/document";
+
+type Step4Data = Record<DocumentType, { file: File | null; name: string }>;
 
 export const documentSections = [
   {

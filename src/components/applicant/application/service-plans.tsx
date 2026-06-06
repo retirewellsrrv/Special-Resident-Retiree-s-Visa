@@ -1,5 +1,5 @@
 import { Clock, Banknote, Building2, Star, Stethoscope } from "lucide-react";
-import { ServiceType } from "./types";
+import type { ServiceType } from "@/schemas/application";
 
 export const servicePlans = [
   {

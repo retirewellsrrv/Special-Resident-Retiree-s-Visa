@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ServiceType } from "./types";
+import type { ServiceType } from "@/schemas/application";
 import { servicePlans } from "./service-plans";
 
 export function Step3({
@@ -9,7 +9,7 @@ export function Step3({
   onSelect,
   error,
 }: {
-  selected: ServiceType;
+  selected: ServiceType | "";
   onSelect: (plan: ServiceType) => void;
   error?: string;
 }) {

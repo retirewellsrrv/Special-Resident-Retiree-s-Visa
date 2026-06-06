@@ -10,8 +10,15 @@ import {
   ComboboxInput,
 } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
-import { Step1Data } from "./types";
+import type { ApplicationFormInput } from "@/schemas/application";
 import { INPUT_CLASS, LABEL_CLASS } from "./constants";
+
+type Step1Data = {
+  [K in keyof Pick<
+    ApplicationFormInput,
+    "name" | "birthday" | "sex" | "nationality" | "maritalStatus"
+  >]: string;
+};
 
 export function Step1({
   data,

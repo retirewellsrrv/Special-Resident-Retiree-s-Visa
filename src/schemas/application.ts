@@ -12,6 +12,7 @@ export const ApplicationStatusEnum = z.enum([
   "paused",
   "approved",
   "rejected",
+  "pending",
 ]);
 
 // ─────────────────────────────────────────────
@@ -82,9 +83,9 @@ export const contactInfoSchema = z.object({
   zip: z.string().min(1, "ZIP/Postal code is required"),
   country: z.string().min(1, "Country is required"),
   phAddress: z.string().nullable(),
-  ecName: z.string().nullable(),
-  ecRelationship: z.string().nullable(),
-  ecPhone: z.string().nullable(),
+  emergencyName: z.string().nullable(),
+  emergencyRelationship: z.string().nullable(),
+  emergencyPhone: z.string().nullable(),
 });
 
 export const applicationFormSchema = z.object({

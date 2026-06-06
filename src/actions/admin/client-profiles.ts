@@ -1,78 +1,93 @@
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/supabase";
 import {
-    clientProfileSchema,
-    ApplicationStatusEnum,
-} from '@/schemas/client-profiles'
+  clientProfileSchema,
+  ApplicationStatusEnum,
+} from "@/schemas/client-profiles";
 
-export type ActionState = { error: string | null; success: boolean }
+export type ActionState = { error: string | null; success: boolean };
 
 export type ClientRow = {
-    user_id: string
-    name: string
-    application_code: string
-    service_type: string
-    status: string
-    updated_at: string
-}
+  user_id: string;
+  name: string;
+  application_code: string;
+  service_type: string;
+  status: string;
+  updated_at: string;
+};
 
 export type ClientStats = {
-    total: number
-    processing: number
-    approved: number
-    rejected: number
-    paused: number
-}
+  total: number;
+  processing: number;
+  approved: number;
+  rejected: number;
+  paused: number;
+};
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export async function getClientStats(): Promise<ClientStats> {
-    const supabase = await createClient()
+  const supabase = await createClient();
 
-    const [
-        { count: total },
-        { count: submitted },
-        { count: approved },
-        { count: rejected },
-        { count: paused },
-    ] = await Promise.all([
-        supabase.from('client_profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'paused'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'processing'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
-    ])
+  const [
+    { count: total },
+    { count: processingCount },
+    { count: approved },
+    { count: rejected },
+    { count: paused },
+  ] = await Promise.all([
+    supabase
+      .from("client_profiles")
+      .select("*", { count: "exact", head: true }),
+    supabase
+      .from("applications")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "processing"),
+    supabase
+      .from("applications")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "approved"),
+    supabase
+      .from("applications")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "rejected"),
+    supabase
+      .from("applications")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "paused"),
+  ]);
 
-    return {
-        total: total ?? 0,
-        processing: (submitted ?? 0) + (paused ?? 0),
-        approved: approved ?? 0,
-        rejected: rejected ?? 0,
-        paused: paused ?? 0,
-    }
+  return {
+    total: total ?? 0,
+    processing: processingCount ?? 0,
+    approved: approved ?? 0,
+    rejected: rejected ?? 0,
+    paused: paused ?? 0,
+  };
 }
 
 export async function getClientDirectory({
-    page = 1,
-    limit = 10,
-    filter = 'all',
-    service_type,
+  page = 1,
+  limit = 10,
+  filter = "all",
+  service_type,
 }: {
-    page?: number
-    limit?: number
-    filter?: 'all' | 'new'
-    service_type?: string
+  page?: number;
+  limit?: number;
+  filter?: "all" | "new";
+  service_type?: string;
 } = {}): Promise<{ rows: ClientRow[]; total: number }> {
-    const supabase = await createClient()
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+  const supabase = await createClient();
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-    let query = supabase
-        .from('applications')
-        .select(
-            `
+  let query = supabase
+    .from("applications")
+    .select(
+      `
             id,
             user_id,
             service_type,
@@ -84,170 +99,177 @@ export async function getClientDirectory({
                 name
             )
             `,
-            { count: 'exact' },
-        )
-        .order('updated_at', { ascending: false })
-        .range(from, to)
+      { count: "exact" },
+    )
+    .order("updated_at", { ascending: false })
+    .range(from, to);
 
-    if (service_type) query = query.eq('service_type', service_type as any)
-    if (filter === 'new') {
-        const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString()
-        query = query.gte('created_at', cutoff)
-    }
+  if (service_type)
+    query = query.eq(
+      "service_type",
+      service_type as Database["public"]["Enums"]["service_type"],
+    );
+  if (filter === "new") {
+    const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    query = query.gte("created_at", cutoff);
+  }
 
-    const { data, count, error } = await query
-    if (error) throw new Error(error.message)
+  const { data, count, error } = await query;
+  if (error) throw new Error(error.message);
 
-    const rows: ClientRow[] = (data ?? []).map((row: any) => ({
-        user_id: row.user_id,
-        name: row.client_profiles?.name ?? 'Unknown',
-        application_code: row.application_code,
-        service_type: row.service_type,
-        status: row.status,
-        updated_at: row.updated_at,
-    }))
+  const rows: ClientRow[] = (data ?? []).map((row: any) => ({
+    user_id: row.user_id,
+    name: row.client_profiles?.name ?? "Unknown",
+    application_code: row.application_code,
+    service_type: row.service_type,
+    status: row.status,
+    updated_at: row.updated_at,
+  }));
 
-    return { rows, total: count ?? 0 }
+  return { rows, total: count ?? 0 };
 }
 
 export async function getClientProfiles() {
-    const supabase = await createClient()
+  const supabase = await createClient();
 
-    const { data, error } = await supabase
-        .from('client_profiles')
-        .select('user_id, name, sex, birthday, nationality, age')
-        .order('name', { ascending: true })
+  const { data, error } = await supabase
+    .from("client_profiles")
+    .select("user_id, name, sex, birthday, nationality, age")
+    .order("name", { ascending: true });
 
-    if (error) throw new Error(error.message)
-    return data
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
 export async function updateClientProfile(
-    _prev: ActionState,
-    formData: FormData,
+  _prev: ActionState,
+  formData: FormData,
 ): Promise<ActionState> {
-    const supabase = await createClient()
+  const supabase = await createClient();
 
-    const userId = formData.get('user_id')
-    if (!userId || typeof userId !== 'string')
-        return { error: 'Missing user ID', success: false }
+  const userId = formData.get("user_id");
+  if (!userId || typeof userId !== "string")
+    return { error: "Missing user ID", success: false };
 
-    const raw = {
-        name: formData.get('name'),
-        sex: formData.get('sex'),
-        birthday: formData.get('birthday'),
-        nationality: formData.get('nationality'),
-        age: formData.get('age') ? Number(formData.get('age')) : undefined,
-    }
+  const raw = {
+    name: formData.get("name"),
+    sex: formData.get("sex"),
+    birthday: formData.get("birthday"),
+    nationality: formData.get("nationality"),
+    age: formData.get("age") ? Number(formData.get("age")) : undefined,
+  };
 
-    const parsed = clientProfileSchema.safeParse(raw)
-    if (!parsed.success) {
-        return {
-            error: parsed.error.issues[0]?.message ?? 'Validation failed',
-            success: false,
-        }
-    }
+  const parsed = clientProfileSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Validation failed",
+      success: false,
+    };
+  }
 
-    const { error } = await supabase
-        .from('client_profiles')
-        .update(parsed.data)
-        .eq('user_id', userId)
+  const { error } = await supabase
+    .from("client_profiles")
+    .update(parsed.data)
+    .eq("user_id", userId);
 
-    if (error) return { error: error.message, success: false }
+  if (error) return { error: error.message, success: false };
 
-    revalidatePath('/admin/profiles')
-    return { error: null, success: true }
+  revalidatePath("/admin/profiles");
+  return { error: null, success: true };
 }
 
 export async function resolveReview(
-    _prev: ActionState,
-    formData: FormData,
+  _prev: ActionState,
+  formData: FormData,
 ): Promise<ActionState> {
-    const supabase = await createClient()
+  const supabase = await createClient();
 
-    const client_id = formData.get('user_id')
-    if (!client_id || typeof client_id !== 'string')
-        return { error: 'Missing user ID', success: false }
+  const client_id = formData.get("user_id");
+  if (!client_id || typeof client_id !== "string")
+    return { error: "Missing user ID", success: false };
 
-    const { error } = await supabase
-        .from('applications')
-        .update({
-            status: 'processing',
-            updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', client_id)
-        .eq('status', 'pending_documents' as any)
+  const { error } = await supabase
+    .from("applications")
+    .update({
+      status: "processing",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", client_id)
+    .eq("status", "pending_documents" as any);
 
-    if (error) return { error: error.message, success: false }
+  if (error) return { error: error.message, success: false };
 
-    revalidatePath('/admin/profiles')
-    return { error: null, success: true }
+  revalidatePath("/admin/profiles");
+  return { error: null, success: true };
 }
 
 export async function createClientProfile(
-    _prev: ActionState,
-    formData: FormData,
+  _prev: ActionState,
+  formData: FormData,
 ): Promise<ActionState> {
-    const supabase = await createClient()
+  const supabase = await createClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return { error: 'Unauthorized', success: false }
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) return { error: "Unauthorized", success: false };
 
-    const raw = {
-        name: formData.get('name'),
-        sex: formData.get('sex'),
-        birthday: formData.get('birthday'),
-        nationality: formData.get('nationality'),
-        age: formData.get('age') ? Number(formData.get('age')) : undefined,
-    }
+  const raw = {
+    name: formData.get("name"),
+    sex: formData.get("sex"),
+    birthday: formData.get("birthday"),
+    nationality: formData.get("nationality"),
+    age: formData.get("age") ? Number(formData.get("age")) : undefined,
+  };
 
-    const parsed = clientProfileSchema.safeParse(raw)
-    if (!parsed.success) {
-        return { error: parsed.error.issues[0]?.message ?? 'Validation failed', success: false }
-    }
+  const parsed = clientProfileSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Validation failed",
+      success: false,
+    };
+  }
 
-    const { error } = await supabase
-        .from('client_profiles')
-        .insert({
-            ...parsed.data,
-            age: parsed.data.age ?? 0,
-            user_id: user.id,
-        })
+  const { error } = await supabase.from("client_profiles").insert({
+    ...parsed.data,
+    age: parsed.data.age ?? 0,
+    user_id: user.id,
+  });
 
-    if (error) return { error: error.message, success: false }
+  if (error) return { error: error.message, success: false };
 
-    revalidatePath('/admin/profiles')
-    return { error: null, success: true }
+  revalidatePath("/admin/profiles");
+  return { error: null, success: true };
 }
 
 export async function updateApplicationStatus(
-    _prev: ActionState,
-    formData: FormData,
+  _prev: ActionState,
+  formData: FormData,
 ): Promise<ActionState> {
-    const supabase = await createClient()
+  const supabase = await createClient();
 
-    const client_id = formData.get('user_id')
-    const status = formData.get('status')
+  const client_id = formData.get("user_id");
+  const status = formData.get("status");
 
-    if (!client_id || typeof client_id !== 'string')
-        return { error: 'Missing user ID', success: false }
+  if (!client_id || typeof client_id !== "string")
+    return { error: "Missing user ID", success: false };
 
-    const parsed = ApplicationStatusEnum.safeParse(status)
-    if (!parsed.success)
-        return { error: 'Invalid status value', success: false }
+  const parsed = ApplicationStatusEnum.safeParse(status);
+  if (!parsed.success) return { error: "Invalid status value", success: false };
 
-    const { error } = await supabase
-        .from('applications')
-        .update({
-            status: parsed.data,
-            updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', client_id)
+  const { error } = await supabase
+    .from("applications")
+    .update({
+      status: parsed.data,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", client_id);
 
-    if (error) return { error: error.message, success: false }
+  if (error) return { error: error.message, success: false };
 
-    revalidatePath('/admin/profiles')
-    return { error: null, success: true }
+  revalidatePath("/admin/profiles");
+  return { error: null, success: true };
 }

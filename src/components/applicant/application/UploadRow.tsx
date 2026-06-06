@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
-import { DocumentFile } from "./types";
+type DocumentFile = { file: File | null; name: string };
 
 // Accepted file types: PDF, DOC, DOCX, and common image formats
 const ACCEPTED_IMAGE_TYPES = [

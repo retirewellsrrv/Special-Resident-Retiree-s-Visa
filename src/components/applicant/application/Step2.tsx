@@ -10,8 +10,25 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { SectionLabel } from "./SectionLabel";
-import { Step2Data } from "./types";
+import type { ApplicationFormInput } from "@/schemas/application";
 import { INPUT_CLASS, SELECT_TRIGGER_CLASS, LABEL_CLASS } from "./constants";
+
+type Step2Data = {
+  [K in keyof Pick<
+    ApplicationFormInput,
+    | "email"
+    | "phoneNumber"
+    | "streetAddress"
+    | "city"
+    | "state"
+    | "zip"
+    | "country"
+    | "phAddress"
+    | "emergencyName"
+    | "emergencyRelationship"
+    | "emergencyPhone"
+  >]: string;
+};
 import {
   getCountries,
   getCountryCallingCode,
@@ -26,8 +43,6 @@ export function Step2({
   onChange: (field: keyof Step2Data, value: string) => void;
   errors?: Record<string, string>;
 }) {
-
-
   const CALLING_CODES = (() => {
     const seen = new Map<
       string,
@@ -38,7 +53,7 @@ export function Step2({
       const callingCode = `+${getCountryCallingCode(countryCode)}`;
       if (!seen.has(callingCode)) {
         seen.set(callingCode, { countryCode, callingCode });
-      } 
+      }
     }
 
     return Array.from(seen.values()).sort((a, b) =>
@@ -95,7 +110,7 @@ export function Step2({
               >
                 {CALLING_CODES.map(({ countryCode, callingCode }) => (
                   <SelectItem key={countryCode} value={callingCode}>
-                    {countryCode} {callingCode} 
+                    {countryCode} {callingCode}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -233,11 +248,11 @@ export function Step2({
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
           <div>
-            <Label htmlFor="ecName" className={LABEL_CLASS}>
+            <Label htmlFor="emergencyName" className={LABEL_CLASS}>
               Emergency Contact Name
             </Label>
             <Input
-              id="ecName"
+              id="emergencyName"
               placeholder="Full legal name"
               value={data.emergencyName}
               onChange={(e) => onChange("emergencyName", e.target.value)}
@@ -253,11 +268,11 @@ export function Step2({
             )}
           </div>
           <div>
-            <Label htmlFor="ecRelationship" className={LABEL_CLASS}>
+            <Label htmlFor="emergencyRelationship" className={LABEL_CLASS}>
               Relationship
             </Label>
             <Input
-              id="ecRelationship"
+              id="emergencyRelationship"
               placeholder="e.g. Spouse, Son, Lawyer"
               value={data.emergencyRelationship}
               onChange={(e) =>
@@ -276,11 +291,11 @@ export function Step2({
           </div>
         </div>
         <div>
-          <Label htmlFor="ecPhone" className={LABEL_CLASS}>
+          <Label htmlFor="emergencyPhone" className={LABEL_CLASS}>
             Emergency Contact Phone Number
           </Label>
           <Input
-            id="ecPhone"
+            id="emergencyPhone"
             type="tel"
             inputMode="numeric"
             pattern="[0-9]*"

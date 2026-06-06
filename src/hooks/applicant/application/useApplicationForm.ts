@@ -1,13 +1,34 @@
 import { useState, useCallback } from "react";
-import {
-  Step1Data,
-  Step2Data,
-  Step4Data,
-  ServiceType,
-} from "@/components/applicant/application/types";
+import type { ApplicationFormInput, ServiceType } from "@/schemas/application";
 import { applicationFormSchema } from "@/schemas/application";
+import type { DocumentType } from "@/schemas/document";
 import { step4FormSchema } from "@/schemas/document";
 import { submitApplication } from "@/actions/applicant/application";
+
+type Step1Data = {
+  [K in keyof Pick<
+    ApplicationFormInput,
+    "name" | "birthday" | "sex" | "nationality" | "maritalStatus"
+  >]: string;
+};
+type Step2Data = {
+  [K in keyof Pick<
+    ApplicationFormInput,
+    | "email"
+    | "phoneNumber"
+    | "streetAddress"
+    | "city"
+    | "state"
+    | "zip"
+    | "country"
+    | "phAddress"
+    | "emergencyName"
+    | "emergencyRelationship"
+    | "emergencyPhone"
+  >]: string;
+};
+type DocumentFile = { file: File | null; name: string };
+type Step4Data = Record<DocumentType, DocumentFile>;
 
 const EMPTY_DOC = { file: null, name: "" };
 
@@ -36,7 +57,7 @@ export function useSRRVApplicationForm() {
     emergencyPhone: "",
   });
 
-  const [selectedService, setSelectedService] = useState<ServiceType>("");
+  const [selectedService, setSelectedService] = useState<ServiceType | "">("");
 
   // Keys aligned to DocumentTypeEnum
   const [step4Data, setStep4Data] = useState<Step4Data>({
@@ -70,7 +91,7 @@ export function useSRRVApplicationForm() {
       emergencyName: step2Data.emergencyName,
       emergencyRelationship: step2Data.emergencyRelationship,
       emergencyPhone: step2Data.emergencyPhone,
-      serviceType: selectedService as "basic" | "premium" | "vip" | "",
+      serviceType: selectedService,
     };
 
     const result = applicationFormSchema.safeParse(formData);
@@ -114,9 +135,17 @@ export function useSRRVApplicationForm() {
       const stepFields: Record<number, string[]> = {
         1: ["name", "birthday", "sex", "nationality", "maritalStatus"],
         2: [
-          "email", "phoneNumber", "streetAddress", "city", "state",
-          "zip", "country", "phAddress", "emergencyName",
-          "emergencyRelationship", "emergencyPhone",
+          "email",
+          "phoneNumber",
+          "streetAddress",
+          "city",
+          "state",
+          "zip",
+          "country",
+          "phAddress",
+          "emergencyName",
+          "emergencyRelationship",
+          "emergencyPhone",
         ],
         3: ["serviceType"],
         4: ["passport", "visa", "nbi", "pension", "medical"],
@@ -131,11 +160,23 @@ export function useSRRVApplicationForm() {
     [errors, submittedSteps],
   );
 
-  const handleStep1Change = (field: keyof Step1Data, value: string) =>
+  const handleStep1Change = (field: keyof Step1Data, value: string) => {
     setStep1Data((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
 
-  const handleStep2Change = (field: keyof Step2Data, value: string) =>
+  const handleStep2Change = (field: keyof Step2Data, value: string) => {
     setStep2Data((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
 
   const handleDocUpload = (key: keyof Step4Data, file: File) => {
     setStep4Data((prev) => ({ ...prev, [key]: { file, name: file.name } }));
@@ -160,9 +201,17 @@ export function useSRRVApplicationForm() {
       const stepFields: Record<number, string[]> = {
         1: ["name", "birthday", "sex", "nationality", "maritalStatus"],
         2: [
-          "email", "phoneNumber", "streetAddress", "city", "state",
-          "zip", "country", "phAddress", "emergencyName",
-          "emergencyRelationship", "emergencyPhone",
+          "email",
+          "phoneNumber",
+          "streetAddress",
+          "city",
+          "state",
+          "zip",
+          "country",
+          "phAddress",
+          "emergencyName",
+          "emergencyRelationship",
+          "emergencyPhone",
         ],
         3: ["serviceType"],
       };
@@ -194,9 +243,9 @@ export function useSRRVApplicationForm() {
     fd.append("zip", step2Data.zip);
     fd.append("country", step2Data.country);
     fd.append("phAddress", step2Data.phAddress);
-    fd.append("ecName", step2Data.emergencyName);
-    fd.append("ecRelationship", step2Data.emergencyRelationship);
-    fd.append("ecPhone", step2Data.emergencyPhone);
+    fd.append("emergencyName", step2Data.emergencyName);
+    fd.append("emergencyRelationship", step2Data.emergencyRelationship);
+    fd.append("emergencyPhone", step2Data.emergencyPhone);
     fd.append("serviceType", selectedService);
 
     for (const [key, doc] of Object.entries(step4Data)) {
@@ -208,10 +257,7 @@ export function useSRRVApplicationForm() {
       }
     }
 
-    const result = await submitApplication(
-      { error: null, success: false },
-      fd,
-    );
+    const result = await submitApplication({ error: null, success: false }, fd);
 
     if (result.error) {
       setSubmitError(result.error);
@@ -220,14 +266,34 @@ export function useSRRVApplicationForm() {
 
     // Reset form on success
     setCurrentStep(1);
-    setStep1Data({ name: "", birthday: "", sex: "", nationality: "", maritalStatus: "" });
+    setStep1Data({
+      name: "",
+      birthday: "",
+      sex: "",
+      nationality: "",
+      maritalStatus: "",
+    });
     setStep2Data({
-      email: "", phoneNumber: "", streetAddress: "", city: "", state: "",
-      zip: "", country: "", phAddress: "", emergencyName: "",
-      emergencyRelationship: "", emergencyPhone: "",
+      email: "",
+      phoneNumber: "",
+      streetAddress: "",
+      city: "",
+      state: "",
+      zip: "",
+      country: "",
+      phAddress: "",
+      emergencyName: "",
+      emergencyRelationship: "",
+      emergencyPhone: "",
     });
     setSelectedService("");
-    setStep4Data({ passport: EMPTY_DOC, visa: EMPTY_DOC, nbi: EMPTY_DOC, pension: EMPTY_DOC, medical: EMPTY_DOC });
+    setStep4Data({
+      passport: EMPTY_DOC,
+      visa: EMPTY_DOC,
+      nbi: EMPTY_DOC,
+      pension: EMPTY_DOC,
+      medical: EMPTY_DOC,
+    });
     setErrors({});
     setSubmitError(null);
     setSubmittedSteps(new Set());
