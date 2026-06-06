@@ -81,31 +81,6 @@ export async function submitApplication(
 
   if (profileError) return { error: profileError.message, success: false };
 
-  const { data: servicePlan } = await supabase
-    .from("service_plans")
-    .select("price")
-    .eq("type", serviceType as Database["public"]["Enums"]["service_type"])
-    .single();
-
-  const { data: payment, error: paymentError } = await supabase
-    .from("payments")
-    .insert({
-      user_id: user.id,
-      amount: servicePlan?.price ?? 0,
-      payment_method: "credit card",
-      status: "pending",
-      transaction_code: code,
-      created_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
-
-  if (paymentError || !payment)
-    return {
-      error: paymentError?.message ?? "Failed to create payment",
-      success: false,
-    };
-
   const { data: app, error: appError } = await supabase
     .from("applications")
     .insert({
@@ -122,8 +97,6 @@ export async function submitApplication(
       emergency_name: parsed.data.emergency_name,
       emergency_phone: parsed.data.emergency_phone,
       emergency_relationship: parsed.data.emergency_relationship,
-      payment_id: payment.id,
-      status: "pending",
     })
     .select("id")
     .single();
@@ -163,7 +136,6 @@ export async function submitApplication(
       format: formatParsed.data,
       name,
       path,
-      status: "pending" as const,
       type: typeParsed.data,
     };
 

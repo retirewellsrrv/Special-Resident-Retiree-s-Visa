@@ -27,7 +27,7 @@ export const applicationInsertSchema = z.object({
   emergency_phone: z.string().optional().nullable(),
   emergency_relationship: z.string().optional().nullable(),
   id: z.number().optional(),
-  payment_id: z.number(),
+  payment_id: z.number().optional().nullable(),
   ph_address: z.string().optional().nullable(),
   phone_number: z.string(),
   service_type: ServiceTypeEnum,
