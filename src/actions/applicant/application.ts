@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { applicationFormSchema } from "@/schemas/application";
 import {
   DocumentTypeEnum,
@@ -81,31 +81,6 @@ export async function submitApplication(
 
   if (profileError) return { error: profileError.message, success: false };
 
-  const { data: servicePlan } = await supabase
-    .from("service_plans")
-    .select("price")
-    .eq("type", serviceType as Database["public"]["Enums"]["service_type"])
-    .single();
-
-  const { data: payment, error: paymentError } = await supabase
-    .from("payments")
-    .insert({
-      user_id: user.id,
-      amount: servicePlan?.price ?? 0,
-      payment_method: "credit card",
-      status: "pending",
-      transaction_code: code,
-      created_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
-
-  if (paymentError || !payment)
-    return {
-      error: paymentError?.message ?? "Failed to create payment",
-      success: false,
-    };
-
   const { data: app, error: appError } = await supabase
     .from("applications")
     .insert({
@@ -122,8 +97,6 @@ export async function submitApplication(
       emergency_name: parsed.data.emergency_name,
       emergency_phone: parsed.data.emergency_phone,
       emergency_relationship: parsed.data.emergency_relationship,
-      payment_id: payment.id,
-      status: "pending",
     })
     .select("id")
     .single();
@@ -134,8 +107,30 @@ export async function submitApplication(
       success: false,
     };
 
-  // ── Validate and insert documents ──────────────────────────────────────────
+  // ── Upload documents to Supabase Storage & insert DB records ──────────────
   const docErrors: string[] = [];
+  const storageAdmin = createAdminClient();
+  const BUCKET = "documents";
+
+  // Ensure the storage bucket exists with correct config
+  const { data: buckets } = await storageAdmin.storage.listBuckets();
+  const bucketExists = buckets?.some((b) => b.name === BUCKET);
+  if (bucketExists) {
+    await storageAdmin.storage.updateBucket(BUCKET, {
+      public: false,
+      allowedMimeTypes: null,
+      fileSizeLimit: 52428800,
+    });
+  } else {
+    const { error: bucketError } = await storageAdmin.storage.createBucket(BUCKET, {
+      public: false,
+      allowedMimeTypes: null,
+      fileSizeLimit: 52428800,
+    });
+    if (bucketError) {
+      return { error: `Failed to create storage bucket: ${bucketError.message}`, success: false };
+    }
+  }
 
   for (const docType of DOC_TYPES) {
     const file = formData.get(`doc_${docType}_file`) as File | null;
@@ -156,14 +151,26 @@ export async function submitApplication(
       continue;
     }
 
-    const path = `pending/${docType}/${app.id}-${name}`;
+    // Upload file to Supabase Storage
+    const storagePath = `${user.id}/${app.id}/${docType}/${name}`;
+
+    const { error: uploadError } = await storageAdmin.storage
+      .from(BUCKET)
+      .upload(storagePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      docErrors.push(`Failed to upload ${docType}: ${uploadError.message}`);
+      continue;
+    }
 
     const docInsert = {
       application_id: app.id,
       format: formatParsed.data,
       name,
-      path,
-      status: "pending" as const,
+      path: storagePath,
       type: typeParsed.data,
     };
 

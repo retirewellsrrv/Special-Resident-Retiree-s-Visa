@@ -39,7 +39,7 @@ export type Database = {
           emergency_phone: string | null
           emergency_relationship: string | null
           id: number
-          payment_id: number
+          payment_id: number | null
           ph_address: string | null
           phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
@@ -59,7 +59,7 @@ export type Database = {
           emergency_phone?: string | null
           emergency_relationship?: string | null
           id?: number
-          payment_id: number
+          payment_id?: number | null
           ph_address?: string | null
           phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
@@ -79,7 +79,7 @@ export type Database = {
           emergency_phone?: string | null
           emergency_relationship?: string | null
           id?: number
-          payment_id?: number
+          payment_id?: number | null
           ph_address?: string | null
           phone_number?: string
           service_type?: Database["public"]["Enums"]["service_type"]
@@ -336,6 +336,7 @@ export type Database = {
     }
     Enums: {
       application_status:
+        | "processing"
         | "paused"
         | "approved"
         | "rejected"
@@ -353,6 +354,7 @@ export type Database = {
         | "tif"
         | "jpeg"
       document_status:
+        | "processing"
         | "accepted"
         | "rejected"
         | "action need"
@@ -491,6 +493,7 @@ export const Constants = {
   public: {
     Enums: {
       application_status: [
+        "processing",
         "paused",
         "approved",
         "rejected",
@@ -510,6 +513,7 @@ export const Constants = {
         "jpeg",
       ],
       document_status: [
+        "processing",
         "accepted",
         "rejected",
         "action need",
