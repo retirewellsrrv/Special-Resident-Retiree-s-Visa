@@ -17,16 +17,16 @@ type Step2Data = {
   [K in keyof Pick<
     ApplicationFormInput,
     | "email"
-    | "phoneNumber"
-    | "streetAddress"
+    | "phone_number"
+    | "street"
     | "city"
     | "state"
     | "zip"
     | "country"
-    | "phAddress"
-    | "emergencyName"
-    | "emergencyRelationship"
-    | "emergencyPhone"
+    | "ph_address"
+    | "emergency_name"
+    | "emergency_relationship"
+    | "emergency_phone"
   >]: string;
 };
 import {
@@ -121,19 +121,19 @@ export function Step2({
               inputMode="numeric"
               pattern="[0-9]*"
               placeholder="Phone Number"
-              value={data.phoneNumber.replace(/^\+\d+\s?/, "")}
+              value={data.phone_number.replace(/^\+\d+\s?/, "")}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9]/g, "");
-                onChange("phoneNumber", value);
+                onChange("phone_number", value);
               }}
               className={cn(
                 INPUT_CLASS,
-                errors.phoneNumber && "border-red-500",
+                errors.phone_number && "border-red-500",
               )}
             />
           </div>
-          {errors.phoneNumber && (
-            <p className="text-sm text-red-500 mt-1">{errors.phoneNumber}</p>
+          {errors.phone_number && (
+            <p className="text-sm text-red-500 mt-1">{errors.phone_number}</p>
           )}
         </div>
       </div>
@@ -146,13 +146,13 @@ export function Step2({
         <Input
           id="street"
           placeholder="House No., Street name, Apartment"
-          value={data.streetAddress}
-          onChange={(e) => onChange("streetAddress", e.target.value)}
-          className={cn(INPUT_CLASS, errors.streetAddress && "border-red-500")}
-        />
-        {errors.streetAddress && (
-          <p className="text-sm text-red-500 mt-1">{errors.streetAddress}</p>
-        )}
+              value={data.street}
+              onChange={(e) => onChange("street", e.target.value)}
+              className={cn(INPUT_CLASS, errors.street && "border-red-500")}
+            />
+            {errors.street && (
+              <p className="text-sm text-red-500 mt-1">{errors.street}</p>
+            )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div>
@@ -226,14 +226,14 @@ export function Step2({
 
       <SectionLabel>Intended Address in the Philippines</SectionLabel>
       <div className="mb-1">
-        <Label htmlFor="phAddress" className={LABEL_CLASS}>
+        <Label htmlFor="ph_address" className={LABEL_CLASS}>
           Address or Hotel Name (if known)
         </Label>
         <Input
-          id="phAddress"
+          id="ph_address"
           placeholder="Leave blank if undecided"
-          value={data.phAddress}
-          onChange={(e) => onChange("phAddress", e.target.value)}
+              value={data.ph_address}
+              onChange={(e) => onChange("ph_address", e.target.value)}
           className={INPUT_CLASS}
         />
       </div>
@@ -248,71 +248,71 @@ export function Step2({
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
           <div>
-            <Label htmlFor="emergencyName" className={LABEL_CLASS}>
+            <Label htmlFor="emergency_name" className={LABEL_CLASS}>
               Emergency Contact Name
             </Label>
             <Input
-              id="emergencyName"
+              id="emergency_name"
               placeholder="Full legal name"
-              value={data.emergencyName}
-              onChange={(e) => onChange("emergencyName", e.target.value)}
+              value={data.emergency_name}
+              onChange={(e) => onChange("emergency_name", e.target.value)}
               className={cn(
                 INPUT_CLASS,
-                errors.emergencyName && "border-red-500",
+                errors.emergency_name && "border-red-500",
               )}
             />
-            {errors.emergencyName && (
+            {errors.emergency_name && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.emergencyName}
+                {errors.emergency_name}
               </p>
             )}
           </div>
           <div>
-            <Label htmlFor="emergencyRelationship" className={LABEL_CLASS}>
+            <Label htmlFor="emergency_relationship" className={LABEL_CLASS}>
               Relationship
             </Label>
             <Input
-              id="emergencyRelationship"
+              id="emergency_relationship"
               placeholder="e.g. Spouse, Son, Lawyer"
-              value={data.emergencyRelationship}
+              value={data.emergency_relationship}
               onChange={(e) =>
-                onChange("emergencyRelationship", e.target.value)
+                onChange("emergency_relationship", e.target.value)
               }
               className={cn(
                 INPUT_CLASS,
-                errors.emergencyRelationship && "border-red-500",
+                errors.emergency_relationship && "border-red-500",
               )}
             />
-            {errors.emergencyRelationship && (
+            {errors.emergency_relationship && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.emergencyRelationship}
+                {errors.emergency_relationship}
               </p>
             )}
           </div>
         </div>
         <div>
-          <Label htmlFor="emergencyPhone" className={LABEL_CLASS}>
-            Emergency Contact Phone Number
-          </Label>
-          <Input
-            id="emergencyPhone"
+            <Label htmlFor="emergency_phone" className={LABEL_CLASS}>
+              Emergency Contact Phone Number
+            </Label>
+            <Input
+              id="emergency_phone"
             type="tel"
             inputMode="numeric"
             pattern="[0-9]*"
             placeholder="Include country code"
-            value={data.emergencyPhone}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, "");
-              onChange("emergencyPhone", value);
-            }}
-            className={cn(
-              INPUT_CLASS,
-              errors.emergencyPhone && "border-red-500",
+              value={data.emergency_phone}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, "");
+                onChange("emergency_phone", value);
+              }}
+              className={cn(
+                INPUT_CLASS,
+                errors.emergency_phone && "border-red-500",
+              )}
+            />
+            {errors.emergency_phone && (
+              <p className="text-sm text-red-500 mt-1">{errors.emergency_phone}</p>
             )}
-          />
-          {errors.emergencyPhone && (
-            <p className="text-sm text-red-500 mt-1">{errors.emergencyPhone}</p>
-          )}
         </div>
       </div>
     </>

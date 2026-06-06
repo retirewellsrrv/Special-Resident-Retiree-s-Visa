@@ -16,7 +16,7 @@ import { INPUT_CLASS, LABEL_CLASS } from "./constants";
 type Step1Data = {
   [K in keyof Pick<
     ApplicationFormInput,
-    "name" | "birthday" | "sex" | "nationality" | "maritalStatus"
+    "name" | "birthday" | "sex" | "nationality" | "marital_status"
   >]: string;
 };
 
@@ -119,13 +119,13 @@ export function Step1({
         <div>
           <Label className={LABEL_CLASS}>Marital Status</Label>
           <Combobox
-            value={data.maritalStatus}
-            onValueChange={(v) => v && onChange("maritalStatus", v)}
+            value={data.marital_status}
+            onValueChange={(v) => v && onChange("marital_status", v)}
           >
             <ComboboxInput
               className={cn(
                 INPUT_CLASS,
-                errors.maritalStatus && "border-red-500",
+                errors.marital_status && "border-red-500",
               )}
               placeholder="Select Status"
             />
@@ -139,8 +139,8 @@ export function Step1({
               </ComboboxList>
             </ComboboxContent>
           </Combobox>
-          {errors.maritalStatus && (
-            <p className="text-sm text-red-500 mt-1">{errors.maritalStatus}</p>
+          {errors.marital_status && (
+            <p className="text-sm text-red-500 mt-1">{errors.marital_status}</p>
           )}
         </div>
       </div>

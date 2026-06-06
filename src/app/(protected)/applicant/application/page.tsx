@@ -110,7 +110,7 @@ export default function SRRVApplicationPage() {
                 <Step3
                   selected={selectedService}
                   onSelect={setSelectedService}
-                  error={errors.serviceType}
+                  error={errors.service_type}
                 />
               )}
               {currentStep === 4 && (

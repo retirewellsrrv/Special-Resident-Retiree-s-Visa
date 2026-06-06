@@ -8,23 +8,23 @@ import { submitApplication } from "@/actions/applicant/application";
 type Step1Data = {
   [K in keyof Pick<
     ApplicationFormInput,
-    "name" | "birthday" | "sex" | "nationality" | "maritalStatus"
+    "name" | "birthday" | "sex" | "nationality" | "marital_status"
   >]: string;
 };
 type Step2Data = {
   [K in keyof Pick<
     ApplicationFormInput,
     | "email"
-    | "phoneNumber"
-    | "streetAddress"
+    | "phone_number"
+    | "street"
     | "city"
     | "state"
     | "zip"
     | "country"
-    | "phAddress"
-    | "emergencyName"
-    | "emergencyRelationship"
-    | "emergencyPhone"
+    | "ph_address"
+    | "emergency_name"
+    | "emergency_relationship"
+    | "emergency_phone"
   >]: string;
 };
 type DocumentFile = { file: File | null; name: string };
@@ -40,21 +40,21 @@ export function useSRRVApplicationForm() {
     birthday: "",
     sex: "",
     nationality: "",
-    maritalStatus: "",
+    marital_status: "",
   });
 
   const [step2Data, setStep2Data] = useState<Step2Data>({
     email: "",
-    phoneNumber: "",
-    streetAddress: "",
+    phone_number: "",
+    street: "",
     city: "",
     state: "",
     zip: "",
     country: "",
-    phAddress: "",
-    emergencyName: "",
-    emergencyRelationship: "",
-    emergencyPhone: "",
+    ph_address: "",
+    emergency_name: "",
+    emergency_relationship: "",
+    emergency_phone: "",
   });
 
   const [selectedService, setSelectedService] = useState<ServiceType | "">("");
@@ -79,19 +79,19 @@ export function useSRRVApplicationForm() {
       birthday: step1Data.birthday,
       sex: step1Data.sex as "male" | "female" | "",
       nationality: step1Data.nationality,
-      maritalStatus: step1Data.maritalStatus,
+      marital_status: step1Data.marital_status,
       email: step2Data.email,
-      phoneNumber: step2Data.phoneNumber,
-      streetAddress: step2Data.streetAddress,
+      phone_number: step2Data.phone_number,
+      street: step2Data.street,
       city: step2Data.city,
       state: step2Data.state,
       zip: step2Data.zip,
       country: step2Data.country,
-      phAddress: step2Data.phAddress || null,
-      emergencyName: step2Data.emergencyName,
-      emergencyRelationship: step2Data.emergencyRelationship,
-      emergencyPhone: step2Data.emergencyPhone,
-      serviceType: selectedService,
+      ph_address: step2Data.ph_address || null,
+      emergency_name: step2Data.emergency_name,
+      emergency_relationship: step2Data.emergency_relationship,
+      emergency_phone: step2Data.emergency_phone,
+      service_type: selectedService,
     };
 
     const result = applicationFormSchema.safeParse(formData);
@@ -133,21 +133,21 @@ export function useSRRVApplicationForm() {
       if (!submittedSteps.has(step)) return {};
 
       const stepFields: Record<number, string[]> = {
-        1: ["name", "birthday", "sex", "nationality", "maritalStatus"],
+        1: ["name", "birthday", "sex", "nationality", "marital_status"],
         2: [
           "email",
-          "phoneNumber",
-          "streetAddress",
+          "phone_number",
+          "street",
           "city",
           "state",
           "zip",
           "country",
-          "phAddress",
-          "emergencyName",
-          "emergencyRelationship",
-          "emergencyPhone",
+          "ph_address",
+          "emergency_name",
+          "emergency_relationship",
+          "emergency_phone",
         ],
-        3: ["serviceType"],
+        3: ["service_type"],
         4: ["passport", "visa", "nbi", "pension", "medical"],
       };
 
@@ -199,21 +199,21 @@ export function useSRRVApplicationForm() {
     } else {
       const allErrors = validateForm();
       const stepFields: Record<number, string[]> = {
-        1: ["name", "birthday", "sex", "nationality", "maritalStatus"],
+        1: ["name", "birthday", "sex", "nationality", "marital_status"],
         2: [
           "email",
-          "phoneNumber",
-          "streetAddress",
+          "phone_number",
+          "street",
           "city",
           "state",
           "zip",
           "country",
-          "phAddress",
-          "emergencyName",
-          "emergencyRelationship",
-          "emergencyPhone",
+          "ph_address",
+          "emergency_name",
+          "emergency_relationship",
+          "emergency_phone",
         ],
-        3: ["serviceType"],
+        3: ["service_type"],
       };
       stepFields[currentStep]?.forEach((field) => {
         if (allErrors[field]) stepErrors[field] = allErrors[field];
@@ -229,24 +229,23 @@ export function useSRRVApplicationForm() {
 
     // Final submit — build FormData matching server action expectations
     const fd = new FormData();
-    fd.append("fullName", step1Data.name);
-    fd.append("dateOfBirth", step1Data.birthday);
-    fd.append("gender", step1Data.sex);
+    fd.append("name", step1Data.name);
+    fd.append("birthday", step1Data.birthday);
+    fd.append("sex", step1Data.sex);
     fd.append("nationality", step1Data.nationality);
-    fd.append("maritalStatus", step1Data.maritalStatus);
+    fd.append("marital_status", step1Data.marital_status);
     fd.append("email", step2Data.email);
-    fd.append("phoneCode", "");
-    fd.append("phone", step2Data.phoneNumber);
-    fd.append("street", step2Data.streetAddress);
+    fd.append("phone_number", step2Data.phone_number);
+    fd.append("street", step2Data.street);
     fd.append("city", step2Data.city);
     fd.append("state", step2Data.state);
     fd.append("zip", step2Data.zip);
     fd.append("country", step2Data.country);
-    fd.append("phAddress", step2Data.phAddress);
-    fd.append("emergencyName", step2Data.emergencyName);
-    fd.append("emergencyRelationship", step2Data.emergencyRelationship);
-    fd.append("emergencyPhone", step2Data.emergencyPhone);
-    fd.append("serviceType", selectedService);
+    fd.append("ph_address", step2Data.ph_address);
+    fd.append("emergency_name", step2Data.emergency_name);
+    fd.append("emergency_relationship", step2Data.emergency_relationship);
+    fd.append("emergency_phone", step2Data.emergency_phone);
+    fd.append("service_type", selectedService);
 
     for (const [key, doc] of Object.entries(step4Data)) {
       if (doc.file) {
@@ -271,20 +270,20 @@ export function useSRRVApplicationForm() {
       birthday: "",
       sex: "",
       nationality: "",
-      maritalStatus: "",
+      marital_status: "",
     });
     setStep2Data({
       email: "",
-      phoneNumber: "",
-      streetAddress: "",
+      phone_number: "",
+      street: "",
       city: "",
       state: "",
       zip: "",
       country: "",
-      phAddress: "",
-      emergencyName: "",
-      emergencyRelationship: "",
-      emergencyPhone: "",
+      ph_address: "",
+      emergency_name: "",
+      emergency_relationship: "",
+      emergency_phone: "",
     });
     setSelectedService("");
     setStep4Data({

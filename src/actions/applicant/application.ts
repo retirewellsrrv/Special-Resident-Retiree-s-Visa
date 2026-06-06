@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { personalInfoSchema, contactInfoSchema } from "@/schemas/application";
+import { applicationFormSchema } from "@/schemas/application";
 import {
   DocumentTypeEnum,
   DocumentFormatEnum,
@@ -25,46 +25,34 @@ export async function submitApplication(
   } = await supabase.auth.getUser();
   if (authError || !user) return { error: "Unauthorized", success: false };
 
-  const serviceType = formData.get("serviceType") as string;
+  const serviceType = formData.get("service_type") as string;
   if (!serviceType || !["basic", "premium", "vip"].includes(serviceType)) {
     return { error: "Please select a service plan", success: false };
   }
 
-  const personalRaw = {
-    fullName: formData.get("fullName"),
-    dateOfBirth: formData.get("dateOfBirth"),
-    gender: formData.get("gender"),
+  const formRaw = {
+    name: formData.get("name"),
+    birthday: formData.get("birthday"),
+    sex: formData.get("sex"),
     nationality: formData.get("nationality"),
-    maritalStatus: formData.get("maritalStatus"),
-  };
-  const personalParsed = personalInfoSchema.safeParse(personalRaw);
-  if (!personalParsed.success) {
-    return {
-      error:
-        personalParsed.error.issues[0]?.message ?? "Invalid personal details",
-      success: false,
-    };
-  }
-
-  const contactRaw = {
+    marital_status: formData.get("marital_status"),
     email: formData.get("email"),
-    phoneCode: formData.get("phoneCode"),
-    phone: formData.get("phone"),
+    phone_number: formData.get("phone_number"),
     street: formData.get("street"),
     city: formData.get("city"),
     state: formData.get("state"),
     zip: formData.get("zip"),
     country: formData.get("country"),
-    phAddress: formData.get("phAddress"),
-    emergencyName: formData.get("emergencyName"),
-    emergencyRelationship: formData.get("emergencyRelationship"),
-    emergencyPhone: formData.get("emergencyPhone"),
+    ph_address: formData.get("ph_address"),
+    emergency_name: formData.get("emergency_name"),
+    emergency_relationship: formData.get("emergency_relationship"),
+    emergency_phone: formData.get("emergency_phone"),
+    service_type: serviceType,
   };
-  const contactParsed = contactInfoSchema.safeParse(contactRaw);
-  if (!contactParsed.success) {
+  const parsed = applicationFormSchema.safeParse(formRaw);
+  if (!parsed.success) {
     return {
-      error:
-        contactParsed.error.issues[0]?.message ?? "Invalid contact details",
+      error: parsed.error.issues[0]?.message ?? "Invalid form data",
       success: false,
     };
   }
@@ -75,18 +63,18 @@ export async function submitApplication(
   const { error: profileError } = await supabase.from("client_profiles").upsert(
     {
       user_id: user.id,
-      name: personalParsed.data.fullName,
-      sex: personalParsed.data.gender,
-      birthday: personalParsed.data.dateOfBirth,
-      nationality: personalParsed.data.nationality,
-      age: personalParsed.data.dateOfBirth
+      name: parsed.data.name,
+      sex: parsed.data.sex,
+      birthday: parsed.data.birthday,
+      nationality: parsed.data.nationality,
+      age: parsed.data.birthday
         ? Math.floor(
-            (Date.now() - new Date(personalParsed.data.dateOfBirth).getTime()) /
+            (Date.now() - new Date(parsed.data.birthday).getTime()) /
               (365.25 * 86400000),
           )
         : 0,
-      marital_status: personalParsed.data
-        .maritalStatus as Database["public"]["Enums"]["marital_status"],
+      marital_status: parsed.data
+        .marital_status as Database["public"]["Enums"]["marital_status"],
     },
     { onConflict: "user_id" },
   );
@@ -124,16 +112,16 @@ export async function submitApplication(
       user_id: user.id,
       service_type: serviceType as Database["public"]["Enums"]["service_type"],
       application_code: code,
-      city: contactParsed.data.city,
-      country: contactParsed.data.country,
-      state: contactParsed.data.state,
-      street: contactParsed.data.street,
-      zip: contactParsed.data.zip,
-      phone_number: contactParsed.data.phone,
-      ph_address: contactParsed.data.phAddress,
-      emergency_name: contactParsed.data.emergencyName,
-      emergency_phone: contactParsed.data.emergencyPhone,
-      emergency_relationship: contactParsed.data.emergencyRelationship,
+      city: parsed.data.city,
+      country: parsed.data.country,
+      state: parsed.data.state,
+      street: parsed.data.street,
+      zip: parsed.data.zip,
+      phone_number: parsed.data.phone_number,
+      ph_address: parsed.data.ph_address,
+      emergency_name: parsed.data.emergency_name,
+      emergency_phone: parsed.data.emergency_phone,
+      emergency_relationship: parsed.data.emergency_relationship,
       payment_id: payment.id,
       status: "processing",
     })
