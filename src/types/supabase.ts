@@ -46,7 +46,7 @@ export type Database = {
           state: string
           status: Database["public"]["Enums"]["application_status"]
           street: string
-          updated_at: string | null
+          updated_at: string
           user_id: string
           zip: string
         }
@@ -66,7 +66,7 @@ export type Database = {
           state: string
           status?: Database["public"]["Enums"]["application_status"]
           street: string
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
           zip: string
         }
@@ -86,7 +86,7 @@ export type Database = {
           state?: string
           status?: Database["public"]["Enums"]["application_status"]
           street?: string
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
           zip?: string
         }
@@ -154,7 +154,7 @@ export type Database = {
           path: string
           status: Database["public"]["Enums"]["document_status"]
           type: Database["public"]["Enums"]["document_type"]
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           application_id: number
@@ -163,9 +163,9 @@ export type Database = {
           id?: number
           name: string
           path: string
-          status: Database["public"]["Enums"]["document_status"]
+          status?: Database["public"]["Enums"]["document_status"]
           type: Database["public"]["Enums"]["document_type"]
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           application_id?: number
@@ -176,7 +176,7 @@ export type Database = {
           path?: string
           status?: Database["public"]["Enums"]["document_status"]
           type?: Database["public"]["Enums"]["document_type"]
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -353,7 +353,12 @@ export type Database = {
         | "tiff"
         | "tif"
         | "jpeg"
-      document_status: "processing" | "accepted" | "rejected" | "action need"
+      document_status:
+        | "processing"
+        | "accepted"
+        | "rejected"
+        | "action need"
+        | "pending"
       document_type: "passport" | "visa" | "nbi" | "pension" | "medical"
       marital_status: "single" | "married" | "widowed" | "divorced"
       payment_methods: "credit card" | "debit card" | "e-wallet"
@@ -507,7 +512,13 @@ export const Constants = {
         "tif",
         "jpeg",
       ],
-      document_status: ["processing", "accepted", "rejected", "action need"],
+      document_status: [
+        "processing",
+        "accepted",
+        "rejected",
+        "action need",
+        "pending",
+      ],
       document_type: ["passport", "visa", "nbi", "pension", "medical"],
       marital_status: ["single", "married", "widowed", "divorced"],
       payment_methods: ["credit card", "debit card", "e-wallet"],

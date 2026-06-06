@@ -141,18 +141,18 @@ export function Step2({
       <SectionLabel>Permanent Address (Home Country)</SectionLabel>
       <div className="mb-6">
         <Label htmlFor="street" className={LABEL_CLASS}>
-          Street Address
+          Street
         </Label>
         <Input
           id="street"
           placeholder="House No., Street name, Apartment"
-              value={data.street}
-              onChange={(e) => onChange("street", e.target.value)}
-              className={cn(INPUT_CLASS, errors.street && "border-red-500")}
-            />
-            {errors.street && (
-              <p className="text-sm text-red-500 mt-1">{errors.street}</p>
-            )}
+          value={data.street}
+          onChange={(e) => onChange("street", e.target.value)}
+          className={cn(INPUT_CLASS, errors.street && "border-red-500")}
+        />
+        {errors.street && (
+          <p className="text-sm text-red-500 mt-1">{errors.street}</p>
+        )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div>
@@ -232,8 +232,8 @@ export function Step2({
         <Input
           id="ph_address"
           placeholder="Leave blank if undecided"
-              value={data.ph_address}
-              onChange={(e) => onChange("ph_address", e.target.value)}
+          value={data.ph_address}
+          onChange={(e) => onChange("ph_address", e.target.value)}
           className={INPUT_CLASS}
         />
       </div>
@@ -291,28 +291,30 @@ export function Step2({
           </div>
         </div>
         <div>
-            <Label htmlFor="emergency_phone" className={LABEL_CLASS}>
-              Emergency Contact Phone Number
-            </Label>
-            <Input
-              id="emergency_phone"
+          <Label htmlFor="emergency_phone" className={LABEL_CLASS}>
+            Emergency Contact Phone Number
+          </Label>
+          <Input
+            id="emergency_phone"
             type="tel"
             inputMode="numeric"
             pattern="[0-9]*"
             placeholder="Include country code"
-              value={data.emergency_phone}
-              onChange={(e) => {
-                const value = e.target.value.replace(/[^0-9]/g, "");
-                onChange("emergency_phone", value);
-              }}
-              className={cn(
-                INPUT_CLASS,
-                errors.emergency_phone && "border-red-500",
-              )}
-            />
-            {errors.emergency_phone && (
-              <p className="text-sm text-red-500 mt-1">{errors.emergency_phone}</p>
+            value={data.emergency_phone}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              onChange("emergency_phone", value);
+            }}
+            className={cn(
+              INPUT_CLASS,
+              errors.emergency_phone && "border-red-500",
             )}
+          />
+          {errors.emergency_phone && (
+            <p className="text-sm text-red-500 mt-1">
+              {errors.emergency_phone}
+            </p>
+          )}
         </div>
       </div>
     </>
