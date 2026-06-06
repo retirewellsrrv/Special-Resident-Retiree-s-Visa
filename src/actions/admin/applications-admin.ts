@@ -19,7 +19,7 @@ export type AppRow = {
 export type AppStats = {
   total: number;
   paused: number;
-  processing: number;
+  pending: number;
   approved: number;
   rejected: number;
 };
@@ -32,7 +32,7 @@ export async function getApplicationStats(): Promise<AppStats> {
   const [
     { count: total },
     { count: paused },
-    { count: processing },
+    { count: pendingCount },
     { count: approved },
     { count: rejected },
   ] = await Promise.all([
@@ -44,7 +44,7 @@ export async function getApplicationStats(): Promise<AppStats> {
     supabase
       .from("applications")
       .select("*", { count: "exact", head: true })
-      .eq("status", "processing"),
+      .eq("status", "pending"),
     supabase
       .from("applications")
       .select("*", { count: "exact", head: true })
@@ -58,7 +58,7 @@ export async function getApplicationStats(): Promise<AppStats> {
   return {
     total: total ?? 0,
     paused: paused ?? 0,
-    processing: processing ?? 0,
+    pending: pendingCount ?? 0,
     approved: approved ?? 0,
     rejected: rejected ?? 0,
   };

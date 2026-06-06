@@ -14,20 +14,18 @@ import type { ApplicationFormInput } from "@/schemas/application";
 import { INPUT_CLASS, SELECT_TRIGGER_CLASS, LABEL_CLASS } from "./constants";
 
 type Step2Data = {
-  [K in keyof Pick<
-    ApplicationFormInput,
-    | "email"
-    | "phone_number"
-    | "street"
-    | "city"
-    | "state"
-    | "zip"
-    | "country"
-    | "ph_address"
-    | "emergency_name"
-    | "emergency_relationship"
-    | "emergency_phone"
-  >]: string;
+  email: string;
+  phone_number: string;
+  phone_dial_code: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  ph_address: string;
+  emergency_name: string;
+  emergency_relationship: string;
+  emergency_phone: string;
 };
 import {
   getCountries,
@@ -97,7 +95,10 @@ export function Step2({
             Phone Number
           </Label>
           <div className="flex items-end gap-2">
-            <Select>
+            <Select
+              value={data.phone_dial_code}
+              onValueChange={(val) => onChange("phone_dial_code", val)}
+            >
               <SelectTrigger
                 className={cn(SELECT_TRIGGER_CLASS, "w-[120px] shrink-0")}
               >

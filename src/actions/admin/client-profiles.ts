@@ -21,7 +21,7 @@ export type ClientRow = {
 
 export type ClientStats = {
   total: number;
-  processing: number;
+  pending: number;
   approved: number;
   rejected: number;
   paused: number;
@@ -45,7 +45,7 @@ export async function getClientStats(): Promise<ClientStats> {
     supabase
       .from("applications")
       .select("*", { count: "exact", head: true })
-      .eq("status", "processing"),
+      .eq("status", "pending"),
     supabase
       .from("applications")
       .select("*", { count: "exact", head: true })
@@ -62,7 +62,7 @@ export async function getClientStats(): Promise<ClientStats> {
 
   return {
     total: total ?? 0,
-    processing: processingCount ?? 0,
+    pending: processingCount ?? 0,
     approved: approved ?? 0,
     rejected: rejected ?? 0,
     paused: paused ?? 0,
@@ -193,7 +193,7 @@ export async function resolveReview(
   const { error } = await supabase
     .from("applications")
     .update({
-      status: "processing",
+      status: "pending",
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", client_id)

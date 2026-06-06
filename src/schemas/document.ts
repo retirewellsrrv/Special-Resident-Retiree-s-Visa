@@ -24,7 +24,7 @@ export const DocumentFormatEnum = z.enum(
 );
 
 export const DocumentStatusEnum = z.enum(
-  ["processing", "accepted", "rejected", "action need"],
+  ["pending", "accepted", "rejected", "action need"],
   {
     error: "Please select a valid document status",
   },
@@ -48,7 +48,7 @@ export const documentInsertSchema = z.object({
   id: z.number().optional(),
   name: z.string(),
   path: z.string(),
-  status: DocumentStatusEnum,
+  status: DocumentStatusEnum.optional(),
   type: DocumentTypeEnum,
   updated_at: z.string().optional().nullable(),
 });

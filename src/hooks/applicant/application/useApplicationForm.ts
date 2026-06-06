@@ -12,20 +12,18 @@ type Step1Data = {
   >]: string;
 };
 type Step2Data = {
-  [K in keyof Pick<
-    ApplicationFormInput,
-    | "email"
-    | "phone_number"
-    | "street"
-    | "city"
-    | "state"
-    | "zip"
-    | "country"
-    | "ph_address"
-    | "emergency_name"
-    | "emergency_relationship"
-    | "emergency_phone"
-  >]: string;
+  email: string;
+  phone_number: string;
+  phone_dial_code: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  ph_address: string;
+  emergency_name: string;
+  emergency_relationship: string;
+  emergency_phone: string;
 };
 type DocumentFile = { file: File | null; name: string };
 type Step4Data = Record<DocumentType, DocumentFile>;
@@ -46,6 +44,7 @@ export function useSRRVApplicationForm() {
   const [step2Data, setStep2Data] = useState<Step2Data>({
     email: "",
     phone_number: "",
+    phone_dial_code: "+63",
     street: "",
     city: "",
     state: "",
@@ -81,7 +80,7 @@ export function useSRRVApplicationForm() {
       nationality: step1Data.nationality,
       marital_status: step1Data.marital_status,
       email: step2Data.email,
-      phone_number: step2Data.phone_number,
+      phone_number: step2Data.phone_dial_code + step2Data.phone_number,
       street: step2Data.street,
       city: step2Data.city,
       state: step2Data.state,
@@ -235,7 +234,7 @@ export function useSRRVApplicationForm() {
     fd.append("nationality", step1Data.nationality);
     fd.append("marital_status", step1Data.marital_status);
     fd.append("email", step2Data.email);
-    fd.append("phone_number", step2Data.phone_number);
+    fd.append("phone_number", step2Data.phone_dial_code + step2Data.phone_number);
     fd.append("street", step2Data.street);
     fd.append("city", step2Data.city);
     fd.append("state", step2Data.state);
@@ -275,6 +274,7 @@ export function useSRRVApplicationForm() {
     setStep2Data({
       email: "",
       phone_number: "",
+      phone_dial_code: "+63",
       street: "",
       city: "",
       state: "",

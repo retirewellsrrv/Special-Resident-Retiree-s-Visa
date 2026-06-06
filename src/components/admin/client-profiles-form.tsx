@@ -14,14 +14,14 @@ const SERVICE_TYPES = ['basic', 'premium', 'vip'] as const
 const STATUS_STYLES: Record<string, string> = {
     approved: 'bg-green-100 text-green-800',
     paused: 'bg-blue-100 text-blue-800',
-    processing: 'bg-purple-100 text-purple-800',
+    pending: 'bg-purple-100 text-purple-800',
     rejected: 'bg-red-100 text-red-700',
 }
 
 const STATUS_DOT: Record<string, string> = {
     approved: 'bg-green-500',
     paused: 'bg-blue-400',
-    processing: 'bg-purple-400',
+    pending: 'bg-purple-400',
     rejected: 'bg-red-500',
 }
 
@@ -151,7 +151,7 @@ export function ClientProfilesClient({
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard label="Total Clients" value={stats.total} badge="+12%" />
-                <StatCard label="Processing" value={stats.processing} />
+                <StatCard label="Pending" value={stats.pending} />
                 <StatCard label="Approved" value={stats.approved} />
                 <StatCard label="Rejected" value={stats.rejected} badge="High Priority" highlight />
             </div>

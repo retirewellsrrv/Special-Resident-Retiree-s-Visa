@@ -8,7 +8,6 @@ export const ServiceTypeEnum = z.enum(["basic", "premium", "vip"], {
   error: "Please select a valid service type: Basic, Premium, or VIP",
 });
 export const ApplicationStatusEnum = z.enum([
-  "processing",
   "paused",
   "approved",
   "rejected",

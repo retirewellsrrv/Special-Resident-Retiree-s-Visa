@@ -336,7 +336,6 @@ export type Database = {
     }
     Enums: {
       application_status:
-        | "processing"
         | "paused"
         | "approved"
         | "rejected"
@@ -354,7 +353,6 @@ export type Database = {
         | "tif"
         | "jpeg"
       document_status:
-        | "processing"
         | "accepted"
         | "rejected"
         | "action need"
@@ -493,7 +491,6 @@ export const Constants = {
   public: {
     Enums: {
       application_status: [
-        "processing",
         "paused",
         "approved",
         "rejected",
@@ -513,7 +510,6 @@ export const Constants = {
         "jpeg",
       ],
       document_status: [
-        "processing",
         "accepted",
         "rejected",
         "action need",

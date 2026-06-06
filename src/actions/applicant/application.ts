@@ -123,7 +123,7 @@ export async function submitApplication(
       emergency_phone: parsed.data.emergency_phone,
       emergency_relationship: parsed.data.emergency_relationship,
       payment_id: payment.id,
-      status: "processing",
+      status: "pending",
     })
     .select("id")
     .single();
@@ -163,7 +163,7 @@ export async function submitApplication(
       format: formatParsed.data,
       name,
       path,
-      status: "processing" as const,
+      status: "pending" as const,
       type: typeParsed.data,
     };
 
@@ -175,7 +175,9 @@ export async function submitApplication(
 
     const { error: docError } = await supabase
       .from("documents")
-      .insert(docParsed.data as Database['public']['Tables']['documents']['Insert']);
+      .insert(
+        docParsed.data as Database["public"]["Tables"]["documents"]["Insert"],
+      );
     if (docError) {
       docErrors.push(`Failed to save ${docType}: ${docError.message}`);
     }
