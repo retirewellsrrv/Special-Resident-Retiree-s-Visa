@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/navbar";
+import { ChatWidget } from "@/components/chat";
 import { getSession } from "@/actions/auth";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -37,6 +38,7 @@ export default async function RootLayout({
         <Navbar user={user} />
         {children}
         <Toaster />
+        <ChatWidget />
       </body>
     </html>
   );
