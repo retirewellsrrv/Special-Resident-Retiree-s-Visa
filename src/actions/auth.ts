@@ -127,6 +127,7 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
   const { data, error: signUpError } = await supabase.auth.signUp({
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
+    phone: parsed.data.phoneNumber,
     options: {
       emailRedirectTo: `${origin}/api/auth/callback?roleType=applicant`,
       data: {

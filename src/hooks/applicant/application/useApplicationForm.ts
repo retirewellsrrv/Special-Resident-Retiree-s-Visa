@@ -1,11 +1,34 @@
 import { useState, useCallback } from "react";
-import {
-  Step1Data,
-  Step2Data,
-  Step4Data,
-  ServiceType,
-} from "@/components/applicant/application/types";
+import type { ApplicationFormInput, ServiceType } from "@/schemas/application";
 import { applicationFormSchema } from "@/schemas/application";
+import type { DocumentType } from "@/schemas/document";
+import { step4FormSchema } from "@/schemas/document";
+import { submitApplication } from "@/actions/applicant/application";
+
+type Step1Data = {
+  [K in keyof Pick<
+    ApplicationFormInput,
+    "name" | "birthday" | "sex" | "nationality" | "marital_status"
+  >]: string;
+};
+type Step2Data = {
+  email: string;
+  phone_number: string;
+  phone_dial_code: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  ph_address: string;
+  emergency_name: string;
+  emergency_relationship: string;
+  emergency_phone: string;
+};
+type DocumentFile = { file: File | null; name: string };
+type Step4Data = Record<DocumentType, DocumentFile>;
+
+const EMPTY_DOC = { file: null, name: "" };
 
 export function useSRRVApplicationForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -15,55 +38,59 @@ export function useSRRVApplicationForm() {
     birthday: "",
     sex: "",
     nationality: "",
-    maritalStatus: "",
+    marital_status: "",
   });
 
   const [step2Data, setStep2Data] = useState<Step2Data>({
     email: "",
-    phoneNumber: "",
-    streetAddress: "",
+    phone_number: "",
+    phone_dial_code: "+63",
+    street: "",
     city: "",
     state: "",
     zip: "",
     country: "",
-    phAddress: "",
-    emergencyName: "",
-    emergencyRelationship: "",
-    emergencyPhone: "",
+    ph_address: "",
+    emergency_name: "",
+    emergency_relationship: "",
+    emergency_phone: "",
   });
 
-  const [selectedService, setSelectedService] = useState<ServiceType>("");
+  const [selectedService, setSelectedService] = useState<ServiceType | "">("");
 
+  // Keys aligned to DocumentTypeEnum
   const [step4Data, setStep4Data] = useState<Step4Data>({
-    passportBio: { file: null, name: "" },
-    validVisa: { file: null, name: "" },
-    nbiClearance: { file: null, name: "" },
-    pensionCert: { file: null, name: "" },
-    medicalExam: { file: null, name: "" },
+    passport: EMPTY_DOC,
+    visa: EMPTY_DOC,
+    nbi: EMPTY_DOC,
+    pension: EMPTY_DOC,
+    medical: EMPTY_DOC,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedSteps, setSubmittedSteps] = useState<Set<number>>(new Set());
 
+  // ── Zod validation for steps 1–3 ──────────────────────────────────────────
   const validateForm = useCallback((): Record<string, string> => {
     const formData = {
       name: step1Data.name,
       birthday: step1Data.birthday,
       sex: step1Data.sex as "male" | "female" | "",
       nationality: step1Data.nationality,
-      maritalStatus: step1Data.maritalStatus,
+      marital_status: step1Data.marital_status,
       email: step2Data.email,
-      phoneNumber: step2Data.phoneNumber,
-      streetAddress: step2Data.streetAddress,
+      phone_number: step2Data.phone_dial_code + step2Data.phone_number,
+      street: step2Data.street,
       city: step2Data.city,
       state: step2Data.state,
       zip: step2Data.zip,
       country: step2Data.country,
-      phAddress: step2Data.phAddress || null,
-      emergencyName: step2Data.emergencyName,
-      emergencyRelationship: step2Data.emergencyRelationship,
-      emergencyPhone: step2Data.emergencyPhone,
-      serviceType: selectedService as "basic" | "premium" | "vip" | "",
+      ph_address: step2Data.ph_address || null,
+      emergency_name: step2Data.emergency_name,
+      emergency_relationship: step2Data.emergency_relationship,
+      emergency_phone: step2Data.emergency_phone,
+      service_type: selectedService,
     };
 
     const result = applicationFormSchema.safeParse(formData);
@@ -72,152 +99,210 @@ export function useSRRVApplicationForm() {
       const fieldErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
         if (issue.path.length > 0) {
-          const fieldName = issue.path[0] as string;
-          fieldErrors[fieldName] = issue.message;
+          fieldErrors[issue.path[0] as string] = issue.message;
         }
       });
-      setErrors(fieldErrors);
+      setErrors((prev) => ({ ...prev, ...fieldErrors }));
       return fieldErrors;
     }
 
-    setErrors({});
     return {};
   }, [step1Data, step2Data, selectedService]);
 
+  // ── File validation for step 4 ─────────────────────────────────────────────
+  const validateStep4 = useCallback((): Record<string, string> => {
+    const fileErrors: Record<string, string> = {};
+
+    const result = step4FormSchema.safeParse(step4Data);
+    if (!result.success) {
+      result.error.issues.forEach((issue) => {
+        if (issue.path.length > 0) {
+          fileErrors[issue.path[0] as string] = issue.message;
+        }
+      });
+    }
+
+    setErrors((prev) => ({ ...prev, ...fileErrors }));
+    return fileErrors;
+  }, [step4Data]);
+
+  // ── Filter errors per step ─────────────────────────────────────────────────
   const getStepErrors = useCallback(
     (step: number): Record<string, string> => {
-      // Only show errors for steps that have been submitted (attempted to validate)
-      if (!submittedSteps.has(step)) {
-        return {};
-      }
-      if (step === 1) {
-        const step1Fields = [
-          "name",
-          "birthday",
-          "sex",
-          "nationality",
-          "maritalStatus",
-        ];
-        return Object.fromEntries(
-          Object.entries(errors).filter(([key]) => step1Fields.includes(key)),
-        );
-      }
-      if (step === 2) {
-        const step2Fields = [
+      if (!submittedSteps.has(step)) return {};
+
+      const stepFields: Record<number, string[]> = {
+        1: ["name", "birthday", "sex", "nationality", "marital_status"],
+        2: [
           "email",
-          "phoneNumber",
-          "streetAddress",
+          "phone_number",
+          "street",
           "city",
           "state",
           "zip",
           "country",
-          "phAddress",
-          "emergencyName",
-          "emergencyRelationship",
-          "emergencyPhone",
-        ];
-        return Object.fromEntries(
-          Object.entries(errors).filter(([key]) => step2Fields.includes(key)),
-        );
-      }
-      if (step === 3) {
-        const step3Fields = ["serviceType"];
-        return Object.fromEntries(
-          Object.entries(errors).filter(([key]) => step3Fields.includes(key)),
-        );
-      }
-      return errors;
+          "ph_address",
+          "emergency_name",
+          "emergency_relationship",
+          "emergency_phone",
+        ],
+        3: ["service_type"],
+        4: ["passport", "visa", "nbi", "pension", "medical"],
+      };
+
+      return Object.fromEntries(
+        Object.entries(errors).filter(([key]) =>
+          stepFields[step]?.includes(key),
+        ),
+      );
     },
     [errors, submittedSteps],
   );
 
   const handleStep1Change = (field: keyof Step1Data, value: string) => {
     setStep1Data((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
   const handleStep2Change = (field: keyof Step2Data, value: string) => {
     setStep2Data((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
-  const handleDocUpload = (key: keyof Step4Data, file: File) =>
+  const handleDocUpload = (key: keyof Step4Data, file: File) => {
     setStep4Data((prev) => ({ ...prev, [key]: { file, name: file.name } }));
+    // Clear error for this field on upload
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
 
-  const handleNext = () => {
-    const validationErrors = validateForm();
-
-    // Define fields for each step
-    const stepFields: Record<number, string[]> = {
-      1: ["name", "birthday", "sex", "nationality", "maritalStatus"],
-      2: [
-        "email",
-        "phoneNumber",
-        "streetAddress",
-        "city",
-        "state",
-        "zip",
-        "country",
-        "phAddress",
-        "emergencyName",
-        "emergencyRelationship",
-        "emergencyPhone",
-      ],
-      3: ["serviceType"],
-    };
-
-    const stepErrors: Record<string, string> = {};
-    if (stepFields[currentStep]) {
-      stepFields[currentStep].forEach((field) => {
-        if (validationErrors[field]) {
-          stepErrors[field] = validationErrors[field];
-        }
-      });
-    } else {
-      // For step 4 or any other, consider all errors (though step 4 shouldn't have its own fields)
-      Object.assign(stepErrors, validationErrors);
-    }
-
-    // Mark current step as submitted
+  const handleNext = async () => {
+    setSubmitError(null);
     setSubmittedSteps((prev) => new Set(prev).add(currentStep));
 
-    if (Object.keys(stepErrors).length > 0) {
-      // Errors already set by validateForm, block navigation
-      return;
+    let stepErrors: Record<string, string> = {};
+
+    if (currentStep === 4) {
+      stepErrors = validateStep4();
+    } else {
+      const allErrors = validateForm();
+      const stepFields: Record<number, string[]> = {
+        1: ["name", "birthday", "sex", "nationality", "marital_status"],
+        2: [
+          "email",
+          "phone_number",
+          "street",
+          "city",
+          "state",
+          "zip",
+          "country",
+          "ph_address",
+          "emergency_name",
+          "emergency_relationship",
+          "emergency_phone",
+        ],
+        3: ["service_type"],
+      };
+      stepFields[currentStep]?.forEach((field) => {
+        if (allErrors[field]) stepErrors[field] = allErrors[field];
+      });
     }
+
+    if (Object.keys(stepErrors).length > 0) return;
 
     if (currentStep < 4) {
       setCurrentStep((s) => s + 1);
       return;
     }
 
-    // Last step - submit
-    const payload = {
-      personal: step1Data,
-      contact: step2Data,
-      selectedService,
-      documents: Object.fromEntries(
-        Object.entries(step4Data).map(([key, val]) => [
-          key,
-          {
-            name: val.name,
-            size: val.file?.size ?? null,
-            type: val.file?.type ?? null,
-          },
-        ]),
-      ),
-    };
+    // Final submit — build FormData matching server action expectations
+    const fd = new FormData();
+    fd.append("name", step1Data.name);
+    fd.append("birthday", step1Data.birthday);
+    fd.append("sex", step1Data.sex);
+    fd.append("nationality", step1Data.nationality);
+    fd.append("marital_status", step1Data.marital_status);
+    fd.append("email", step2Data.email);
+    fd.append("phone_number", step2Data.phone_dial_code + step2Data.phone_number);
+    fd.append("street", step2Data.street);
+    fd.append("city", step2Data.city);
+    fd.append("state", step2Data.state);
+    fd.append("zip", step2Data.zip);
+    fd.append("country", step2Data.country);
+    fd.append("ph_address", step2Data.ph_address);
+    fd.append("emergency_name", step2Data.emergency_name);
+    fd.append("emergency_relationship", step2Data.emergency_relationship);
+    fd.append("emergency_phone", step2Data.emergency_phone);
+    fd.append("service_type", selectedService);
 
-    console.log("📋 SRRV Application Payload:", payload);
+    for (const [key, doc] of Object.entries(step4Data)) {
+      if (doc.file) {
+        fd.append(`doc_${key}_file`, doc.file);
+        fd.append(`doc_${key}_name`, doc.name);
+        const ext = doc.name.split(".").pop()?.toLowerCase() ?? "";
+        fd.append(`doc_${key}_format`, ext);
+      }
+    }
+
+    const result = await submitApplication({ error: null, success: false }, fd);
+
+    if (result.error) {
+      setSubmitError(result.error);
+      return;
+    }
+
+    // Reset form on success
+    setCurrentStep(1);
+    setStep1Data({
+      name: "",
+      birthday: "",
+      sex: "",
+      nationality: "",
+      marital_status: "",
+    });
+    setStep2Data({
+      email: "",
+      phone_number: "",
+      phone_dial_code: "+63",
+      street: "",
+      city: "",
+      state: "",
+      zip: "",
+      country: "",
+      ph_address: "",
+      emergency_name: "",
+      emergency_relationship: "",
+      emergency_phone: "",
+    });
+    setSelectedService("");
+    setStep4Data({
+      passport: EMPTY_DOC,
+      visa: EMPTY_DOC,
+      nbi: EMPTY_DOC,
+      pension: EMPTY_DOC,
+      medical: EMPTY_DOC,
+    });
+    setErrors({});
+    setSubmitError(null);
+    setSubmittedSteps(new Set());
   };
 
   const handleBack = () => {
     if (currentStep > 1) setCurrentStep((s) => s - 1);
   };
 
-  const isLastStep = currentStep === 4;
-
   const stepErrors = getStepErrors(currentStep);
-  const hasStepErrors = Object.keys(stepErrors).length > 0;
-  const isFormValid = Object.keys(errors).length === 0;
 
   return {
     currentStep,
@@ -232,9 +317,10 @@ export function useSRRVApplicationForm() {
     docUpload: handleDocUpload,
     next: handleNext,
     back: handleBack,
-    isLastStep,
+    isLastStep: currentStep === 4,
     errors: stepErrors,
-    hasStepErrors,
-    isFormValid,
+    submitError,
+    hasStepErrors: Object.keys(stepErrors).length > 0,
+    isFormValid: Object.keys(errors).length === 0,
   };
 }

@@ -34,15 +34,13 @@ import { updateAppStatus, type AppStats, type AppRow } from '@/actions/admin/app
 
 const STATUS_LABELS: Record<string, string> = {
   paused: 'Paused',
-  processing: 'Processing',
+  pending: 'Pending',
   approved: 'Approved',
   rejected: 'Rejected',
 }
 
 const STATUS_BADGE: Record<string, 'default' | 'secondary' | 'destructive' | 'outline' | 'ghost' | 'link'> = {
-  submitted: 'secondary',
-  under_review: 'default',
-  pending_documents: 'outline',
+  pending: 'secondary',
   approved: 'ghost',
   rejected: 'destructive',
 }
@@ -93,7 +91,7 @@ export function ApplicationsClient({
   const statCards = [
     { label: 'Total', value: stats.total },
     { label: 'Paused', value: stats.paused },
-    { label: 'Processing', value: stats.processing },
+    { label: 'Pending', value: stats.pending },
     { label: 'Approved', value: stats.approved },
     { label: 'Rejected', value: stats.rejected },
   ]
