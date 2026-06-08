@@ -4,6 +4,9 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { Navbar } from "@/components/layout/navbar";
+import { ChatWidget } from "@/components/chat";
+import { getSession } from "@/actions/auth";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -23,16 +26,19 @@ export const metadata: Metadata = {
   description: "Your trusted partner for visa and immigration services",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const user = await getSession();
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Navbar user={user} />
         {children}
         <Toaster />
+        <ChatWidget />
       </body>
     </html>
   );
