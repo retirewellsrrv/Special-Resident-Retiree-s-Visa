@@ -213,7 +213,37 @@ export async function resendConfirmationAction(email: string): Promise<ActionRes
 // FORGOT PASSWORD
 // ─────────────────────────────────────────────
 
-export async function forgotPasswordAction(email: string): Promise<ActionResult> {
+export async function handleResetRequest(email: string): Promise<ActionResult> {
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
+  // check if email exists in the db
+  const user = await supabaseAdmin().auth.admin.listUsers();
+
+  //! only used for debugging, REMOVE WHEN FEATURE IS DONE
+  console.log('email exists, proceeding with reset:', email)
+  console.log('user: ', user.data.users.find((u) => u.email === email))
+  console.log('user from if: ', user)
+
+  if (!user.data.users.find((u) => u.email === email)) {
+    return { success: false, error: 'No account found with this email.' }
+  }
+
+  //* request for the change password email
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/change-password`,
+  })
+
+  //! only used for debugging, REMOVE WHEN FEATURE IS DONE
+  console.log('reset password result:', { data, error })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, message: 'Password reset link sent. Check your email.' }
+}
+
+export async function savePasswordChange(email: string): Promise<ActionResult> {
   if (!email || !email.includes('@')) {
     return { success: false, error: 'Please enter a valid email address.' }
   }
@@ -222,7 +252,7 @@ export async function forgotPasswordAction(email: string): Promise<ActionResult>
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/reset-password`,
+    redirectTo: `${origin}/change-password`,
   })
 
   if (error) {

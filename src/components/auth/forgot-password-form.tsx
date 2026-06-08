@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/schemas/auth'
-import { forgotPasswordAction } from '@/actions/auth'
+import { handleResetRequest } from '@/actions/auth'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Mail, RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react'
@@ -33,6 +33,12 @@ export default function ForgotPasswordForm() {
   const [cooldown, setCooldown] = useState(0)
   const [sending, setSending] = useState(false)
 
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(id)
+  }, [cooldown])
+
   const {
     register,
     handleSubmit,
@@ -43,7 +49,7 @@ export default function ForgotPasswordForm() {
 
   async function onSubmit(data: ForgotPasswordInput) {
     setSending(true)
-    const result = await forgotPasswordAction(data.email)
+    const result = await handleResetRequest(data.email)
     setSending(false)
 
     if (result.success) {
@@ -59,7 +65,7 @@ export default function ForgotPasswordForm() {
   async function handleResend() {
     if (sending || cooldown > 0 || !sentEmail) return
     setSending(true)
-    const result = await forgotPasswordAction(sentEmail)
+    const result = await handleResetRequest(sentEmail)
     setSending(false)
 
     if (result.success) {
@@ -112,7 +118,7 @@ export default function ForgotPasswordForm() {
                   Can&apos;t find it? Check your{' '}
                   <span className="font-medium text-foreground">spam or junk folder</span>.
                   The sender is{' '}
-                  <span className="font-medium text-foreground">admin@retirwellsrrv.com</span>.
+                  <span className="font-medium text-foreground">admin@retirewellsrrv.com</span>.
                 </p>
               </div>
 
@@ -136,13 +142,12 @@ export default function ForgotPasswordForm() {
               )}
             </div>
           </CardContent>
+          <div className="flex items-center justify-center">
+            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              ← Back to sign in
+            </Link>
+          </div>
         </Card>
-
-        <div className="flex items-center justify-center">
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            ← Back to sign in
-          </Link>
-        </div>
       </div>
     )
   }
@@ -197,14 +202,13 @@ export default function ForgotPasswordForm() {
             </FieldGroup>
           </form>
         </CardContent>
+        <div className="flex items-center justify-center">
+          <Link href="/login" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="size-4" />
+            Back to sign in
+          </Link>
+        </div>
       </Card>
-
-      <div className="flex items-center justify-center">
-        <Link href="/login" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="size-4" />
-          Back to sign in
-        </Link>
-      </div>
     </div>
   )
 }
