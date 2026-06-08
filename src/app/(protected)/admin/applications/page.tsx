@@ -4,10 +4,11 @@ import { ApplicationsClient } from '@/components/admin/applications'
 export default async function ApplicationsPage({
   searchParams,
 }: {
-  searchParams: { page?: string; status?: string }
+  searchParams: Promise<{ page?: string; status?: string }>
 }) {
-  const page = Number(searchParams.page ?? 1)
-  const status = searchParams.status
+  const resolvedParams = await searchParams
+  const page = Number(resolvedParams.page ?? 1)
+  const status = resolvedParams.status
 
   const [stats, { rows, total }] = await Promise.all([
     getApplicationStats(),

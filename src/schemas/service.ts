@@ -1,26 +1,26 @@
 import { z } from 'zod'
 
-export const serviceSchema = z.object({
+export const servicePlanSchema = z.object({
   type: z.enum(['basic', 'premium', 'vip']),
-
+  name: z.string().min(1, 'Name is required').max(100),
+  subtitle: z.string().min(1, 'Subtitle is required').max(200),
   price: z.coerce
     .number()
     .positive()
     .multipleOf(0.01, 'Max 2 decimal places'),
-
-  description: z
+  price_note: z
     .string()
-    .max(500)
+    .max(200)
     .optional()
     .nullable()
     .transform((val) => (val === '' ? null : val ?? null)),
-
+  description: z.string().min(1, 'Description is required').max(2000),
+  tags: z.array(z.string()).default([]),
+  highlighted: z.boolean().default(false),
   is_available: z.boolean().default(true),
 })
 
-export const updateServiceSchema = serviceSchema
-  .omit({ is_available: true })
-  .partial()
+export const updateServicePlanSchema = servicePlanSchema.partial()
 
-export type ServiceInput = z.infer<typeof serviceSchema>
-export type UpdateServiceInput = z.infer<typeof updateServiceSchema>
+export type ServicePlanInput = z.infer<typeof servicePlanSchema>
+export type UpdateServicePlanInput = z.infer<typeof updateServicePlanSchema>

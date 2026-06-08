@@ -188,7 +188,7 @@ export type Database = {
           },
         ]
       }
-      notifactions: {
+      notifications: {
         Row: {
           id: number
           is_read: boolean
@@ -225,7 +225,7 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_methods"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -235,7 +235,7 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_methods"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -245,7 +245,7 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_methods"]
           status?: Database["public"]["Enums"]["payment_status"]
           transaction_code?: string
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -300,30 +300,6 @@ export type Database = {
           tags?: string[]
           type?: Database["public"]["Enums"]["service_type"]
           updated_at?: string
-        }
-        Relationships: []
-      }
-      services: {
-        Row: {
-          description: string | null
-          id: number
-          is_available: boolean
-          price: number
-          type: Database["public"]["Enums"]["service_type"]
-        }
-        Insert: {
-          description?: string | null
-          id?: number
-          is_available: boolean
-          price: number
-          type: Database["public"]["Enums"]["service_type"]
-        }
-        Update: {
-          description?: string | null
-          id?: number
-          is_available?: boolean
-          price?: number
-          type?: Database["public"]["Enums"]["service_type"]
         }
         Relationships: []
       }

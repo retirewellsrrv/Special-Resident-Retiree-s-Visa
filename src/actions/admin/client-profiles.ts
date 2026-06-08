@@ -11,13 +11,14 @@ import {
 export type ActionState = { error: string | null; success: boolean };
 
 export type ClientRow = {
-  user_id: string;
-  name: string;
-  application_code: string;
-  service_type: string;
-  status: string;
-  updated_at: string;
-};
+    user_id: string
+    name: string
+    application_code: string
+    service_type: string
+    service_plan_name: string | null
+    status: string
+    updated_at: string
+}
 
 export type ClientStats = {
   total: number;
@@ -114,17 +115,25 @@ export async function getClientDirectory({
     query = query.gte("created_at", cutoff);
   }
 
-  const { data, count, error } = await query;
-  if (error) throw new Error(error.message);
+    const { data, count, error } = await query
+    if (error) throw new Error(error.message)
 
-  const rows: ClientRow[] = (data ?? []).map((row: any) => ({
-    user_id: row.user_id,
-    name: row.client_profiles?.name ?? "Unknown",
-    application_code: row.application_code,
-    service_type: row.service_type,
-    status: row.status,
-    updated_at: row.updated_at,
-  }));
+    const serviceTypes = [...new Set((data ?? []).map((r: any) => r.service_type))]
+    const { data: plans } = await supabase
+        .from('service_plans')
+        .select('type, name')
+        .in('type', serviceTypes as any[])
+    const planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+
+    const rows: ClientRow[] = (data ?? []).map((row: any) => ({
+        user_id: row.user_id,
+        name: row.client_profiles?.name ?? 'Unknown',
+        application_code: row.application_code,
+        service_type: row.service_type,
+        service_plan_name: planNameMap[row.service_type] ?? null,
+        status: row.status,
+        updated_at: row.updated_at,
+    }))
 
   return { rows, total: count ?? 0 };
 }
