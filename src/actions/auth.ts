@@ -253,7 +253,7 @@ export async function savePasswordChange(email: string): Promise<ActionResult> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/reset-password`,
+    redirectTo: `${origin}/change-password`,
   })
 
   if (error) {
