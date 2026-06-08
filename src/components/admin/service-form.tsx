@@ -15,7 +15,7 @@ import {
   Dialog, DialogTrigger, DialogContent,
   DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
-import { Loader2, Plus, X } from 'lucide-react'
+import { Loader2, Plus, X, Star } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 
 type ServiceType = 'basic' | 'premium' | 'vip'
@@ -282,15 +282,23 @@ export function ServiceForm() {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <Switch
-              id="highlighted"
-              checked={fields.highlighted}
-              onCheckedChange={(v) => set('highlighted', v)}
-            />
-            <label htmlFor="highlighted" className="text-sm font-medium cursor-pointer">
-              Highlight this plan
-            </label>
+          <div className={`rounded-lg border p-4 transition-colors ${fields.highlighted ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/20' : 'border-border'}`}>
+            <div className="flex items-center gap-3">
+              <Switch
+                id="highlighted"
+                checked={fields.highlighted}
+                onCheckedChange={(v) => set('highlighted', v)}
+              />
+              <div className="flex-1">
+                <label htmlFor="highlighted" className="text-sm font-medium cursor-pointer">
+                  Highlight this plan
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Featured plans are prominently displayed to applicants. Only one plan can be featured at a time.
+                </p>
+              </div>
+              {fields.highlighted && <Star className="h-5 w-5 fill-amber-400 text-amber-400" />}
+            </div>
           </div>
 
           <Button

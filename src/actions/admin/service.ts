@@ -31,6 +31,13 @@ export async function createServicePlan(payload: unknown) {
     return { error: validated.error.message }
   }
 
+  if (validated.data.highlighted) {
+    await supabase
+      .from('service_plans')
+      .update({ highlighted: false })
+      .neq('highlighted', false)
+  }
+
   const { error } = await supabase
     .from('service_plans')
     .insert(validated.data)
@@ -51,6 +58,14 @@ export async function updateServicePlan(
   const validated = updateServicePlanSchema.safeParse(payload)
   if (!validated.success) {
     return { error: validated.error.message }
+  }
+
+  if (validated.data.highlighted) {
+    await supabase
+      .from('service_plans')
+      .update({ highlighted: false })
+      .neq('id', id)
+      .neq('highlighted', false)
   }
 
   const { error } = await supabase
@@ -76,6 +91,29 @@ export async function deleteServicePlan(id: number) {
   if (error) {
     return { error: error.message }
   }
+
+  revalidatePath('/admin/services')
+
+  return { success: true }
+}
+
+export async function setFeaturedService(id: number) {
+  const supabase = await createClient()
+
+  const { error: resetError } = await supabase
+    .from('service_plans')
+    .update({ highlighted: false })
+    .neq('id', id)
+    .neq('highlighted', false)
+
+  if (resetError) return { error: resetError.message }
+
+  const { error } = await supabase
+    .from('service_plans')
+    .update({ highlighted: true })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
 
   revalidatePath('/admin/services')
 

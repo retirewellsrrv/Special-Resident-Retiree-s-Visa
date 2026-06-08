@@ -2,9 +2,9 @@
 
 import { useState, useTransition, useOptimistic } from 'react'
 import { toast } from 'sonner'
-import { Loader2, Trash2, Pencil, Check, X, Plus } from 'lucide-react'
+import { Loader2, Trash2, Pencil, Check, X, Plus, Flag, Circle } from 'lucide-react'
 import type { ServicePlan } from '@/types/services'
-import { deleteServicePlan, toggleServicePlanAvailability, updateServicePlan } from '@/actions/admin/service'
+import { deleteServicePlan, toggleServicePlanAvailability, updateServicePlan, setFeaturedService } from '@/actions/admin/service'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,12 @@ import {
 } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 type ServiceType = 'basic' | 'premium' | 'vip'
 
@@ -37,6 +43,7 @@ interface EditState {
   description: string
   tags: string[]
   highlighted: boolean
+  is_available: boolean
 }
 
 interface Props {
@@ -47,6 +54,7 @@ export function ServiceTable({ services }: Props) {
   const [, startTransition] = useTransition()
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set())
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set())
+  const [featuringIds, setFeaturingIds] = useState<Set<number>>(new Set())
   const [savingIds, setSavingIds] = useState<Set<number>>(new Set())
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editState, setEditState] = useState<EditState | null>(null)
@@ -68,6 +76,7 @@ export function ServiceTable({ services }: Props) {
       description: service.description,
       tags: [...service.tags],
       highlighted: service.highlighted,
+      is_available: service.is_available,
     })
     setTagInput('')
   }
@@ -124,6 +133,7 @@ export function ServiceTable({ services }: Props) {
         description: editState.description.trim(),
         tags: editState.tags,
         highlighted: editState.highlighted,
+        is_available: editState.is_available,
       })
       setSavingIds((prev) => {
         const next = new Set(prev)
@@ -137,6 +147,31 @@ export function ServiceTable({ services }: Props) {
       toast.success('Service plan updated')
       setEditingId(null)
       setEditState(null)
+    })
+  }
+
+  function handleSetFeatured(service: ServicePlan) {
+    setFeaturingIds((prev) => new Set(prev).add(service.id))
+    startTransition(async () => {
+      if (service.highlighted) {
+        const result = await updateServicePlan(service.id, { highlighted: false })
+        setFeaturingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(service.id)
+          return next
+        })
+        if (result?.error) { toast.error(result.error); return }
+        toast.success('Featured service removed')
+      } else {
+        const result = await setFeaturedService(service.id)
+        setFeaturingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(service.id)
+          return next
+        })
+        if (result?.error) { toast.error(result.error); return }
+        toast.success('Featured service updated')
+      }
     })
   }
 
@@ -202,10 +237,11 @@ export function ServiceTable({ services }: Props) {
             services.map((service) => {
               const isDeleting = deletingIds.has(service.id)
               const isToggling = togglingIds.has(service.id)
+              const isFeaturing = featuringIds.has(service.id)
               const isSaving = savingIds.has(service.id)
               const isEditing = editingId === service.id
               const isAvailable = optimisticAvailability[service.id]
-              const isBusy = isDeleting || isToggling || isSaving
+              const isBusy = isDeleting || isToggling || isFeaturing || isSaving
 
               return (
                 <TableRow key={service.id} className={isDeleting ? 'opacity-50' : ''}>
@@ -349,31 +385,69 @@ export function ServiceTable({ services }: Props) {
 
                   <TableCell>
                     {isEditing ? (
-                      <Switch
-                        checked={editState!.highlighted}
-                        onCheckedChange={(v) =>
-                          setEditState((prev) => ({ ...prev!, highlighted: v }))
-                        }
-                      />
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={editState!.highlighted}
+                          onCheckedChange={(v) =>
+                            setEditState((prev) => ({ ...prev!, highlighted: v }))
+                          }
+                        />
+                        {editState!.highlighted && (
+                          <span className="text-xs text-amber-600">Only one plan can be featured</span>
+                        )}
+                      </div>
                     ) : (
-                      <Badge variant={service.highlighted ? 'default' : 'outline'}>
-                        {service.highlighted ? 'Yes' : 'No'}
-                      </Badge>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={service.highlighted ? 'default' : 'outline'}
+                        className={service.highlighted ? 'bg-amber-500 hover:bg-amber-600 border-amber-500' : ''}
+                        disabled={isBusy || isEditing}
+                        onClick={() => handleSetFeatured(service)}
+                      >
+                        {isFeaturing ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : (
+                          <Flag className="h-3 w-3 mr-1" />
+                        )}
+                        {isFeaturing ? '…' : service.highlighted ? 'Featured' : 'Set as Featured'}
+                      </Button>
                     )}
                   </TableCell>
 
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={isAvailable}
-                        disabled={isBusy || isEditing}
-                        aria-label={`Toggle availability for plan ${service.id}`}
-                        onCheckedChange={(value) => handleToggle(service.id, value)}
-                      />
-                      <span className={`text-xs font-medium ${isAvailable ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        {isToggling ? '…' : isAvailable ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
+                    {isEditing ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={editState!.is_available ? 'default' : 'outline'}
+                        className={editState!.is_available ? 'bg-green-600 hover:bg-green-700 border-green-600' : ''}
+                        onClick={() =>
+                          setEditState((prev) => ({ ...prev!, is_available: !prev!.is_available }))
+                        }
+                      >
+                        <Circle className={`h-2 w-2 mr-1.5 fill-current ${editState!.is_available ? '' : 'text-muted-foreground/50'}`} />
+                        {editState!.is_available ? 'Active' : 'Inactive'}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={isAvailable ? 'default' : 'outline'}
+                        className={isAvailable ? 'bg-green-600 hover:bg-green-700 border-green-600' : ''}
+                        disabled={isBusy}
+                        onClick={() => handleToggle(service.id, !isAvailable)}
+                      >
+                        {isToggling ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : (
+                          <>
+                            <Circle className={`h-2 w-2 mr-1.5 fill-current ${isAvailable ? '' : 'text-muted-foreground/50'}`} />
+                            {isAvailable ? 'Active' : 'Inactive'}
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </TableCell>
 
                   <TableCell className="text-right">
@@ -416,19 +490,39 @@ export function ServiceTable({ services }: Props) {
                             Edit
                           </Button>
 
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={isBusy || editingId !== null}
-                            onClick={() => handleDelete(service.id)}
-                          >
-                            {isDeleting ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-3 w-3" />
-                            )}
-                            {isDeleting ? 'Deleting…' : 'Delete'}
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={isBusy || editingId !== null}
+                              >
+                                {isDeleting ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3 w-3" />
+                                )}
+                                {isDeleting ? 'Deleting…' : 'Delete'}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Service Plan</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete <strong>{service.name}</strong>? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  variant="destructive"
+                                  onClick={() => handleDelete(service.id)}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </>
                       )}
                     </div>
