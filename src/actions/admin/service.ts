@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 import {
   servicePlanSchema,
@@ -9,7 +9,7 @@ import {
 } from '@/schemas/service'
 
 export async function getServicePlans() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('service_plans')
@@ -24,7 +24,7 @@ export async function getServicePlans() {
 }
 
 export async function createServicePlan(payload: unknown) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const validated = servicePlanSchema.safeParse(payload)
   if (!validated.success) {
@@ -53,7 +53,7 @@ export async function updateServicePlan(
   id: number,
   payload: unknown
 ) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const validated = updateServicePlanSchema.safeParse(payload)
   if (!validated.success) {
@@ -81,7 +81,7 @@ export async function updateServicePlan(
 }
 
 export async function deleteServicePlan(id: number) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { error } = await supabase
     .from('service_plans')
@@ -98,7 +98,7 @@ export async function deleteServicePlan(id: number) {
 }
 
 export async function setFeaturedService(id: number) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { error: resetError } = await supabase
     .from('service_plans')
@@ -121,7 +121,7 @@ export async function setFeaturedService(id: number) {
 }
 
 export async function getPublicServicePlans() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('service_plans')
@@ -140,7 +140,7 @@ export async function toggleServicePlanAvailability(
   id: number,
   isAvailable: boolean
 ) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { error } = await supabase
     .from('service_plans')

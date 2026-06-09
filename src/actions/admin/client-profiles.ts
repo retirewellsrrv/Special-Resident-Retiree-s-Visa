@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import {
   clientProfileSchema,
@@ -31,7 +31,7 @@ export type ClientStats = {
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export async function getClientStats(): Promise<ClientStats> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const [
     { count: total },
@@ -81,7 +81,7 @@ export async function getClientDirectory({
   filter?: "all" | "new";
   service_type?: string;
 } = {}): Promise<{ rows: ClientRow[]; total: number }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
@@ -139,7 +139,7 @@ export async function getClientDirectory({
 }
 
 export async function getClientProfiles() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("client_profiles")
@@ -156,7 +156,7 @@ export async function updateClientProfile(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const userId = formData.get("user_id");
   if (!userId || typeof userId !== "string")
@@ -193,7 +193,7 @@ export async function resolveReview(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const client_id = formData.get("user_id");
   if (!client_id || typeof client_id !== "string")
@@ -218,7 +218,7 @@ export async function createClientProfile(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const {
     data: { user },
@@ -258,7 +258,7 @@ export async function updateApplicationStatus(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const client_id = formData.get("user_id");
   const status = formData.get("status");

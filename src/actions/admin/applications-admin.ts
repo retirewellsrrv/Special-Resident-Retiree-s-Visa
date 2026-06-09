@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/types/supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 import { ApplicationStatusEnum } from "@/schemas/client-profiles";
 
 export type AppRow = {
@@ -28,7 +27,7 @@ export type AppStats = {
 export type ActionState = { error: string | null; success: boolean };
 
 export async function getApplicationStats(): Promise<AppStats> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const [
     { count: total },
@@ -74,7 +73,7 @@ export async function getApplications({
   limit?: number;
   status?: string;
 } = {}): Promise<{ rows: AppRow[]; total: number }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
@@ -129,7 +128,7 @@ export async function updateAppStatus(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const appId = formData.get("app_id");
   const status = formData.get("status");
