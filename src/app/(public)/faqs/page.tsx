@@ -6,6 +6,7 @@ import { Field } from '@/components/ui/field';
 import AccordionCard from '@/components/faqs/accordion-card';
 import SideButton from '@/components/faqs/side-button';
 import ConsultationModal from '@/components/faqs/consultation-modal';
+import { useRouter } from 'next/navigation';
 
 // Configuration for your navigation sidebar
 const FAQ_CATEGORIES = [
@@ -63,6 +64,10 @@ export default function Faq() {
 
   // Establish state to track visibility
   const [isConsultModalOpen, setIsConsultModalOpen] = useState(false);
+
+  const router = useRouter();
+
+  const handleClick = () => {router.push('/register')};
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-800">
@@ -123,7 +128,7 @@ export default function Faq() {
             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               {/* 2. Bind action trigger to both CTA click options */}
               <button
-                onClick={() => setIsConsultModalOpen(true)}
+                onClick={handleClick}
                 className="px-6 py-3 bg-white text-[#9E1B32] text-sm font-semibold rounded shadow-sm hover:bg-gray-50 transition whitespace-nowrap"
               >
                 Get Started
