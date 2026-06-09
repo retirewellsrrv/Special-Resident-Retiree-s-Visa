@@ -10,6 +10,44 @@ import {
 } from "@/schemas/document";
 import type { Database } from "@/types/supabase";
 
+export type ApplicantProfile = {
+  name: string;
+  birthday: string;
+  sex: string;
+  nationality: string;
+  marital_status: string;
+  email: string;
+  phone: string | null;
+};
+
+export async function getApplicantProfile(): Promise<ApplicantProfile | null> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) return null;
+
+  const { data: profile } = await supabase
+    .from("client_profiles")
+    .select("name, birthday, sex, nationality, marital_status")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!profile) return null;
+
+  return {
+    name: profile.name,
+    birthday: profile.birthday,
+    sex: profile.sex,
+    nationality: profile.nationality,
+    marital_status: profile.marital_status,
+    email: user.email ?? "",
+    phone: user.phone ?? null,
+  };
+}
+
 export type SubmitState = { error: string | null; success: boolean };
 
 const DOC_TYPES = ["passport", "visa", "nbi", "pension", "medical"] as const;
