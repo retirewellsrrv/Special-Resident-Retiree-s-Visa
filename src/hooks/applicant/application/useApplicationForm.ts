@@ -85,6 +85,7 @@ export function useSRRVApplicationForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedSteps, setSubmittedSteps] = useState<Set<number>>(new Set());
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // ── Pre-fill from existing profile on mount ───────────────────────────────
   useEffect(() => {
@@ -257,10 +258,19 @@ export function useSRRVApplicationForm() {
 
     if (Object.keys(stepErrors).length > 0) return;
 
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep((s) => s + 1);
       return;
     }
+
+    // Show confirmation dialog before final submit
+    setShowConfirm(true);
+    return;
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
+    setSubmitError(null);
 
     // Final submit — build FormData matching server action expectations
     const fd = new FormData();
@@ -353,10 +363,13 @@ export function useSRRVApplicationForm() {
     docUpload: handleDocUpload,
     next: handleNext,
     back: handleBack,
-    isLastStep: currentStep === 4,
+    isLastStep: currentStep === 5,
     errors: stepErrors,
     submitError,
     hasStepErrors: Object.keys(stepErrors).length > 0,
     isFormValid: Object.keys(errors).length === 0,
+    showConfirm,
+    confirmSubmit,
+    cancelSubmit: () => setShowConfirm(false),
   };
 }
