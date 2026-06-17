@@ -13,7 +13,20 @@ import { Step1 } from "@/components/applicant/application/Step1";
 import { Step2 } from "@/components/applicant/application/Step2";
 import { Step3 } from "@/components/applicant/application/Step3";
 import { Step4 } from "@/components/applicant/application/Step4";
+import { Step5 } from "@/components/applicant/application/Step5";
 import { useSRRVApplicationForm } from "@/hooks/applicant/application/useApplicationForm";
+
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 export default function SRRVApplicationPage() {
   const {
@@ -31,23 +44,31 @@ export default function SRRVApplicationPage() {
     isLastStep,
     errors,
     submitError,
+    showConfirm,
+    confirmSubmit,
+    cancelSubmit,
   } = useSRRVApplicationForm();
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f9f6f1] py-10 px-4">
+    <div className="min-h-[calc(100vh-4rem)] bg-white py-10 px-4">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Main Form Card ── */}
         <div className="lg:col-span-2">
           <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
             <CardContent className="p-10">
               {/* Step Indicator */}
-              <div className="flex items-center gap-0 mb-6">
-                {steps.map((step, index) => (
-                  <div
-                    key={step.id}
-                    className="flex items-center flex-1 last:flex-none"
-                  >
-                    <div className="flex flex-col items-center gap-1.5">
+              <div className="relative mb-6">
+                <div className="absolute top-4 left-0 right-0 h-px bg-neutral-200" />
+                <div
+                  className="absolute top-4 left-0 h-px bg-[#8B1A2B]/40 transition-all"
+                  style={{ width: `${steps.length > 1 ? ((currentStep - 1) / (steps.length - 1)) * 100 : 0}%` }}
+                />
+                <div className="flex items-center justify-between relative">
+                  {steps.map((step) => (
+                    <div
+                      key={step.id}
+                      className="flex flex-col items-center gap-1.5 bg-white px-1"
+                    >
                       <div
                         className={cn(
                           "w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
@@ -75,18 +96,8 @@ export default function SRRVApplicationPage() {
                         {step.label}
                       </span>
                     </div>
-                    {index < steps.length - 1 && (
-                      <div
-                        className={cn(
-                          "flex-1 h-px mx-3 mb-5 transition-colors",
-                          step.id < currentStep
-                            ? "bg-[#8B1A2B]/40"
-                            : "bg-neutral-200",
-                        )}
-                      />
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
               <Separator className="mb-6" />
@@ -115,6 +126,14 @@ export default function SRRVApplicationPage() {
               )}
               {currentStep === 4 && (
                 <Step4 data={step4Data} onUpload={docUpload} errors={errors} />
+              )}
+              {currentStep === 5 && (
+                <Step5
+                  step1Data={step1Data}
+                  step2Data={step2Data}
+                  selectedService={selectedService}
+                  step4Data={step4Data}
+                />
               )}
 
               {/* Submit error banner */}
@@ -210,6 +229,29 @@ export default function SRRVApplicationPage() {
           </Card>
         </div>
       </div>
+
+      <AlertDialog open={showConfirm} onOpenChange={(open) => !open && cancelSubmit()}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader className="bg-brand-primary-50 -mx-4 -mt-4 rounded-t-xl p-4 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.15)] relative z-10">
+            <AlertDialogTitle className="font-bold">Confirm Submission</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure the details you provided are correct? You will not be
+              able to modify your application after submission.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="border-t-0 bg-white py-2 justify-items-center items-center">
+            <AlertDialogCancel onClick={cancelSubmit}>
+              Review Again
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmSubmit}
+              className="bg-[#8B1A2B] hover:bg-[#6f1522]"
+            >
+              Yes, Submit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
