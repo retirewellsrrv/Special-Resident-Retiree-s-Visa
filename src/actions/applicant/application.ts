@@ -9,24 +9,60 @@ import {
   documentInsertSchema,
 } from "@/schemas/document";
 import type { Database } from "@/types/supabase";
+import { ServiceTypeEnum } from "@/schemas/application";
+import { getUserServer } from "@/utils/auth/getUser";
+
+export type ApplicantProfile = {
+  name: string;
+  birthday: string;
+  sex: string;
+  nationality: string;
+  marital_status: string;
+  email: string;
+  phone: string | null;
+};
 
 export type SubmitState = { error: string | null; success: boolean };
 
 const DOC_TYPES = ["passport", "visa", "nbi", "pension", "medical"] as const;
 
+export async function getApplicantProfile(): Promise<ApplicantProfile | null> {
+  const user = await getUserServer();
+  if (!user) return null;
+
+  const supabase = await createClient();
+
+  const { data: profile } = await supabase
+    .from("client_profiles")
+    .select("name, birthday, sex, nationality, marital_status")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!profile) return null;
+
+  return {
+    name: profile.name,
+    birthday: profile.birthday,
+    sex: profile.sex,
+    nationality: profile.nationality,
+    marital_status: profile.marital_status,
+    email: user.email ?? "",
+    phone: user.phone ?? null,
+  };
+}
+
 export async function submitApplication(
   _prev: SubmitState,
   formData: FormData,
 ): Promise<SubmitState> {
+  const user = await getUserServer();
+  if (!user) return { error: "Unauthorized", success: false };
+
   const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-  if (authError || !user) return { error: "Unauthorized", success: false };
 
   const serviceType = formData.get("service_type") as string;
-  if (!serviceType || !["basic", "premium", "vip"].includes(serviceType)) {
+  const parsedServiceType = ServiceTypeEnum.safeParse(serviceType);
+  if (!parsedServiceType.success) {
     return { error: "Please select a service plan", success: false };
   }
 
@@ -109,28 +145,7 @@ export async function submitApplication(
 
   // ── Upload documents to Supabase Storage & insert DB records ──────────────
   const docErrors: string[] = [];
-  const storageAdmin = createAdminClient();
   const BUCKET = "documents";
-
-  // Ensure the storage bucket exists with correct config
-  const { data: buckets } = await storageAdmin.storage.listBuckets();
-  const bucketExists = buckets?.some((b) => b.name === BUCKET);
-  if (bucketExists) {
-    await storageAdmin.storage.updateBucket(BUCKET, {
-      public: false,
-      allowedMimeTypes: null,
-      fileSizeLimit: 52428800,
-    });
-  } else {
-    const { error: bucketError } = await storageAdmin.storage.createBucket(BUCKET, {
-      public: false,
-      allowedMimeTypes: null,
-      fileSizeLimit: 52428800,
-    });
-    if (bucketError) {
-      return { error: `Failed to create storage bucket: ${bucketError.message}`, success: false };
-    }
-  }
 
   for (const docType of DOC_TYPES) {
     const file = formData.get(`doc_${docType}_file`) as File | null;
@@ -151,10 +166,9 @@ export async function submitApplication(
       continue;
     }
 
-    // Upload file to Supabase Storage
     const storagePath = `${user.id}/${app.id}/${docType}/${name}`;
 
-    const { error: uploadError } = await storageAdmin.storage
+    const { error: uploadError } = await supabase.storage
       .from(BUCKET)
       .upload(storagePath, file, {
         contentType: file.type,

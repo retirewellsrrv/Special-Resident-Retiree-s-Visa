@@ -16,7 +16,6 @@ export function Footer() {
     <footer className="bg-brand-tertiary-400 border-t border-ht-outline-variant py-12">
       <div className="max-w-ht-content mx-auto px-ht-margin-mobile md:px-ht-margin-desktop">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          {/* Brand */}
           <div>
             <img
               src={retireWellLogo.src}
@@ -29,7 +28,6 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Navigation */}
           <div>
             <p className="text-ht-label-md font-semibold text-brand-secondary-500 mb-3 uppercase tracking-wider">
               Navigation
@@ -48,7 +46,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
             <p className="text-ht-label-md font-semibold text-brand-secondary-500 mb-3 uppercase tracking-wider">
               Legal

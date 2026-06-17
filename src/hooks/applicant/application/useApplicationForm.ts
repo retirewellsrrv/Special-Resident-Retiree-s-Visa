@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { ApplicationFormInput, ServiceType } from "@/schemas/application";
 import { applicationFormSchema } from "@/schemas/application";
 import type { DocumentType } from "@/schemas/document";
 import { step4FormSchema } from "@/schemas/document";
-import { submitApplication } from "@/actions/applicant/application";
+import { submitApplication, getApplicantProfile } from "@/actions/applicant/application";
 
 type Step1Data = {
   [K in keyof Pick<
@@ -29,6 +29,21 @@ type DocumentFile = { file: File | null; name: string };
 type Step4Data = Record<DocumentType, DocumentFile>;
 
 const EMPTY_DOC = { file: null, name: "" };
+
+/** Parse an E.164 phone (e.g. "+639123456789") into dial code + national number. */
+function parseAuthPhone(
+  phone: string,
+): { phone_dial_code: string; phone_number: string } | Record<string, never> {
+  if (!phone.startsWith("+")) return {};
+  for (let len = 1; len <= 3; len++) {
+    const code = phone.slice(0, len + 1);
+    const num = phone.slice(len + 1);
+    if (num.length >= 4 && /^\d+$/.test(num)) {
+      return { phone_dial_code: code, phone_number: num };
+    }
+  }
+  return {};
+}
 
 export function useSRRVApplicationForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -70,6 +85,28 @@ export function useSRRVApplicationForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedSteps, setSubmittedSteps] = useState<Set<number>>(new Set());
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  // ── Pre-fill from existing profile on mount ───────────────────────────────
+  useEffect(() => {
+    getApplicantProfile().then((profile) => {
+      if (!profile) return;
+
+      setStep1Data({
+        name: profile.name,
+        birthday: profile.birthday,
+        sex: profile.sex,
+        nationality: profile.nationality,
+        marital_status: profile.marital_status,
+      });
+
+      setStep2Data((prev) => ({
+        ...prev,
+        email: profile.email,
+        ...(profile.phone ? parseAuthPhone(profile.phone) : {}),
+      }));
+    });
+  }, []);
 
   // ── Zod validation for steps 1–3 ──────────────────────────────────────────
   const validateForm = useCallback((): Record<string, string> => {
@@ -221,10 +258,19 @@ export function useSRRVApplicationForm() {
 
     if (Object.keys(stepErrors).length > 0) return;
 
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep((s) => s + 1);
       return;
     }
+
+    // Show confirmation dialog before final submit
+    setShowConfirm(true);
+    return;
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false);
+    setSubmitError(null);
 
     // Final submit — build FormData matching server action expectations
     const fd = new FormData();
@@ -317,10 +363,13 @@ export function useSRRVApplicationForm() {
     docUpload: handleDocUpload,
     next: handleNext,
     back: handleBack,
-    isLastStep: currentStep === 4,
+    isLastStep: currentStep === 5,
     errors: stepErrors,
     submitError,
     hasStepErrors: Object.keys(stepErrors).length > 0,
     isFormValid: Object.keys(errors).length === 0,
+    showConfirm,
+    confirmSubmit,
+    cancelSubmit: () => setShowConfirm(false),
   };
 }
