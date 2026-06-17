@@ -6,8 +6,8 @@ import {
   EligibilitySection,
   WhyChooseSection,
   ContactSection,
-  Footer,
 } from "@/components/public";
+import { Footer } from "@/components/layout/Footer";
 
 export default function Page() {
   return (
