@@ -86,26 +86,31 @@ export function useSRRVApplicationForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedSteps, setSubmittedSteps] = useState<Set<number>>(new Set());
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   // ── Pre-fill from existing profile on mount ───────────────────────────────
   useEffect(() => {
-    getApplicantProfile().then((profile) => {
-      if (!profile) return;
+    setIsLoadingProfile(true);
+    getApplicantProfile()
+      .then((profile) => {
+        if (!profile) return;
 
-      setStep1Data({
-        name: profile.name,
-        birthday: profile.birthday,
-        sex: profile.sex,
-        nationality: profile.nationality,
-        marital_status: profile.marital_status,
-      });
+        setStep1Data({
+          name: profile.name,
+          birthday: profile.birthday,
+          sex: profile.sex,
+          nationality: profile.nationality,
+          marital_status: profile.marital_status,
+        });
 
-      setStep2Data((prev) => ({
-        ...prev,
-        email: profile.email,
-        ...(profile.phone ? parseAuthPhone(profile.phone) : {}),
-      }));
-    });
+        setStep2Data((prev) => ({
+          ...prev,
+          email: profile.email,
+          ...(profile.phone ? parseAuthPhone(profile.phone) : {}),
+        }));
+      })
+      .finally(() => setIsLoadingProfile(false));
   }, []);
 
   // ── Zod validation for steps 1–3 ──────────────────────────────────────────
@@ -270,6 +275,7 @@ export function useSRRVApplicationForm() {
 
   const confirmSubmit = async () => {
     setShowConfirm(false);
+    setIsSubmitting(true);
     setSubmitError(null);
 
     // Final submit — build FormData matching server action expectations
@@ -302,13 +308,19 @@ export function useSRRVApplicationForm() {
     }
 
     const result = await submitApplication({ error: null, success: false }, fd);
+    setIsSubmitting(false);
 
     if (result.error) {
       setSubmitError(result.error);
       return;
     }
 
-    // Reset form on success
+    if (result.invoiceUrl) {
+      window.location.href = result.invoiceUrl;
+      return;
+    }
+
+    // Reset form on success (fallback if no invoiceUrl)
     setCurrentStep(1);
     setStep1Data({
       name: "",
@@ -371,5 +383,7 @@ export function useSRRVApplicationForm() {
     showConfirm,
     confirmSubmit,
     cancelSubmit: () => setShowConfirm(false),
+    isLoadingProfile,
+    isSubmitting,
   };
 }

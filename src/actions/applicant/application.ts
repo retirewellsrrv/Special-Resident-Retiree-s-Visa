@@ -1,16 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { applicationFormSchema } from "@/schemas/application";
+import { headers } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
+import { applicationFormSchema, ServiceTypeEnum } from "@/schemas/application";
 import {
   DocumentTypeEnum,
   DocumentFormatEnum,
   documentInsertSchema,
 } from "@/schemas/document";
 import type { Database } from "@/types/supabase";
-import { ServiceTypeEnum } from "@/schemas/application";
 import { getUserServer } from "@/utils/auth/getUser";
+import xenditClient from "@/lib/xendit";
+import { randomUUID } from "crypto";
 
 export type ApplicantProfile = {
   name: string;
@@ -22,7 +24,11 @@ export type ApplicantProfile = {
   phone: string | null;
 };
 
-export type SubmitState = { error: string | null; success: boolean };
+export type SubmitState = {
+  error: string | null;
+  success: boolean;
+  invoiceUrl?: string;
+};
 
 const DOC_TYPES = ["passport", "visa", "nbi", "pension", "medical"] as const;
 
@@ -208,6 +214,79 @@ export async function submitApplication(
     return { error: docErrors.join("; "), success: false };
   }
 
+  // ── Get price from service_plans ─────────────────────────────────────────
+  const { data: plan } = await supabase
+    .from("service_plans")
+    .select("price")
+    .eq("type", serviceType as Database["public"]["Enums"]["service_type"])
+    .single();
+
+  if (!plan) {
+    return { error: "Service plan not found", success: false };
+  }
+
+  // ── Create payment record ────────────────────────────────────────────────
+  const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
+  const { data: payment, error: paymentError } = await supabase
+    .from("payments")
+    .insert({
+      user_id: user.id,
+      amount: plan.price,
+      status: "pending",
+      payment_method: "ewallet",
+      transaction_code: externalId,
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (paymentError || !payment) {
+    return {
+      error: paymentError?.message ?? "Failed to create payment record",
+      success: false,
+    };
+  }
+
+  // ── Link payment to application ──────────────────────────────────────────
+  const { error: linkError } = await supabase
+    .from("applications")
+    .update({ payment_id: payment.id })
+    .eq("id", app.id);
+
+  if (linkError) {
+    return { error: linkError.message, success: false };
+  }
+
+  // ── Create Xendit invoice ────────────────────────────────────────────────
+  const headersList = await headers();
+  const origin = headersList.get("origin") ?? "http://localhost:3000";
+
+  let invoiceUrl: string;
+  try {
+    const invoice = await xenditClient.Invoice.createInvoice({
+      data: {
+        externalId,
+        amount: plan.price,
+        description: `SRRV ${serviceType} application fee`,
+        payerEmail: parsed.data.email,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
+        failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
+        currency: "PHP",
+        metadata: {
+          application_id: String(app.id),
+          service_type: serviceType,
+        },
+      },
+    });
+    invoiceUrl = invoice.invoiceUrl!;
+  } catch (xenditError) {
+    const message =
+      xenditError instanceof Error
+        ? xenditError.message
+        : "Failed to create payment invoice";
+    return { error: message, success: false };
+  }
+
   revalidatePath("/applicant/application");
-  return { error: null, success: true };
+  return { error: null, success: true, invoiceUrl };
 }

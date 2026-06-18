@@ -6,6 +6,7 @@ import type { ServiceType } from "@/schemas/application";
 import { getPublicServicePlans } from "@/actions/admin/service";
 import type { ServicePlan } from "@/types/services";
 import { Clock, Banknote, Building2, Star, Stethoscope, type LucideIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const TAG_ICONS: Record<string, LucideIcon> = {
   "35+ Years Old": Clock,
@@ -61,7 +62,32 @@ export function Step3({
 
       <div className="flex flex-col gap-4">
         {loading ? (
-          <p className="text-sm text-neutral-400">Loading service plans...</p>
+          <div className="flex flex-col gap-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="w-full rounded-xl border-2 border-neutral-200 p-5 space-y-3"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-44" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                  <div className="space-y-1.5 text-right">
+                    <Skeleton className="h-5 w-24 ml-auto" />
+                    <Skeleton className="h-3 w-16 ml-auto" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <div className="flex flex-wrap gap-2">
+                  <Skeleton className="h-6 w-24 rounded-md" />
+                  <Skeleton className="h-6 w-32 rounded-md" />
+                  <Skeleton className="h-6 w-20 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : plans.length === 0 ? (
           <p className="text-sm text-neutral-500">No service plans available at this time.</p>
         ) : (

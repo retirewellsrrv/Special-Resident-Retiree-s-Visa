@@ -337,7 +337,18 @@ export type Database = {
         | "pending"
       document_type: "passport" | "visa" | "nbi" | "pension" | "medical"
       marital_status: "single" | "married" | "widowed" | "divorced"
-      payment_methods: "credit card" | "debit card" | "e-wallet"
+      payment_methods:
+        | "pool"
+        | "callback_virtual_account"
+        | "credit_card"
+        | "retail_outlet"
+        | "qr_code"
+        | "qris"
+        | "ewallet"
+        | "direct_debit"
+        | "bank_transfer"
+        | "paylater"
+        | "cryptocurrency"
       payment_status: "processing" | "pending" | "cancelled" | "success"
       service_type: "basic" | "premium" | "vip"
       sex: "male" | "female"
@@ -497,7 +508,19 @@ export const Constants = {
       ],
       document_type: ["passport", "visa", "nbi", "pension", "medical"],
       marital_status: ["single", "married", "widowed", "divorced"],
-      payment_methods: ["credit card", "debit card", "e-wallet"],
+      payment_methods: [
+        "pool",
+        "callback_virtual_account",
+        "credit_card",
+        "retail_outlet",
+        "qr_code",
+        "qris",
+        "ewallet",
+        "direct_debit",
+        "bank_transfer",
+        "paylater",
+        "cryptocurrency",
+      ],
       payment_status: ["processing", "pending", "cancelled", "success"],
       service_type: ["basic", "premium", "vip"],
       sex: ["male", "female"],

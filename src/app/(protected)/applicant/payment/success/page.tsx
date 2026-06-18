@@ -1,20 +1,73 @@
-import Link from 'next/link'
-import { CheckCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from "next/link";
+import { CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { createAdminClient } from "@/lib/supabase/server";
+import xenditClient, { mapPaymentMethod } from "@/lib/xendit";
 
 interface Props {
   searchParams: Promise<{
-    id?: string
-    external_id?: string
-    status?: string
-    amount?: string
-    currency?: string
-  }>
+    id?: string;
+    external_id?: string;
+    status?: string;
+    amount?: string;
+    currency?: string;
+  }>;
 }
 
 export default async function PaymentSuccessPage({ searchParams }: Props) {
-  const { id, external_id, status, amount, currency } = await searchParams
+  const params = await searchParams;
+
+  console.log("[payment-success] external_id:", params.external_id);
+
+  let verifiedStatus: string | undefined;
+  let verifiedExternalId: string | undefined;
+
+  if (params.external_id) {
+    try {
+      const invoices = await xenditClient.Invoice.getInvoices({
+        externalId: params.external_id,
+        limit: 1,
+      });
+
+      console.log("[payment-success] invoices found:", invoices?.length);
+
+      const invoice = invoices[0];
+      if (invoice) {
+        verifiedStatus = invoice.status;
+        verifiedExternalId = invoice.externalId;
+
+        console.log("[payment-success] invoice status:", invoice.status);
+
+        if (invoice.status === "PAID") {
+          const supabase = createAdminClient();
+          const paymentMethod = mapPaymentMethod(invoice.paymentMethod);
+          const { error: updateError } = await supabase
+            .from("payments")
+            .update({
+              status: "success",
+              payment_method: paymentMethod,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("transaction_code", invoice.externalId);
+
+          console.log("[payment-success] update result:", updateError?.message ?? "ok");
+        }
+      }
+    } catch (e) {
+      console.error("[payment-success] Xendit API error:", e);
+    }
+  }
+
+  const displayStatus = params.status ?? verifiedStatus;
+  const displayExternalId = params.external_id ?? verifiedExternalId;
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
@@ -29,24 +82,27 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          {external_id && (
+          {displayExternalId && (
             <div className="flex justify-between rounded-lg bg-muted px-4 py-2">
               <span className="text-muted-foreground">Reference</span>
-              <span className="font-medium">{external_id}</span>
+              <span className="font-medium">{displayExternalId}</span>
             </div>
           )}
-          {amount && (
+          {params.amount && (
             <div className="flex justify-between rounded-lg bg-muted px-4 py-2">
               <span className="text-muted-foreground">Amount</span>
               <span className="font-medium">
-                {currency ? `${currency} ` : ''}{parseFloat(amount).toLocaleString()}
+                {params.currency ? `${params.currency} ` : ""}
+                {parseFloat(params.amount).toLocaleString()}
               </span>
             </div>
           )}
-          {status && (
+          {displayStatus && (
             <div className="flex justify-between rounded-lg bg-muted px-4 py-2">
               <span className="text-muted-foreground">Status</span>
-              <span className="font-medium text-green-600">{status}</span>
+              <span className="font-medium text-green-600">
+                {displayStatus}
+              </span>
             </div>
           )}
         </CardContent>
@@ -60,5 +116,5 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
