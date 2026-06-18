@@ -1,23 +1,26 @@
 import { getServicePlans } from '@/actions/admin/service'
-import { ServiceForm } from '@/components/admin/service-form'
-import { ServiceTable } from '@/components/admin/service-table'
+import { PageHeader } from '@/components/admin/shared/page-header'
+import { ServiceForm } from '@/components/admin/services/service-form'
+import { ServiceCards } from '@/components/admin/services/service-cards'
+import { ServiceTable } from '@/components/admin/services/service-table'
 
 export default async function ServicesPage() {
   const services = await getServicePlans()
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Service Plans</h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-            Create, manage, and monitor service packages offered to applicants.
-          </p>
-        </div>
-        <ServiceForm />
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Service plans"
+        description="Create, manage, and monitor service packages offered to applicants."
+        actions={<ServiceForm />}
+      />
 
-      <ServiceTable services={services} />
+      <ServiceCards services={services} />
+
+      <div className="space-y-2.5">
+        <h2 className="text-sm font-medium text-brand-neutral-900">All plans</h2>
+        <ServiceTable services={services} />
+      </div>
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { getSession } from '@/actions/auth'
 import { SidebarLayout } from '@/components/layout/sidebar-layout'
-import { LayoutDashboard, Users, Package2, FileText } from 'lucide-react'
+import { LayoutDashboard, Users, Package2, FileText, Wallet } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/admin/profiles', label: 'Client Profiles', icon: Users },
   { href: '/admin/services', label: 'Services', icon: Package2 },
   { href: '/admin/applications', label: 'Applications', icon: FileText },
+  { href: '/admin/payments', label: 'Payments', icon: Wallet },
 ]
 
 export default function AdminLayout({
@@ -29,7 +30,6 @@ export default function AdminLayout({
   return (
     <SidebarLayout navItems={NAV_ITEMS} title="Admin" user={{ name: userName || 'Admin User', role: role || 'Admin' }}>
       {children}
-      role
     </SidebarLayout>
   )
 }

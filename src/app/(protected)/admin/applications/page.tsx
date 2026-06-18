@@ -1,5 +1,5 @@
 import { getApplicationStats, getApplications } from '@/actions/admin/applications-admin'
-import { ApplicationsClient } from '@/components/admin/applications'
+import { ApplicationsClient } from '@/components/admin/applications/applications'
 
 export default async function ApplicationsPage({
   searchParams,
