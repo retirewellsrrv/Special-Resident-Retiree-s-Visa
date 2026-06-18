@@ -308,7 +308,12 @@ export function useSRRVApplicationForm() {
       return;
     }
 
-    // Reset form on success
+    if (result.invoiceUrl) {
+      window.location.href = result.invoiceUrl;
+      return;
+    }
+
+    // Reset form on success (fallback if no invoiceUrl)
     setCurrentStep(1);
     setStep1Data({
       name: "",
