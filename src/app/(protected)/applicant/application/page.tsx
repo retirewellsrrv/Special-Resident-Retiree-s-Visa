@@ -7,6 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Mail, Phone, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { steps } from "@/components/applicant/application/constants";
 import { Step1 } from "@/components/applicant/application/Step1";
@@ -47,6 +49,8 @@ export default function SRRVApplicationPage() {
     showConfirm,
     confirmSubmit,
     cancelSubmit,
+    isLoadingProfile,
+    isSubmitting,
   } = useSRRVApplicationForm();
 
   return (
@@ -102,32 +106,66 @@ export default function SRRVApplicationPage() {
 
               <Separator className="mb-6" />
 
+              {/* Loading state for profile data */}
+              {isLoadingProfile && (
+                <div className="space-y-6">
+                  <div className="mb-6 space-y-2">
+                    <Skeleton className="h-7 w-48" />
+                    <Skeleton className="h-4 w-96" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-12" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Active step content */}
-              {currentStep === 1 && (
+              {!isLoadingProfile && currentStep === 1 && (
                 <Step1
                   data={step1Data}
                   onChange={step1Change}
                   errors={errors}
                 />
               )}
-              {currentStep === 2 && (
+              {!isLoadingProfile && currentStep === 2 && (
                 <Step2
                   data={step2Data}
                   onChange={step2Change}
                   errors={errors}
                 />
               )}
-              {currentStep === 3 && (
+              {!isLoadingProfile && currentStep === 3 && (
                 <Step3
                   selected={selectedService}
                   onSelect={setSelectedService}
                   error={errors.service_type}
                 />
               )}
-              {currentStep === 4 && (
+              {!isLoadingProfile && currentStep === 4 && (
                 <Step4 data={step4Data} onUpload={docUpload} errors={errors} />
               )}
-              {currentStep === 5 && (
+              {!isLoadingProfile && currentStep === 5 && (
                 <Step5
                   step1Data={step1Data}
                   step2Data={step2Data}
@@ -154,6 +192,7 @@ export default function SRRVApplicationPage() {
                   <Button
                     variant="outline"
                     onClick={back}
+                    disabled={isSubmitting}
                     className="border-neutral-300 text-neutral-600 hover:bg-neutral-50 px-6 py-2.5 rounded-md font-semibold flex items-center gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
@@ -162,10 +201,22 @@ export default function SRRVApplicationPage() {
                 )}
                 <Button
                   onClick={next}
-                  className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors"
+                  disabled={isSubmitting}
+                  className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLastStep ? "Submit Application" : "Save & Continue"}
-                  {!isLastStep && <ArrowRight className="w-4 h-4" />}
+                  {isSubmitting ? (
+                    <>
+                      <Spinner className="size-4" />
+                      Processing...
+                    </>
+                  ) : isLastStep ? (
+                    "Submit Application"
+                  ) : (
+                    <>
+                      Save & Continue
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
