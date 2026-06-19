@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getServicePlans } from '@/actions/admin/service'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import { ServiceForm } from '@/components/admin/services/service-form'

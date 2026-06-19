@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getApplicationStats, getApplications } from '@/actions/admin/applications-admin'
 import { ApplicationsClient } from '@/components/admin/applications/applications'
 
