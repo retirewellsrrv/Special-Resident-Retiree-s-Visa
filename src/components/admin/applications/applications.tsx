@@ -92,7 +92,9 @@ export function ApplicationsClient({
       />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
         {statCards.map((s) => (
-          <Card key={s.label} size="sm">
+          <Card
+            className="rounded-2xl border border-neutral-200 shadow-sm bg-white"
+            key={s.label} size="sm">
             <CardContent className="flex flex-col gap-1">
               <span className="text-ht-caption text-muted-foreground">
                 {s.label}

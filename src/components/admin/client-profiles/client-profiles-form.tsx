@@ -55,7 +55,7 @@ function StatCard({
     icon: LucideIcon
 }) {
     return (
-        <Card className={`p-5 space-y-4 rounded-xl transition-shadow hover:shadow-md ${highlight ? 'border-brand-primary-200' : ''}`}>
+        <Card className={` rounded-2xl border border-neutral-200 shadow-sm bg-white p-5 space-y-4 transition-shadow hover:shadow-md ${highlight ? 'ring-brand-primary-200' : ''}`}>
             <div className="flex items-start justify-between">
                 <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center ${highlight ? 'bg-brand-primary-100 text-brand-primary-600' : 'bg-primary/10 text-primary'
@@ -196,7 +196,8 @@ export function ClientProfilesClient({
             </div>
 
             {/* Client Directory */}
-            <Card className="rounded-xl overflow-hidden">
+            <Card
+                className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
                 {/* Toolbar */}
                 <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                     <div className="flex items-center gap-2">

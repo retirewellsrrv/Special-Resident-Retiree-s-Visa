@@ -39,9 +39,12 @@ export function NavItems({ items, label }: NavItemsProps) {
                 <SidebarMenuButton
                   asChild
                   isActive={isActive}
-                  tooltip={label}
                   className={cn(
-                    isActive && '!bg-brand-primary-600 !text-white !font-semibold !shadow-sm'
+                    isActive && [
+                      '!bg-brand-primary-600 !text-white !font-semibold',
+                      'data-active:!shadow-sm',
+                      'group-data-[collapsible=icon]:!bg-brand-primary-600 group-data-[collapsible=icon]:!rounded-md group-data-[collapsible=icon]:!shadow-sm group-data-[collapsible=icon]:!h-7 group-data-[collapsible=icon]:!w-auto group-data-[collapsible=icon]:!gap-0',
+                    ]
                   )}
                 >
                   <Link href={href}>

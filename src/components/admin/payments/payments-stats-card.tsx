@@ -14,7 +14,7 @@ interface Props {
 
 export default function StatCard({ label, value, icon, barWidth = 0, barColor = '#871426', footer }: Props) {
   return (
-    <Card className="bg-white border-brand-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[11px] text-brand-neutral-500 font-semibold uppercase tracking-wide">{label}</span>

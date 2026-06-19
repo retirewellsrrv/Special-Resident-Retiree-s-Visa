@@ -58,7 +58,7 @@ export function SidebarLayout({
           } as React.CSSProperties
         }
       >
-        <div className="flex min-h-svh w-full">
+        <div className="flex flex-row min-h-svh w-full">
           <Sidebar
             collapsible="icon"
             className="border-r border-brand-neutral-200 bg-brand-tertiary-500"
@@ -88,7 +88,7 @@ export function SidebarLayout({
 
             {/* ── Nav items ── */}
             <SidebarContent className="px-2 py-3">
-              <NavItems items={navItems} label="Navigation" />
+              <NavItems items={navItems} />
             </SidebarContent>
 
             {/* ── Footer ── */}

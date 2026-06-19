@@ -79,9 +79,9 @@ export function ServiceCards({ services }: Props) {
         <Card
           key={s.id}
           size="sm"
-          className={`bg-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${s.highlighted
+          className={`rounded-2xl border border-neutral-200 shadow-sm bg-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${s.highlighted
             ? 'border-brand-primary-300 shadow-sm shadow-brand-primary-100 ring-brand-primary-200'
-            : 'border-transparent shadow-sm ring-0'
+            : 'shadow-sm'
             }`}
         >
           <CardContent className="flex items-center justify-between">
