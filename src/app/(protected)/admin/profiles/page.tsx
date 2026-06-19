@@ -1,5 +1,7 @@
+export const dynamic = 'force-dynamic'
+
 import { getClientStats, getClientDirectory } from '@/actions/admin/client-profiles'
-import { ClientProfilesClient } from '@/components/admin/client-profiles-form';
+import { ClientProfilesClient } from '@/components/admin/client-profiles/client-profiles-form';
 
 export default async function ClientProfilesPage({
   searchParams,

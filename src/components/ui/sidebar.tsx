@@ -35,12 +35,12 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 // These are injected as CSS variables on the sidebar wrapper so every
 // descendent can reference them without extra class work.
 const SRRV_VARS = {
-  "--sidebar-background": "#fff",   // deep crimson shell
+  "--sidebar-background": "#fff",
   "--sidebar-foreground": "rgba(0, 0, 0, 0.75)",
   "--sidebar-border": "rgba(255,255,255,0.08)",
-  "--sidebar-accent": "#FFB3B3", // hover bg
+  "--sidebar-accent": "#FFB3B3",
   "--sidebar-accent-foreground": "#400009",
-  "--sidebar-primary": "#C0392B",   // active bg
+  "--sidebar-primary": "#871426",   // brand-primary-600
   "--sidebar-primary-foreground": "#ffffff",
   "--sidebar-ring": "rgba(255,255,255,0.25)",
 } as React.CSSProperties
@@ -539,7 +539,7 @@ function SidebarMenuButton({
       data-slot="sidebar-menu-button"
       data-sidebar="menu-button"
       data-size={size}
-      data-active={isActive}
+      data-active={isActive || undefined}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
       {...props}
     />
@@ -604,7 +604,7 @@ function SidebarMenuBadge({
         "pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold tabular-nums select-none",
         "bg-[rgba(255,255,255,0.15)] text-white",
         "group-data-[collapsible=icon]:hidden",
-        "peer-data-active/menu-button:bg-white peer-data-active/menu-button:text-[#C0392B]",
+        "peer-data-active/menu-button:bg-white peer-data-active/menu-button:text-brand-primary-600",
         className
       )}
       {...props}
@@ -691,7 +691,7 @@ function SidebarMenuSubButton({
       data-slot="sidebar-menu-sub-button"
       data-sidebar="menu-sub-button"
       data-size={size}
-      data-active={isActive}
+      data-active={isActive || undefined}
       className={cn(
         "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-[var(--sidebar-foreground)] ring-[var(--sidebar-ring)] outline-hidden group-data-[collapsible=icon]:hidden",
         "hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]",

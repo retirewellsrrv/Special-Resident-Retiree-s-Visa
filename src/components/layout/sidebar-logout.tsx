@@ -26,7 +26,6 @@ export function SidebarLogout() {
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Logout"
           onClick={handleLogout}
           disabled={pending}
         >

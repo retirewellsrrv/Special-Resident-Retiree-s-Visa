@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { Geist } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/navbar";
 import { ChatWidget } from "@/components/chat";
 import { getSession } from "@/actions/auth";
-
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -21,20 +19,35 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-body",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-display",
+});
+
 export const metadata: Metadata = {
   title: "Special Resident Retiree's Visa",
   description: "Your trusted partner for visa and immigration services",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const user = await getSession();
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html
+      lang="en"
+      className={cn(
+        inter.variable,
+        manrope.variable,
+        geistSans.variable,
+        geistMono.variable
+      )}
+    >
+      <body className="antialiased">
         {children}
         <Toaster />
         <ChatWidget />
