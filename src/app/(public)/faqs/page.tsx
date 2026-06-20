@@ -7,6 +7,7 @@ import AccordionCard from '@/components/faqs/accordion-card';
 import SideButton from '@/components/faqs/side-button';
 import ConsultationModal from '@/components/faqs/consultation-modal';
 import { useRouter } from 'next/navigation';
+import { Footer } from '@/components/layout/Footer';
 
 // Configuration for your navigation sidebar
 const FAQ_CATEGORIES = [
@@ -147,53 +148,7 @@ export default function Faq() {
           />
         </div>
       </section>
-
-
-      {/* Footer */}
-      <footer className="bg-[#FAFAFA] border-t border-gray-200 py-12 px-6">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div className="col-span-1">
-            <div className="text-[#A6192E] font-bold text-xl tracking-tighter mb-4">
-              SRRV <span className="text-xs font-normal text-gray-500 uppercase block leading-none">Global Consulting</span>
-            </div>
-            <p className="text-sm text-gray-500 leading-relaxed pr-4">
-              Leading consultancy for Philippine retirement visas, serving clients globally with integrity.
-            </p>
-          </div>
-          <div>
-            <h5 className="font-bold text-gray-900 text-sm mb-4">Company</h5>
-            <ul className="space-y-3 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-[#A6192E]">About Us</a></li>
-              <li><a href="#" className="hover:text-[#A6192E]">Services</a></li>
-              <li><a href="#" className="hover:text-[#A6192E]">Careers</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="font-bold text-gray-900 text-sm mb-4">Resources</h5>
-            <ul className="space-y-3 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-[#A6192E]">FAQ</a></li>
-              <li><a href="#" className="hover:text-[#A6192E]">Blog</a></li>
-              <li><a href="#" className="hover:text-[#A6192E]">Guides</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="font-bold text-gray-900 text-sm mb-4">Support</h5>
-            <ul className="space-y-3 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-[#A6192E]">Contact</a></li>
-              <li><a href="#" className="hover:text-[#A6192E]">Help Center</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
-          <p>© 2026 SRRV Global Consulting. All rights reserved.</p>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-gray-900">Privacy Policy</a>
-            <a href="#" className="hover:text-gray-900">Terms of Service</a>
-            <a href="#" className="hover:text-gray-900">Cookie Policy</a>
-            <a href="#" className="hover:text-gray-900">Regulatory Disclosure</a>
-          </div>
-        </div>
-      </footer>
+      <Footer/>
     </div>
   );
 }
