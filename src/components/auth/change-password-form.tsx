@@ -1,13 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { resetPasswordSchema, type ResetPasswordInput } from '@/schemas/auth'
-import { resetPasswordAction } from '@/actions/auth'
-import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { resetPasswordSchema } from '@/schemas/auth'
+import { resetPasswordAction, type ActionResult } from '@/actions/auth'
 import { toast } from 'sonner'
-import { Lock, Eye, EyeOff } from 'lucide-react'
+import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -21,25 +18,39 @@ import { Input } from '@/components/ui/input'
 export default function ChangePasswordForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isPending, setPending] = useState(false)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ResetPasswordInput>({
-    resolver: zodResolver(resetPasswordSchema),
-  })
-
-  async function onSubmit(data: ResetPasswordInput) {
+  async function handleSubmit() {
+    const parsed = resetPasswordSchema.safeParse({ password, confirmPassword })
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {}
+      for (const issue of parsed.error.issues) {
+        fieldErrors[issue.path[0] as string] = issue.message
+      }
+      setErrors(fieldErrors)
+      return
+    }
+    setErrors({})
+    setPending(true)
     try {
-      const result = await resetPasswordAction(data.password)
-
-      if (!result.success) {
+      const result = await resetPasswordAction(parsed.data.password) as ActionResult | undefined
+      if (result && !result.success) {
         toast.error(result.error)
       }
-    } catch (error) {
-      if (isRedirectError(error)) throw error
-      toast.error('Something went wrong. Please try again.')
+    } catch {
+      // redirect handled by Next.js — component will unmount
+      return
+    }
+    setPending(false)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleSubmit()
     }
   }
 
@@ -59,7 +70,7 @@ export default function ChangePasswordForm() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="password">New password</FieldLabel>
@@ -71,7 +82,9 @@ export default function ChangePasswordForm() {
                     placeholder="Min. 8 characters"
                     autoComplete="new-password"
                     className="h-12 pl-11 pr-11"
-                    {...register('password')}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
                   />
                   <button
                     type="button"
@@ -84,7 +97,7 @@ export default function ChangePasswordForm() {
                 </div>
                 {errors.password && (
                   <FieldDescription className="text-brand-danger-800">
-                    {errors.password.message}
+                    {errors.password}
                   </FieldDescription>
                 )}
               </Field>
@@ -99,7 +112,9 @@ export default function ChangePasswordForm() {
                     placeholder="Re-enter your new password"
                     autoComplete="new-password"
                     className="h-12 pl-11 pr-11"
-                    {...register('confirmPassword')}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
                   />
                   <button
                     type="button"
@@ -112,22 +127,26 @@ export default function ChangePasswordForm() {
                 </div>
                 {errors.confirmPassword && (
                   <FieldDescription className="text-brand-danger-800">
-                    {errors.confirmPassword.message}
+                    {errors.confirmPassword}
                   </FieldDescription>
                 )}
               </Field>
 
               <Field>
                 <Button
-                  type="submit"
                   className="h-12 w-full bg-brand-primary-700 text-brand-tertiary-50 hover:bg-brand-primary-500"
-                  disabled={isSubmitting}
+                  disabled={isPending}
+                  onClick={handleSubmit}
                 >
-                  {isSubmitting ? 'Resetting…' : 'Reset password'}
+                  {isPending ? (
+                    <><Loader2 className="mr-2 size-4 animate-spin" /> Resetting…</>
+                  ) : (
+                    'Reset password'
+                  )}
                 </Button>
               </Field>
             </FieldGroup>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
