@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 //? place holder for now 
 const LOGO_SRC =
@@ -88,6 +89,7 @@ export function LoginForm({
         } catch (error) {
             if (isRedirectError(error)) throw error
             console.error(error)
+            if(isRedirectError(error)) throw error 
             setServerError('Something went wrong.')
         }
     }

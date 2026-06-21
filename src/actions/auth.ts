@@ -231,7 +231,7 @@ export async function handleResetRequest(email: string): Promise<ActionResult> {
   //* request for the change password email
   const supabase = await createClient()
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/change-password`,
+    redirectTo: `${origin}/forgot-password/change-password`,
   })
 
   //! only used for debugging, REMOVE WHEN FEATURE IS DONE
@@ -253,7 +253,7 @@ export async function savePasswordChange(email: string): Promise<ActionResult> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/change-password`,
+    redirectTo: `${origin}/forgot-password/change-password`,
   })
 
   if (error) {
@@ -272,7 +272,14 @@ export async function resetPasswordAction(newPassword: string): Promise<ActionRe
     return { success: false, error: 'Password must be at least 8 characters.' }
   }
 
+  console.log('Password: ', newPassword)
+
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'No active session. Please request a new password reset link.' }
+  }
 
   const { error } = await supabase.auth.updateUser({ password: newPassword })
 
