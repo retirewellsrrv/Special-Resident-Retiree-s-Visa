@@ -1,9 +1,31 @@
-import { ConfirmEmail } from "@/components/auth/confirm-email-page";
+import ConfirmEmailForm from '@/components/auth/confirm-email'
+import Link from 'next/link'
 
-export default function ConfirmEmailPage() {
+interface Props {
+  searchParams: Promise<{ email?: string; error?: string }>
+}
+
+export default async function ConfirmEmailPage({ searchParams }: Props) {
+  const { email } = await searchParams
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f4f2ec] px-4 py-12">
-      <ConfirmEmail />
-    </div>
+    <>
+      <ConfirmEmailForm
+        email={email ?? ''}
+      />
+
+      <footer className="pointer-events-none absolute bottom-6 w-full px-4 text-center">
+        <p className="mx-auto max-w-[600px] text-xs leading-4 text-white/70">
+          © 2024 Retire Well SRRV. Professional Visa Consultation Services.
+          <span className="mx-2">|</span>
+          <Link
+            href="#"
+            className="pointer-events-auto transition-colors hover:text-white"
+          >
+            Privacy Policy
+          </Link>
+        </p>
+      </footer>
+    </>
   )
 }

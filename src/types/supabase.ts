@@ -32,33 +32,63 @@ export type Database = {
       applications: {
         Row: {
           application_code: string
+          city: string
+          country: string
           created_at: string
+          emergency_name: string | null
+          emergency_phone: string | null
+          emergency_relationship: string | null
           id: number
-          payment_id: number
+          payment_id: number | null
+          ph_address: string | null
+          phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
+          state: string
           status: Database["public"]["Enums"]["application_status"]
-          updated_at: string | null
+          street: string
+          updated_at: string
           user_id: string
+          zip: string
         }
         Insert: {
           application_code: string
+          city: string
+          country: string
           created_at?: string
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relationship?: string | null
           id?: number
-          payment_id: number
+          payment_id?: number | null
+          ph_address?: string | null
+          phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
+          state: string
           status?: Database["public"]["Enums"]["application_status"]
-          updated_at?: string | null
+          street: string
+          updated_at?: string
           user_id: string
+          zip: string
         }
         Update: {
           application_code?: string
+          city?: string
+          country?: string
           created_at?: string
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relationship?: string | null
           id?: number
-          payment_id?: number
+          payment_id?: number | null
+          ph_address?: string | null
+          phone_number?: string
           service_type?: Database["public"]["Enums"]["service_type"]
+          state?: string
           status?: Database["public"]["Enums"]["application_status"]
-          updated_at?: string | null
+          street?: string
+          updated_at?: string
           user_id?: string
+          zip?: string
         }
         Relationships: [
           {
@@ -72,7 +102,7 @@ export type Database = {
             foreignKeyName: "applications_service_type_fkey"
             columns: ["service_type"]
             isOneToOne: false
-            referencedRelation: "services"
+            referencedRelation: "service_plans"
             referencedColumns: ["type"]
           },
           {
@@ -86,27 +116,27 @@ export type Database = {
       }
       client_profiles: {
         Row: {
-          address: string
           age: number
           birthday: string
+          marital_status: Database["public"]["Enums"]["marital_status"]
           name: string
           nationality: string
           sex: Database["public"]["Enums"]["sex"]
           user_id: string
         }
         Insert: {
-          address: string
           age: number
           birthday: string
+          marital_status?: Database["public"]["Enums"]["marital_status"]
           name: string
           nationality: string
           sex: Database["public"]["Enums"]["sex"]
           user_id: string
         }
         Update: {
-          address?: string
           age?: number
           birthday?: string
+          marital_status?: Database["public"]["Enums"]["marital_status"]
           name?: string
           nationality?: string
           sex?: Database["public"]["Enums"]["sex"]
@@ -118,29 +148,35 @@ export type Database = {
         Row: {
           application_id: number
           created_at: string
+          format: Database["public"]["Enums"]["document_format"]
           id: number
+          name: string
           path: string
           status: Database["public"]["Enums"]["document_status"]
-          type: string
-          updated_at: string | null
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at: string
         }
         Insert: {
           application_id: number
           created_at?: string
-          id: number
+          format: Database["public"]["Enums"]["document_format"]
+          id?: number
+          name: string
           path: string
-          status: Database["public"]["Enums"]["document_status"]
-          type: string
-          updated_at?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          type: Database["public"]["Enums"]["document_type"]
+          updated_at?: string
         }
         Update: {
           application_id?: number
           created_at?: string
+          format?: Database["public"]["Enums"]["document_format"]
           id?: number
+          name?: string
           path?: string
           status?: Database["public"]["Enums"]["document_status"]
-          type?: string
-          updated_at?: string | null
+          type?: Database["public"]["Enums"]["document_type"]
+          updated_at?: string
         }
         Relationships: [
           {
@@ -152,7 +188,7 @@ export type Database = {
           },
         ]
       }
-      notifactions: {
+      notifications: {
         Row: {
           id: number
           is_read: boolean
@@ -189,7 +225,7 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_methods"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -199,7 +235,7 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_methods"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -209,7 +245,7 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_methods"]
           status?: Database["public"]["Enums"]["payment_status"]
           transaction_code?: string
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -222,27 +258,48 @@ export type Database = {
           },
         ]
       }
-      services: {
+      service_plans: {
         Row: {
-          description: string | null
+          created_at: string
+          description: string
+          highlighted: boolean
           id: number
           is_available: boolean
+          name: string
           price: number
+          price_note: string | null
+          subtitle: string
+          tags: string[]
           type: Database["public"]["Enums"]["service_type"]
+          updated_at: string
         }
         Insert: {
-          description?: string | null
-          id?: number
-          is_available: boolean
-          price: number
-          type: Database["public"]["Enums"]["service_type"]
-        }
-        Update: {
-          description?: string | null
+          created_at?: string
+          description: string
+          highlighted?: boolean
           id?: number
           is_available?: boolean
+          name: string
+          price: number
+          price_note?: string | null
+          subtitle: string
+          tags?: string[]
+          type: Database["public"]["Enums"]["service_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          highlighted?: boolean
+          id?: number
+          is_available?: boolean
+          name?: string
           price?: number
+          price_note?: string | null
+          subtitle?: string
+          tags?: string[]
           type?: Database["public"]["Enums"]["service_type"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -254,9 +311,44 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      application_status: "processing" | "paused" | "approved" | "rejected"
-      document_status: "processing" | "accepted" | "rejected" | "action need"
-      payment_methods: "credit card" | "debit card" | "e-wallet"
+      application_status:
+        | "processing"
+        | "paused"
+        | "approved"
+        | "rejected"
+        | "pending"
+      document_format:
+        | "pdf"
+        | "doc"
+        | "docx"
+        | "jpg"
+        | "png"
+        | "gif"
+        | "bmp"
+        | "webp"
+        | "tiff"
+        | "tif"
+        | "jpeg"
+      document_status:
+        | "processing"
+        | "accepted"
+        | "rejected"
+        | "action need"
+        | "pending"
+      document_type: "passport" | "visa" | "nbi" | "pension" | "medical"
+      marital_status: "single" | "married" | "widowed" | "divorced"
+      payment_methods:
+        | "pool"
+        | "callback_virtual_account"
+        | "credit_card"
+        | "retail_outlet"
+        | "qr_code"
+        | "qris"
+        | "ewallet"
+        | "direct_debit"
+        | "bank_transfer"
+        | "paylater"
+        | "cryptocurrency"
       payment_status: "processing" | "pending" | "cancelled" | "success"
       service_type: "basic" | "premium" | "vip"
       sex: "male" | "female"
@@ -387,9 +479,48 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      application_status: ["processing", "paused", "approved", "rejected"],
-      document_status: ["processing", "accepted", "rejected", "action need"],
-      payment_methods: ["credit card", "debit card", "e-wallet"],
+      application_status: [
+        "processing",
+        "paused",
+        "approved",
+        "rejected",
+        "pending",
+      ],
+      document_format: [
+        "pdf",
+        "doc",
+        "docx",
+        "jpg",
+        "png",
+        "gif",
+        "bmp",
+        "webp",
+        "tiff",
+        "tif",
+        "jpeg",
+      ],
+      document_status: [
+        "processing",
+        "accepted",
+        "rejected",
+        "action need",
+        "pending",
+      ],
+      document_type: ["passport", "visa", "nbi", "pension", "medical"],
+      marital_status: ["single", "married", "widowed", "divorced"],
+      payment_methods: [
+        "pool",
+        "callback_virtual_account",
+        "credit_card",
+        "retail_outlet",
+        "qr_code",
+        "qris",
+        "ewallet",
+        "direct_debit",
+        "bank_transfer",
+        "paylater",
+        "cryptocurrency",
+      ],
       payment_status: ["processing", "pending", "cancelled", "success"],
       service_type: ["basic", "premium", "vip"],
       sex: ["male", "female"],

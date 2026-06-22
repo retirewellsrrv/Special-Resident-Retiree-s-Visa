@@ -1,7 +1,5 @@
-export type Service = {
-  id: number
-  type: 'basic' | 'premium' | 'vip'
-  price: number
-  description: string | null
-  is_available: boolean
-}
+import type { Database } from './supabase'
+
+export type ServicePlan = Database['public']['Tables']['service_plans']['Row']
+export type ServicePlanInsert = Database['public']['Tables']['service_plans']['Insert']
+export type ServicePlanUpdate = Database['public']['Tables']['service_plans']['Update']

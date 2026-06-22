@@ -3,22 +3,31 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Combobox,
+  ComboboxContent,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxInput,
+} from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
-import { Step1Data } from "./types";
-import { INPUT_CLASS, SELECT_TRIGGER_CLASS, LABEL_CLASS } from "./constants";
+import type { ApplicationFormInput } from "@/schemas/application";
+import { INPUT_CLASS, LABEL_CLASS } from "./constants";
+
+type Step1Data = {
+  [K in keyof Pick<
+    ApplicationFormInput,
+    "name" | "birthday" | "sex" | "nationality" | "marital_status"
+  >]: string;
+};
 
 export function Step1({
   data,
   onChange,
+  errors = {},
 }: {
   data: Step1Data;
   onChange: (field: keyof Step1Data, value: string) => void;
+  errors?: Record<string, string>;
 }) {
   return (
     <>
@@ -33,16 +42,19 @@ export function Step1({
       </div>
 
       <div className="mb-6">
-        <Label htmlFor="fullName" className={LABEL_CLASS}>
+        <Label htmlFor="name" className={LABEL_CLASS}>
           Full Name (As shown in Passport)
         </Label>
         <Input
-          id="fullName"
+          id="name"
           placeholder="Enter your full legal name"
-          value={data.fullName}
-          onChange={(e) => onChange("fullName", e.target.value)}
-          className={INPUT_CLASS}
+          value={data.name}
+          onChange={(e) => onChange("name", e.target.value)}
+          className={cn(INPUT_CLASS, errors.name && "border-red-500")}
         />
+        {errors.name && (
+          <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
@@ -53,26 +65,38 @@ export function Step1({
           <Input
             id="dob"
             type="date"
-            value={data.dateOfBirth}
-            onChange={(e) => onChange("dateOfBirth", e.target.value)}
-            className={cn(INPUT_CLASS, "text-neutral-700")}
+            value={data.birthday}
+            onChange={(e) => onChange("birthday", e.target.value)}
+            className={cn(
+              INPUT_CLASS,
+              "text-neutral-700",
+              errors.birthday && "border-red-500",
+            )}
           />
+          {errors.birthday && (
+            <p className="text-sm text-red-500 mt-1">{errors.birthday}</p>
+          )}
         </div>
         <div>
-          <Label className={LABEL_CLASS}>Gender</Label>
-          <Select
-            value={data.gender}
-            onValueChange={(v) => onChange("gender", v)}
+          <Label className={LABEL_CLASS}>Sex</Label>
+          <Combobox
+            value={data.sex}
+            onValueChange={(v) => v && onChange("sex", v)}
           >
-            <SelectTrigger className={SELECT_TRIGGER_CLASS}>
-              <SelectValue placeholder="Select Gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-              <SelectItem value="prefer-not">Prefer not to say</SelectItem>
-            </SelectContent>
-          </Select>
+            <ComboboxInput
+              className={cn(INPUT_CLASS, errors.sex && "border-red-500")}
+              placeholder="Select Sex"
+            />
+            <ComboboxContent>
+              <ComboboxList>
+                <ComboboxItem value="male">Male</ComboboxItem>
+                <ComboboxItem value="female">Female</ComboboxItem>
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+          {errors.sex && (
+            <p className="text-sm text-red-500 mt-1">{errors.sex}</p>
+          )}
         </div>
       </div>
 
@@ -86,26 +110,38 @@ export function Step1({
             placeholder="e.g. United Kingdom"
             value={data.nationality}
             onChange={(e) => onChange("nationality", e.target.value)}
-            className={INPUT_CLASS}
+            className={cn(INPUT_CLASS, errors.nationality && "border-red-500")}
           />
+          {errors.nationality && (
+            <p className="text-sm text-red-500 mt-1">{errors.nationality}</p>
+          )}
         </div>
         <div>
           <Label className={LABEL_CLASS}>Marital Status</Label>
-          <Select
-            value={data.maritalStatus}
-            onValueChange={(v) => onChange("maritalStatus", v)}
+          <Combobox
+            value={data.marital_status}
+            onValueChange={(v) => v && onChange("marital_status", v)}
           >
-            <SelectTrigger className={SELECT_TRIGGER_CLASS}>
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="single">Single</SelectItem>
-              <SelectItem value="married">Married</SelectItem>
-              <SelectItem value="widowed">Widowed</SelectItem>
-              <SelectItem value="divorced">Divorced</SelectItem>
-              <SelectItem value="separated">Separated</SelectItem>
-            </SelectContent>
-          </Select>
+            <ComboboxInput
+              className={cn(
+                INPUT_CLASS,
+                errors.marital_status && "border-red-500",
+              )}
+              placeholder="Select Status"
+            />
+            <ComboboxContent>
+              <ComboboxList>
+                <ComboboxItem value="single">Single</ComboboxItem>
+                <ComboboxItem value="married">Married</ComboboxItem>
+                <ComboboxItem value="widowed">Widowed</ComboboxItem>
+                <ComboboxItem value="divorced">Divorced</ComboboxItem>
+                <ComboboxItem value="separated">Separated</ComboboxItem>
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+          {errors.marital_status && (
+            <p className="text-sm text-red-500 mt-1">{errors.marital_status}</p>
+          )}
         </div>
       </div>
     </>

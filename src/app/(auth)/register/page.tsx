@@ -11,18 +11,9 @@
 import Link from "next/link"
 import { SignupForm } from "@/components/auth/signup-form";
 
-import bgImage from "@/assets/images/bg-rice-terraces.png"
-
 export default function RegisterPage() {
   return (
-    <main
-      className="relative flex min-h-screen w-full items-center justify-center px-4 py-8"
-      style={{
-        backgroundImage: `linear-gradient(rgba(11, 28, 48, 0.45), rgba(11, 28, 48, 0.45)), url('${bgImage.src}')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
+    <>
       <SignupForm />
 
       {/* Bottom legal info */}
@@ -38,6 +29,6 @@ export default function RegisterPage() {
           </Link>
         </p>
       </footer>
-    </main>
+    </>
   )
 }

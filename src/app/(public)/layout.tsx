@@ -1,13 +1,15 @@
-import { Navbar } from '@/components/layout/navbar'
+import { Navbar } from "@/components/layout/navbar";
+import { getSession } from "@/actions/auth";
 
-export default function PublicLayout({
+export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const user = await getSession();
   return (
     <>
-      <Navbar />
+      <Navbar user={user} />
       {children}
     </>
   )

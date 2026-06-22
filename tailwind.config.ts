@@ -174,8 +174,8 @@ const config: Config = {
 
       // ─── Typography ─────────────────────────────────────────────────────────
       fontFamily: {
-        display: ["Manrope", "sans-serif"],
-        body: ["Inter", "sans-serif"],
+        display: ["var(--font-display)", "Manrope", "sans-serif"],
+        body: ["var(--font-body)", "Inter", "sans-serif"],
       },
 
       fontSize: {

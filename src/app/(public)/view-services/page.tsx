@@ -1,7 +1,7 @@
-import { getServices } from "@/actions/admin/service"
+import { getServicePlans } from "@/actions/admin/service"
 
 export default async function Services() {
-    const services = await getServices()
+    const services = await getServicePlans()
     return (
         <h1>
             Services

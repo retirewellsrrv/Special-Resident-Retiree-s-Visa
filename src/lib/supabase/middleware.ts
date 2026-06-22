@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/supabase";
 import { getSession } from "@/actions/auth";
+import { getUserRole, getUser } from "@/utils/auth/getUser"
 
 const PROTECTED_PREFIXES = ["/applicant", "/admin"];
 const PUBLIC_ONLY_PATHS = [
@@ -24,7 +25,7 @@ function isPublicOnly(pathname: string) {
   return PUBLIC_ONLY_PATHS.some((p) => pathname.startsWith(p));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
@@ -60,7 +61,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && isPublicOnly(pathname)) {
-    const userRole = user.user_metadata?.role as string | undefined;
+    const userRole = await getUserRole();
 
     const homeUrl = request.nextUrl.clone();
 

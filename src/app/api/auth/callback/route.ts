@@ -4,34 +4,54 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const tokenHash = searchParams.get('token_hash')
+  const type = searchParams.get('type')
 
+  const supabase = await createClient()
+
+  // OAuth flow
   if (code) {
-    const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
-      // Assign default role to OAuth users if not already set
-      const role = data.user.user_metadata?.role
+      const role = data.user.user_metadata?.role as string | undefined
+
       if (!role) {
         await supabase.auth.updateUser({
           data: { role: 'applicant' },
         })
-
-        // Also seed client_profiles for first-time OAuth users
-        await supabase.from('client_profiles').upsert({
-          user_id: data.user.id,
-          name: data.user.user_metadata?.full_name ?? '',
-          nationality: '',
-          address: '',
-          age: 0,
-          birthday: '',
-          sex: 'male',
-        }, { onConflict: 'user_id' })
+        await supabase.from('client_profiles').upsert(
+          {
+            user_id: data.user.id,
+            name: data.user.user_metadata?.full_name ?? '',
+            nationality: '',
+            age: 0,
+            birthday: '',
+            sex: 'male',
+          },
+          { onConflict: 'user_id' },
+        )
       }
 
       const destination = role === 'admin' ? '/admin/dashboard' : '/applicant/dashboard'
       return NextResponse.redirect(`${origin}${destination}`)
     }
+
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+  }
+
+  // Email confirmation flow
+  if (tokenHash && type === 'email') {
+    const { error } = await supabase.auth.verifyOtp({
+      type: 'email',
+      token_hash: tokenHash,
+    })
+
+    if (!error) {
+      return NextResponse.redirect(`${origin}/applicant/dashboard`)
+    }
+
+    return NextResponse.redirect(`${origin}/confirm-email?error=expired`)
   }
 
   return NextResponse.redirect(`${origin}/login?error=oauth_failed`)

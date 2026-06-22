@@ -1,24 +1,28 @@
-// app/admin/services/page.tsx
+export const dynamic = 'force-dynamic'
 
-import { getServices } from '@/actions/admin/service'
-import { ServiceTable } from '@/components/admin/service-table'
-import { ServiceForm } from '@/components/admin/service-form'
+import { getServicePlans } from '@/actions/admin/service'
+import { PageHeader } from '@/components/admin/shared/page-header'
+import { ServiceForm } from '@/components/admin/services/service-form'
+import { ServiceCards } from '@/components/admin/services/service-cards'
+import { ServiceTable } from '@/components/admin/services/service-table'
 
 export default async function ServicesPage() {
-  const services = await getServices()
+  const services = await getServicePlans()
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">Services</h1>
-        <p className="text-muted-foreground">
-          Manage service packages
-        </p>
+    <div className="space-y-4">
+      <PageHeader
+        title="Service plans"
+        description="Create, manage, and monitor service packages offered to applicants."
+        actions={<ServiceForm />}
+      />
+
+      <ServiceCards services={services} />
+
+      <div className="space-y-2.5">
+        <h2 className="text-sm font-medium text-brand-neutral-900">All plans</h2>
+        <ServiceTable services={services} />
       </div>
-
-      <ServiceForm />
-
-      <ServiceTable services={services} />
     </div>
   )
 }

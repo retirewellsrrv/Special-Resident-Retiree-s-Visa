@@ -1,17 +1,20 @@
 import { z } from 'zod'
 
 export const SexEnum = z.enum(['male', 'female'])
-export const ClientStatusEnum = z.enum(['processing', 'approved', 'paused', 'rejected',])
+export const ApplicationStatusEnum = z.enum([
+  'paused', 'approved', 'rejected', 'pending',
+])
+export const ServiceTypeEnum = z.enum(['basic', 'premium', 'vip'])
 
 export const clientProfileSchema = z.object({
-    name: z.string().max(255),
-    sex: SexEnum,
-    birthday: z.coerce.date().transform((d) => d.toISOString()),
-    nationality: z.string().max(100),
-    age: z.number().int().min(0).max(32767),
-    address: z.string().max(500).optional().transform((v) => v ?? undefined),
+  name: z.string().max(255),
+  sex: SexEnum,
+  birthday: z.coerce.date().transform((d) => d.toISOString()),
+  nationality: z.string().max(100),
+  age: z.number().int().min(0).max(32767).optional(),
 })
 
 export type ClientProfileInput = z.infer<typeof clientProfileSchema>
 export type Sex = z.infer<typeof SexEnum>
-export type ClientStatus = z.infer<typeof ClientStatusEnum>
+export type ApplicationStatus = z.infer<typeof ApplicationStatusEnum>
+export type ServiceType = z.infer<typeof ServiceTypeEnum>

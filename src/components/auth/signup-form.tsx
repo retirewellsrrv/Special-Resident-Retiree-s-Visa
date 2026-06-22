@@ -8,7 +8,7 @@ import { registerAction, oauthAction, CreateAdminAction } from '@/actions/auth'
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { User, Flag, MapPin, Mail, Lock, KeyRound } from 'lucide-react'
+import { User, Flag, MapPin, Mail, Lock, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,8 @@ export function SignupForm({
 }: React.ComponentProps<'div'>) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [oauthPending, setOauthPending] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {
     register,
@@ -55,7 +57,6 @@ export function SignupForm({
       email: '',
       birthday: '',
       nationality: '',
-      address: '',
       phoneNumber: '',
       password: '',
       confirmPassword: '',
@@ -66,8 +67,8 @@ export function SignupForm({
     try {
       setServerError(null)
 
-      // const result = await registerAction(data)
-      const result = await CreateAdminAction(data)
+      const result = await registerAction(data)
+      // const result = await CreateAdminAction(data) //* to create an admin
 
       if (!result.success) {
         toast.error(`Something went wrong: ${result.error}`)
@@ -193,7 +194,7 @@ export function SignupForm({
                       type="text"
                       placeholder="John"
                       autoComplete="given-name"
-                      className="pl-9"
+                      className="h-11 pl-9"
                       {...register('firstName')}
                     />
                   </div>
@@ -212,7 +213,7 @@ export function SignupForm({
                       type="text"
                       placeholder="Smith"
                       autoComplete="family-name"
-                      className="pl-9"
+                      className="h-11 pl-9"
                       {...register('surname')}
                     />
                   </div>
@@ -237,6 +238,7 @@ export function SignupForm({
                         onChange={(date) => field.onChange(date ? date.toISOString() : '')}
                         placeholder="Dec 25, 2000"
                         maxDate={new Date()}
+                        className="h-11 w-full"
                       />
                     )}
                   />
@@ -246,7 +248,7 @@ export function SignupForm({
                     </FieldDescription>
                   )}
                 </Field>
-                
+
                 <Field>
                   <FieldLabel htmlFor="sex">Sex</FieldLabel>
                   <Controller
@@ -258,7 +260,7 @@ export function SignupForm({
                         value={field.value ?? ''}
                         onValueChange={field.onChange}
                       >
-                        <ComboboxInput id="sex" placeholder="Select" />
+                        <ComboboxInput id="sex" placeholder="Select" className="h-11" />
                         <ComboboxContent>
                           <ComboboxEmpty>No options found.</ComboboxEmpty>
                           <ComboboxList>
@@ -281,30 +283,28 @@ export function SignupForm({
               </Field>
 
               {/* Nationality */}
-              <Field className="grid grid-cols-2 gap-4">
-                <Field>
-                  <FieldLabel htmlFor="nationality">Nationality</FieldLabel>
-                  <div className="group relative">
-                    <Flag className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
-                    <Input
-                      id="nationality"
-                      type="text"
-                      placeholder="Filipino"
-                      autoComplete="nationality"
-                      className="pl-9"
-                      {...register('nationality')}
-                    />
-                  </div>
-                  {errors.nationality && (
-                    <FieldDescription className="text-brand-danger-800">
-                      {errors.nationality.message}
-                    </FieldDescription>
-                  )}
-                </Field>
+              <Field>
+                <FieldLabel htmlFor="nationality">Nationality</FieldLabel>
+                <div className="group relative">
+                  <Flag className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                  <Input
+                    id="nationality"
+                    type="text"
+                    placeholder="Filipino"
+                    className="h-11 pl-9"
+                    {...register('nationality')}
+                  />
+                </div>
+                {errors.nationality && (
+                  <FieldDescription className="text-brand-danger-800">
+                    {errors.nationality.message}
+                  </FieldDescription>
+                )}
               </Field>
 
               {/* Address */}
-              <Field>
+              {/* //! removed the address from db */}
+              {/* <Field>
                 <FieldLabel htmlFor="address">Address</FieldLabel>
                 <div className="group relative">
                   <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
@@ -313,7 +313,7 @@ export function SignupForm({
                     type="text"
                     placeholder="Complete address"
                     autoComplete="street-address"
-                    className="pl-9"
+                    className="h-11 pl-9"
                     {...register('address')}
                   />
                 </div>
@@ -322,7 +322,7 @@ export function SignupForm({
                     {errors.address.message}
                   </FieldDescription>
                 )}
-              </Field>
+              </Field> */}
 
               {/* Email — full width, has description */}
               <Field>
@@ -334,7 +334,7 @@ export function SignupForm({
                     type="email"
                     placeholder="john@example.com"
                     autoComplete="email"
-                    className="pl-9"
+                    className="h-11 pl-9"
                     {...register('email')}
                   />
                 </div>
@@ -362,6 +362,7 @@ export function SignupForm({
                       value={field.value ?? ''}
                       onChange={field.onChange}
                       inputComponent={Input}
+                      numberInputProps={{ className: 'h-11', placeholder: '09XX XXX XXXX' }}
                     />
                   )}
                 />
@@ -380,12 +381,24 @@ export function SignupForm({
                     <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
                     <Input
                       id="password"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="Min. 8 characters"
                       autoComplete="new-password"
-                      className="pl-9"
+                      className="h-11 pl-9 pr-9"
                       {...register('password')}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-brand-primary-700"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </button>
                   </div>
                   {errors.password && (
                     <FieldDescription className="text-brand-danger-800">
@@ -399,12 +412,24 @@ export function SignupForm({
                     <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
                     <Input
                       id="confirm-password"
-                      type="password"
+                      type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="Repeat password"
                       autoComplete="new-password"
-                      className="pl-9"
+                      className="h-11 pl-9 pr-9"
                       {...register('confirmPassword')}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-brand-primary-700"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </button>
                   </div>
                   {errors.confirmPassword && (
                     <FieldDescription className="text-brand-danger-800">
