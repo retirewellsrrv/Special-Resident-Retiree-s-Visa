@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
-      const role = data.user.user_metadata?.role as string | undefined
+      let role = data.user.user_metadata?.role as string | undefined
 
       if (!role) {
         await supabase.auth.updateUser({
@@ -33,7 +33,18 @@ export async function GET(request: Request) {
         )
       }
 
-      const destination = role === 'admin' ? '/admin/dashboard' : '/applicant/dashboard'
+      // Check super_admin_profiles — overrides metadata role
+      const { data: superAdminProfile } = await supabase
+        .from('super_admin_profiles')
+        .select('user_id')
+        .eq('user_id', data.user.id)
+        .maybeSingle()
+
+      if (superAdminProfile) {
+        role = 'super_admin'
+      }
+
+      const destination = role === 'super_admin' ? '/super-admin/dashboard' : role === 'admin' ? '/admin/dashboard' : '/applicant/dashboard'
       return NextResponse.redirect(`${origin}${destination}`)
     }
 

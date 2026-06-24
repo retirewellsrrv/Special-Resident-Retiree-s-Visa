@@ -9,9 +9,17 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck, AlertCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck, AlertCircle, Ban } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+} from '@/components/ui/alert-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import {
     Field,
@@ -44,6 +52,7 @@ export function LoginForm({
     const [serverError, setServerError] = useState<string | null>(urlError ? (ERROR_MESSAGES[urlError] ?? urlError) : null)
     const [oauthPending, setOauthPending] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+    const [showDisabledDialog, setShowDisabledDialog] = useState(false)
 
     useEffect(() => {
         if (urlError) {
@@ -65,6 +74,10 @@ export function LoginForm({
             const result = await loginAction(data)
 
             if (!result.success) {
+                if (result.error === 'ACCOUNT_DISABLED') {
+                    setShowDisabledDialog(true)
+                    return
+                }
                 toast.error(`Something went wrong: ${result.error}`)
                 setServerError(result.error)
                 return
@@ -252,6 +265,28 @@ export function LoginForm({
                     </form>
                 </CardContent>
             </Card>
+            <AlertDialog open={showDisabledDialog} onOpenChange={setShowDisabledDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-red-100">
+                            <Ban className="size-7 text-red-600" />
+                        </div>
+                        <AlertDialogTitle className="text-center text-xl">Account Disabled</AlertDialogTitle>
+                        <AlertDialogDescription className="text-center">
+                            Your admin account has been disabled. Please contact the super administrator to regain access.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="sm:justify-center">
+                        <Button
+                            variant="default"
+                            className="bg-brand-primary-600 hover:bg-brand-primary-800"
+                            onClick={() => setShowDisabledDialog(false)}
+                        >
+                            Understood
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
