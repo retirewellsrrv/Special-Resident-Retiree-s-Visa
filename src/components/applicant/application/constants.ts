@@ -12,4 +12,5 @@ export const steps = [
   { id: 3, label: "Service Selection" },
   { id: 4, label: "Document Checklist" },
   { id: 5, label: "Review Application" },
+  { id: 6, label: "Under Review" },
 ];

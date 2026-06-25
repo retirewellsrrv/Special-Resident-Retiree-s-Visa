@@ -57,6 +57,108 @@ export async function getApplicantProfile(): Promise<ApplicantProfile | null> {
   };
 }
 
+export type ExistingApplicationData = {
+  application: {
+    id: number;
+    application_code: string;
+    service_type: string;
+    status: string;
+    created_at: string;
+    phone_number: string;
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+    ph_address: string | null;
+    emergency_name: string | null;
+    emergency_phone: string | null;
+    emergency_relationship: string | null;
+  };
+  profile: {
+    name: string;
+    birthday: string;
+    sex: string;
+    nationality: string;
+    marital_status: string;
+    email: string;
+  };
+  documents: {
+    type: string;
+    name: string;
+    format: string;
+    status: string;
+  }[];
+  payment: {
+    amount: number;
+    status: string;
+  } | null;
+};
+
+export async function getExistingApplication(): Promise<ExistingApplicationData | null> {
+  const user = await getUserServer();
+  if (!user) return null;
+
+  const supabase = await createClient();
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!app) return null;
+
+  const { data: profile } = await supabase
+    .from("client_profiles")
+    .select("name, birthday, sex, nationality, marital_status")
+    .eq("user_id", user.id)
+    .single();
+
+  const { data: documents } = await supabase
+    .from("documents")
+    .select("type, name, format, status")
+    .eq("application_id", app.id);
+
+  const { data: payment } = app.payment_id
+    ? await supabase
+        .from("payments")
+        .select("amount, status")
+        .eq("id", app.payment_id)
+        .single()
+    : { data: null };
+
+  return {
+    application: {
+      id: app.id,
+      application_code: app.application_code,
+      service_type: app.service_type,
+      status: app.status,
+      created_at: app.created_at,
+      phone_number: app.phone_number,
+      street: app.street,
+      city: app.city,
+      state: app.state,
+      zip: app.zip,
+      country: app.country,
+      ph_address: app.ph_address,
+      emergency_name: app.emergency_name,
+      emergency_phone: app.emergency_phone,
+      emergency_relationship: app.emergency_relationship,
+    },
+    profile: {
+      name: profile?.name ?? "",
+      birthday: profile?.birthday ?? "",
+      sex: profile?.sex ?? "",
+      nationality: profile?.nationality ?? "",
+      marital_status: profile?.marital_status ?? "",
+      email: user.email ?? "",
+    },
+    documents: documents ?? [],
+    payment,
+  };
+}
+
 export async function submitApplication(
   _prev: SubmitState,
   formData: FormData,
@@ -65,6 +167,20 @@ export async function submitApplication(
   if (!user) return { error: "Unauthorized", success: false };
 
   const supabase = await createClient();
+
+  // Check if user already has an application
+  const { data: existingApp } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingApp) {
+    return {
+      error: "You already have an existing application. Only one application per user is allowed.",
+      success: false,
+    };
+  }
 
   const serviceType = formData.get("service_type") as string;
   const parsedServiceType = ServiceTypeEnum.safeParse(serviceType);
