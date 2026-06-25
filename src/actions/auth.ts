@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import type { Provider } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { headers } from 'next/headers'
@@ -48,12 +48,36 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     return { success: false, error: error.message }
   }
 
-  const role = data.user.user_metadata?.role as string | undefined
+  let role = data.user.user_metadata?.role as string | undefined
 
+  // Check super_admin_profiles first — overrides metadata role
+  const { data: superAdminProfile } = await supabase
+    .from('super_admin_profiles')
+    .select('user_id')
+    .eq('user_id', data.user.id)
+    .maybeSingle()
+
+  if (superAdminProfile) {
+    role = 'super_admin'
+  }
 
   // revalidatePath must run before any redirect()
   revalidatePath('/', 'layout')
 
+  if (role === 'admin') {
+    const adminSupabase = createAdminClient()
+    const { data: adminProfile } = await adminSupabase
+      .from('admin_profiles')
+      .select('is_active')
+      .eq('user_id', data.user.id)
+      .maybeSingle()
+
+    if (!adminProfile || !adminProfile.is_active) {
+      return { success: false, error: 'ACCOUNT_DISABLED' }
+    }
+  }
+
+  if (role === 'super_admin') redirect('/super-admin/dashboard')
   if (role === 'admin') redirect('/admin/dashboard')
   if (role === 'applicant') redirect('/applicant/dashboard')
   redirect('/')
