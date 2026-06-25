@@ -8,8 +8,8 @@ import type { User } from '@supabase/supabase-js'
 
 const NAV_ITEMS = [
   { href: '/super-admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/super-admin/admins', label: 'Manage Admins', icon: Shield },
-  { href: '/super-admin/users', label: 'Users', icon: Users },
+  { href: '/super-admin/manage-admins', label: 'Admins', icon: Shield },
+  { href: '/super-admin/manage-clients', label: 'Clients', icon: Users },
 ]
 
 export default function SuperAdminLayout({

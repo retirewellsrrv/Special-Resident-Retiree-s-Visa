@@ -1,8 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/client'
 
 export type AdminWithUser = {
   user_id: string
@@ -10,6 +10,7 @@ export type AdminWithUser = {
   email: string
   is_active: boolean | null
   created_at: string
+  email_confirmed: boolean
 }
 
 export async function getAdmins(): Promise<AdminWithUser[]> {
@@ -20,19 +21,23 @@ export async function getAdmins(): Promise<AdminWithUser[]> {
     .select('*')
     .order('name')
 
-  const { data: { users } } = await supabaseAdmin().auth.admin.listUsers()
+  const { data: { users } } = await supabase.auth.admin.listUsers()
 
   if (!profiles) return []
 
   const userMap = new Map(users?.map(u => [u.id, u]) ?? [])
 
-  return profiles.map(p => ({
-    user_id: p.user_id,
-    name: p.name,
-    email: userMap.get(p.user_id)?.email ?? '',
-    is_active: p.is_active,
-    created_at: userMap.get(p.user_id)?.created_at ?? '',
-  }))
+  return profiles.map(p => {
+    const authUser = userMap.get(p.user_id)
+    return {
+      user_id: p.user_id,
+      name: p.name,
+      email: authUser?.email ?? '',
+      is_active: p.is_active,
+      created_at: authUser?.created_at ?? '',
+      email_confirmed: !!authUser?.email_confirmed_at,
+    }
+  })
 }
 
 export async function createAdmin(formData: FormData) {
@@ -48,23 +53,30 @@ export async function createAdmin(formData: FormData) {
     return { error: 'Password must be at least 8 characters.' }
   }
 
-  const { data: authData, error: authError } = await supabaseAdmin().auth.admin.createUser({
+  const supabase = createAdminClient()
+
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
+
+  const { data, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
-    email_confirm: true,
-    user_metadata: { role: 'admin', name },
+    options: {
+      emailRedirectTo: `${origin}/api/auth/callback?roleType=admin`,
+      data: {
+        role: 'admin',
+        name,
+      },
+    },
   })
 
-  if (authError || !authData.user) {
-    return { error: authError?.message ?? 'Failed to create user.' }
+  if (signUpError || !data.user) {
+    return { error: signUpError?.message ?? 'Failed to create user.' }
   }
-
-  const supabase = createAdminClient()
 
   const { error: profileError } = await supabase
     .from('admin_profiles')
     .insert({
-      user_id: authData.user.id,
+      user_id: data.user.id,
       name,
       is_active: true,
     })
@@ -73,8 +85,8 @@ export async function createAdmin(formData: FormData) {
     return { error: profileError.message }
   }
 
-  revalidatePath('/super-admin/admins')
-  return { success: true }
+  revalidatePath('/super-admin/manage-admins')
+  return { success: true, message: 'Admin created. They need to check their email to confirm their account.' }
 }
 
 export async function toggleAdminActive(userId: string, isActive: boolean) {
@@ -87,7 +99,7 @@ export async function toggleAdminActive(userId: string, isActive: boolean) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/super-admin/admins')
+  revalidatePath('/super-admin/manage-admins')
   return { success: true }
 }
 
@@ -101,6 +113,6 @@ export async function deleteAdmin(userId: string) {
 
   if (profileError) return { error: profileError.message }
 
-  revalidatePath('/super-admin/admins')
+  revalidatePath('/super-admin/manage-admins')
   return { success: true }
 }

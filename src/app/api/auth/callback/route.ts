@@ -59,7 +59,10 @@ export async function GET(request: Request) {
     })
 
     if (!error) {
-      return NextResponse.redirect(`${origin}/applicant/dashboard`)
+      const { data: { user } } = await supabase.auth.getUser()
+      const role = user?.user_metadata?.role as string | undefined
+      const destination = role === 'admin' ? '/admin/dashboard' : '/applicant/dashboard'
+      return NextResponse.redirect(`${origin}${destination}`)
     }
 
     return NextResponse.redirect(`${origin}/confirm-email?error=expired`)

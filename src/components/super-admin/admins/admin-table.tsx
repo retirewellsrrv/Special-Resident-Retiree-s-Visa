@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, Loader2, Ban, CheckCircle, Shield } from 'lucide-react'
+import { Plus, Trash2, Loader2, Ban, CheckCircle, Shield, Mail, MailX } from 'lucide-react'
 import type { AdminWithUser } from '@/actions/admin/admins'
 import { createAdmin, toggleAdminActive, deleteAdmin } from '@/actions/admin/admins'
 import { Input } from '@/components/ui/input'
@@ -65,7 +65,7 @@ export function AdminTable({ admins }: Props) {
       const result = await createAdmin(formData)
       setCreateBusy(false)
       if (result?.error) { toast.error(result.error); return }
-      toast.success('Admin created')
+      toast.success(result?.message ?? 'Admin created')
       setCreateOpen(false)
       setCreateName('')
       setCreateEmail('')
@@ -150,6 +150,7 @@ export function AdminTable({ admins }: Props) {
               <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Admin</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Email</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Email Verified</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Created</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Actions</th>
             </tr>
@@ -157,7 +158,7 @@ export function AdminTable({ admins }: Props) {
           <tbody className="divide-y divide-brand-neutral-100">
             {admins.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-sm text-brand-neutral-400">
+                <td colSpan={6} className="px-4 py-12 text-center text-sm text-brand-neutral-400">
                   No admin accounts yet. Click &quot;Add Admin&quot; to create one.
                 </td>
               </tr>
@@ -187,6 +188,19 @@ export function AdminTable({ admins }: Props) {
                         <span className={`size-1.5 rounded-full ${admin.is_active ? 'bg-green-500' : 'bg-brand-neutral-300'}`} />
                         {admin.is_active ? 'Active' : 'Inactive'}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {admin.email_confirmed ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-green-600">
+                          <Mail className="size-3.5" />
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-amber-600">
+                          <MailX className="size-3.5" />
+                          Pending
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-brand-neutral-400 text-xs">
                       {new Date(admin.created_at).toLocaleDateString('en-US', {

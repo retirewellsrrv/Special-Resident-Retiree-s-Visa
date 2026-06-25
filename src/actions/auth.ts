@@ -73,6 +73,7 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
       .maybeSingle()
 
     if (!adminProfile || !adminProfile.is_active) {
+      await supabase.auth.signOut()
       return { success: false, error: 'ACCOUNT_DISABLED' }
     }
   }
