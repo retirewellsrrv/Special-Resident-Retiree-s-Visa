@@ -57,6 +57,231 @@ export async function getApplicantProfile(): Promise<ApplicantProfile | null> {
   };
 }
 
+export type ExistingApplicationData = {
+  application: {
+    id: number;
+    application_code: string;
+    service_type: string;
+    status: string;
+    created_at: string;
+    phone_number: string;
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+    ph_address: string | null;
+    emergency_name: string | null;
+    emergency_phone: string | null;
+    emergency_relationship: string | null;
+  };
+  profile: {
+    name: string;
+    birthday: string;
+    sex: string;
+    nationality: string;
+    marital_status: string;
+    email: string;
+  };
+  documents: {
+    type: string;
+    name: string;
+    format: string;
+    status: string;
+  }[];
+  payment: {
+    amount: number;
+    status: string;
+  } | null;
+};
+
+export async function getExistingApplication(): Promise<ExistingApplicationData | null> {
+  const user = await getUserServer();
+  if (!user) return null;
+
+  const supabase = await createClient();
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!app) return null;
+
+  const { data: profile } = await supabase
+    .from("client_profiles")
+    .select("name, birthday, sex, nationality, marital_status")
+    .eq("user_id", user.id)
+    .single();
+
+  const { data: documents } = await supabase
+    .from("documents")
+    .select("type, name, format, status")
+    .eq("application_id", app.id);
+
+  const { data: payment } = app.payment_id
+    ? await supabase
+        .from("payments")
+        .select("amount, status")
+        .eq("id", app.payment_id)
+        .single()
+    : { data: null };
+
+  return {
+    application: {
+      id: app.id,
+      application_code: app.application_code,
+      service_type: app.service_type,
+      status: app.status,
+      created_at: app.created_at,
+      phone_number: app.phone_number,
+      street: app.street,
+      city: app.city,
+      state: app.state,
+      zip: app.zip,
+      country: app.country,
+      ph_address: app.ph_address,
+      emergency_name: app.emergency_name,
+      emergency_phone: app.emergency_phone,
+      emergency_relationship: app.emergency_relationship,
+    },
+    profile: {
+      name: profile?.name ?? "",
+      birthday: profile?.birthday ?? "",
+      sex: profile?.sex ?? "",
+      nationality: profile?.nationality ?? "",
+      marital_status: profile?.marital_status ?? "",
+      email: user.email ?? "",
+    },
+    documents: documents ?? [],
+    payment,
+  };
+}
+
+export type DashboardData = {
+  application: {
+    application_code: string;
+    status: string;
+    service_type: string;
+    created_at: string;
+  };
+  documents: {
+    type: string;
+    name: string;
+    format: string;
+    status: string;
+    created_at: string;
+  }[];
+  payment: {
+    amount: number;
+    status: string;
+    payment_method: string;
+    transaction_code: string;
+  } | null;
+};
+
+export async function getApplicantDashboard(): Promise<DashboardData | null> {
+  const user = await getUserServer();
+  if (!user) return null;
+
+  const supabase = await createClient();
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("id, application_code, status, service_type, created_at, payment_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!app) return null;
+
+  const { data: documents } = await supabase
+    .from("documents")
+    .select("type, name, format, status, created_at")
+    .eq("application_id", app.id)
+    .order("created_at");
+
+  let payment: DashboardData["payment"] = null;
+  if (app.payment_id) {
+    const { data: pmt } = await supabase
+      .from("payments")
+      .select("amount, status, payment_method, transaction_code")
+      .eq("id", app.payment_id)
+      .single();
+    if (pmt) {
+      payment = {
+        amount: pmt.amount,
+        status: pmt.status,
+        payment_method: pmt.payment_method,
+        transaction_code: pmt.transaction_code,
+      };
+    }
+  }
+
+  return {
+    application: {
+      application_code: app.application_code,
+      status: app.status,
+      service_type: app.service_type,
+      created_at: app.created_at,
+    },
+    documents: documents ?? [],
+    payment,
+  };
+}
+
+export type PaymentReceiptData = {
+  transactionCode: string;
+  amount: number;
+  status: string;
+  paymentMethod: string;
+  createdAt: string;
+  applicationCode: string;
+  serviceType: string;
+  clientName: string;
+  clientEmail: string;
+};
+
+export async function getPaymentReceipt(
+  transactionCode: string,
+): Promise<PaymentReceiptData | null> {
+  const supabase = await createClient();
+
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("transaction_code", transactionCode)
+    .single();
+
+  if (!payment) return null;
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("application_code, service_type, user_id")
+    .eq("payment_id", payment.id)
+    .single();
+
+  if (!app) return null;
+
+  const { data: profile } = await supabase
+    .from("client_profiles")
+    .select("name")
+    .eq("user_id", app.user_id)
+    .single();
+
+  return {
+    transactionCode: payment.transaction_code,
+    amount: payment.amount,
+    status: payment.status,
+    paymentMethod: payment.payment_method,
+    createdAt: payment.created_at,
+    applicationCode: app.application_code,
+    serviceType: app.service_type,
+    clientName: profile?.name ?? "",
+    clientEmail: payment.user_id,
+  };
+}
+
 export async function submitApplication(
   _prev: SubmitState,
   formData: FormData,
@@ -65,6 +290,20 @@ export async function submitApplication(
   if (!user) return { error: "Unauthorized", success: false };
 
   const supabase = await createClient();
+
+  // Check if user already has an application
+  const { data: existingApp } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingApp) {
+    return {
+      error: "You already have an existing application. Only one application per user is allowed.",
+      success: false,
+    };
+  }
 
   const serviceType = formData.get("service_type") as string;
   const parsedServiceType = ServiceTypeEnum.safeParse(serviceType);

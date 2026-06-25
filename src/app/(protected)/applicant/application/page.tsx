@@ -16,6 +16,7 @@ import { Step2 } from "@/components/applicant/application/Step2";
 import { Step3 } from "@/components/applicant/application/Step3";
 import { Step4 } from "@/components/applicant/application/Step4";
 import { Step5 } from "@/components/applicant/application/Step5";
+import { Step6 } from "@/components/applicant/application/Step6";
 import { useSRRVApplicationForm } from "@/hooks/applicant/application/useApplicationForm";
 
 import {
@@ -51,13 +52,14 @@ export default function SRRVApplicationPage() {
     cancelSubmit,
     isLoadingProfile,
     isSubmitting,
+    existingApplication,
   } = useSRRVApplicationForm();
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white py-10 px-4">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* ── Main Form Card ── */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
             <CardContent className="p-10">
               {/* Step Indicator */}
@@ -173,6 +175,9 @@ export default function SRRVApplicationPage() {
                   step4Data={step4Data}
                 />
               )}
+              {!isLoadingProfile && currentStep === 6 && existingApplication && (
+                <Step6 data={existingApplication} />
+              )}
 
               {/* Submit error banner */}
               {submitError && (
@@ -182,43 +187,45 @@ export default function SRRVApplicationPage() {
               )}
 
               {/* Navigation buttons */}
-              <div
-                className={cn(
-                  "flex mt-8",
-                  currentStep > 1 ? "justify-between" : "justify-end",
-                )}
-              >
-                {currentStep > 1 && (
-                  <Button
-                    variant="outline"
-                    onClick={back}
-                    disabled={isSubmitting}
-                    className="border-neutral-300 text-neutral-600 hover:bg-neutral-50 px-6 py-2.5 rounded-md font-semibold flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back
-                  </Button>
-                )}
-                <Button
-                  onClick={next}
-                  disabled={isSubmitting}
-                  className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Spinner className="size-4" />
-                      Processing...
-                    </>
-                  ) : isLastStep ? (
-                    "Submit Application"
-                  ) : (
-                    <>
-                      Save & Continue
-                      <ArrowRight className="w-4 h-4" />
-                    </>
+              {currentStep !== 6 && (
+                <div
+                  className={cn(
+                    "flex mt-8",
+                    currentStep > 1 ? "justify-between" : "justify-end",
                   )}
-                </Button>
-              </div>
+                >
+                  {currentStep > 1 && (
+                    <Button
+                      variant="outline"
+                      onClick={back}
+                      disabled={isSubmitting}
+                      className="border-neutral-300 text-neutral-600 hover:bg-neutral-50 px-6 py-2.5 rounded-md font-semibold flex items-center gap-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back
+                    </Button>
+                  )}
+                  <Button
+                    onClick={next}
+                    disabled={isSubmitting}
+                    className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Spinner className="size-4" />
+                        Processing...
+                      </>
+                    ) : isLastStep ? (
+                      "Submit Application"
+                    ) : (
+                      <>
+                        Save & Continue
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
