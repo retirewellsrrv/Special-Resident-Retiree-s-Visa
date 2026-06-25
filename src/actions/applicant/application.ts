@@ -159,6 +159,77 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
   };
 }
 
+export type DashboardData = {
+  application: {
+    application_code: string;
+    status: string;
+    service_type: string;
+    created_at: string;
+  };
+  documents: {
+    type: string;
+    name: string;
+    format: string;
+    status: string;
+    created_at: string;
+  }[];
+  payment: {
+    amount: number;
+    status: string;
+    payment_method: string;
+    transaction_code: string;
+  } | null;
+};
+
+export async function getApplicantDashboard(): Promise<DashboardData | null> {
+  const user = await getUserServer();
+  if (!user) return null;
+
+  const supabase = await createClient();
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("id, application_code, status, service_type, created_at, payment_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!app) return null;
+
+  const { data: documents } = await supabase
+    .from("documents")
+    .select("type, name, format, status, created_at")
+    .eq("application_id", app.id)
+    .order("created_at");
+
+  let payment: DashboardData["payment"] = null;
+  if (app.payment_id) {
+    const { data: pmt } = await supabase
+      .from("payments")
+      .select("amount, status, payment_method, transaction_code")
+      .eq("id", app.payment_id)
+      .single();
+    if (pmt) {
+      payment = {
+        amount: pmt.amount,
+        status: pmt.status,
+        payment_method: pmt.payment_method,
+        transaction_code: pmt.transaction_code,
+      };
+    }
+  }
+
+  return {
+    application: {
+      application_code: app.application_code,
+      status: app.status,
+      service_type: app.service_type,
+      created_at: app.created_at,
+    },
+    documents: documents ?? [],
+    payment,
+  };
+}
+
 export async function submitApplication(
   _prev: SubmitState,
   formData: FormData,
