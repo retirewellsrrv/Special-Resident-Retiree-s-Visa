@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const SERVICE_LABELS: Record<string, string> = {
   vip: "VIP",
 };
 
-export default function ReceiptPage() {
+function ReceiptContent() {
   const searchParams = useSearchParams();
   const externalId = searchParams.get("external_id");
   const [receipt, setReceipt] = useState<PaymentReceiptData | null>(null);
@@ -153,5 +153,13 @@ export default function ReceiptPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ReceiptPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen w-full bg-white flex items-center justify-center">Loading...</div>}>
+      <ReceiptContent />
+    </Suspense>
   );
 }
