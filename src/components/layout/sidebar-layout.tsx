@@ -117,7 +117,7 @@ export function SidebarLayout({
           </Sidebar>
 
           {/* ── Main content area ── */}
-          <SidebarInset className="flex flex-col flex-1 min-w-0 min-h-svh bg-brand-tertiary-400">
+          <SidebarInset className="flex flex-col flex-1 min-w-0 min-h-svh bg-white">
 
             {/* ── Top header ── */}
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-brand-neutral-200 bg-white px-4 gap-4">
