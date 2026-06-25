@@ -3,7 +3,8 @@ import type { ApplicationFormInput, ServiceType } from "@/schemas/application";
 import { applicationFormSchema } from "@/schemas/application";
 import type { DocumentType } from "@/schemas/document";
 import { step4FormSchema } from "@/schemas/document";
-import { submitApplication, getApplicantProfile } from "@/actions/applicant/application";
+import { submitApplication, getApplicantProfile, getExistingApplication } from "@/actions/applicant/application";
+import type { ExistingApplicationData } from "@/actions/applicant/application";
 
 type Step1Data = {
   [K in keyof Pick<
@@ -88,12 +89,19 @@ export function useSRRVApplicationForm() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [existingApplication, setExistingApplication] = useState<ExistingApplicationData | null>(null);
 
-  // ── Pre-fill from existing profile on mount ───────────────────────────────
+  // ── Pre-fill from existing profile and check for existing app on mount ──
   useEffect(() => {
     setIsLoadingProfile(true);
-    getApplicantProfile()
-      .then((profile) => {
+    Promise.all([getApplicantProfile(), getExistingApplication()])
+      .then(([profile, existing]) => {
+        if (existing) {
+          setExistingApplication(existing);
+          setCurrentStep(6);
+          return;
+        }
+
         if (!profile) return;
 
         setStep1Data({
@@ -385,5 +393,6 @@ export function useSRRVApplicationForm() {
     cancelSubmit: () => setShowConfirm(false),
     isLoadingProfile,
     isSubmitting,
+    existingApplication,
   };
 }
