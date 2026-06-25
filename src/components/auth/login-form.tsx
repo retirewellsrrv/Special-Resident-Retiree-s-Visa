@@ -9,11 +9,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck, AlertCircle, Ban } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
+  AlertDialogAction,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogFooter,
@@ -84,6 +86,7 @@ export function LoginForm({
             }
             // success logic here (redirect handled by the action / middleware)
         } catch (error) {
+            if (isRedirectError(error)) throw error
             console.error(error)
             setServerError('Something went wrong.')
         }
@@ -266,24 +269,23 @@ export function LoginForm({
                 </CardContent>
             </Card>
             <AlertDialog open={showDisabledDialog} onOpenChange={setShowDisabledDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
+                <AlertDialogContent size="sm" className="sm:max-w-xs">
+                    <AlertDialogHeader className="pt-6">
                         <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-red-100">
                             <Ban className="size-7 text-red-600" />
                         </div>
-                        <AlertDialogTitle className="text-center text-xl">Account Disabled</AlertDialogTitle>
-                        <AlertDialogDescription className="text-center">
+                        <AlertDialogTitle className="text-center text-lg font-bold">Account Disabled</AlertDialogTitle>
+                        <AlertDialogDescription className="text-center text-balance">
                             Your admin account has been disabled. Please contact the super administrator to regain access.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="sm:justify-center">
-                        <Button
-                            variant="default"
-                            className="bg-brand-primary-600 hover:bg-brand-primary-800"
+                    <AlertDialogFooter className="flex justify-center !grid-cols-1 border-t-0 bg-white pt-0">
+                        <AlertDialogAction
                             onClick={() => setShowDisabledDialog(false)}
+                            className="bg-brand-primary-600 hover:bg-brand-primary-800 text-white min-w-[120px]"
                         >
                             Understood
-                        </Button>
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
