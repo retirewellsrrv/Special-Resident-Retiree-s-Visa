@@ -15,10 +15,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   Clock,
-  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Check, PenLine, Flag, Phone, Mail, MapPin } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getApplicantDashboard } from "@/actions/applicant/application";
 import type { DashboardData } from "@/actions/applicant/application";
 
@@ -31,7 +31,7 @@ const APPLICATION_STEPS = [
 
 const STATUS_TO_STEP_INDEX: Record<string, number> = {
   pending: 0,
-  processing: 1,
+  processing: 2,
   paused: 2,
   approved: 3,
   rejected: -1,
@@ -80,8 +80,102 @@ export default function ApplicantDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-6 h-6 animate-spin text-brand-neutral-400" />
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <Card className="rounded-xl border border-brand-neutral-200 shadow-sm">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-52" />
+              </div>
+              <Skeleton className="h-6 w-24 rounded-md" />
+            </div>
+            <div className="flex items-center justify-between">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex flex-col items-center gap-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              ))}
+            </div>
+            <Skeleton className="h-4 w-full" />
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border border-brand-neutral-200 shadow-sm">
+          <CardHeader>
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-brand-neutral-200">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border border-brand-neutral-200 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                  <Skeleton className="h-5 w-5 mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-5 w-28" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border border-brand-neutral-200 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-5 w-44" />
+            </div>
+            <Skeleton className="h-4 w-72" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-14 w-14 rounded-full" />
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={`flex items-center gap-3 p-3 rounded-lg bg-brand-neutral-50 ${i === 3 ? "sm:col-span-2" : ""}`}>
+                  <Skeleton className="h-4 w-4" />
+                  <div className="space-y-1 flex-1">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-4 w-36" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -89,7 +183,12 @@ export default function ApplicantDashboardPage() {
   const application = data?.application ?? null;
   const documents = data?.documents ?? [];
   const payment = data?.payment ?? null;
-  const currentStepIndex = application ? STATUS_TO_STEP_INDEX[application.status] ?? 0 : 0;
+  const hasPayment = !!payment;
+  const currentStepIndex = application
+    ? application.status === "pending" && hasPayment
+      ? 1
+      : STATUS_TO_STEP_INDEX[application.status] ?? 0
+    : 0;
   const isRejected = application?.status === "rejected";
   const progress = application?.status === "approved"
     ? 100

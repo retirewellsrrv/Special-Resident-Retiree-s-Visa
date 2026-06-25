@@ -230,6 +230,58 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
   };
 }
 
+export type PaymentReceiptData = {
+  transactionCode: string;
+  amount: number;
+  status: string;
+  paymentMethod: string;
+  createdAt: string;
+  applicationCode: string;
+  serviceType: string;
+  clientName: string;
+  clientEmail: string;
+};
+
+export async function getPaymentReceipt(
+  transactionCode: string,
+): Promise<PaymentReceiptData | null> {
+  const supabase = await createClient();
+
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("transaction_code", transactionCode)
+    .single();
+
+  if (!payment) return null;
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("application_code, service_type, user_id")
+    .eq("payment_id", payment.id)
+    .single();
+
+  if (!app) return null;
+
+  const { data: profile } = await supabase
+    .from("client_profiles")
+    .select("name")
+    .eq("user_id", app.user_id)
+    .single();
+
+  return {
+    transactionCode: payment.transaction_code,
+    amount: payment.amount,
+    status: payment.status,
+    paymentMethod: payment.payment_method,
+    createdAt: payment.created_at,
+    applicationCode: app.application_code,
+    serviceType: app.service_type,
+    clientName: profile?.name ?? "",
+    clientEmail: payment.user_id,
+  };
+}
+
 export async function submitApplication(
   _prev: SubmitState,
   formData: FormData,
