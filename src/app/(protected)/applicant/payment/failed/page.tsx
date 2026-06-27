@@ -26,7 +26,8 @@ function PaymentFailedContent() {
               Payment Failed
             </h1>
             <p className="text-center text-sm text-[#8A7B72] max-w-md leading-relaxed">
-              {error || "Something went wrong with your payment. Please try again."}
+              {error ||
+                "Something went wrong with your payment. Please try again."}
             </p>
           </CardContent>
 
@@ -36,12 +37,16 @@ function PaymentFailedContent() {
               <CardContent className="pt-6 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-[#8A7B72]">Transaction Code</span>
-                  <span className="text-[#3B2A28] font-medium">{externalId}</span>
+                  <span className="text-[#3B2A28] font-medium">
+                    {externalId}
+                  </span>
                 </div>
                 {status && (
                   <div className="flex justify-between text-sm">
                     <span className="text-[#8A7B72]">Status</span>
-                    <span className="font-medium text-red-600 capitalize">{status}</span>
+                    <span className="font-medium text-red-600 capitalize">
+                      {status}
+                    </span>
                   </div>
                 )}
               </CardContent>
@@ -51,17 +56,28 @@ function PaymentFailedContent() {
           <Separator className="bg-[#EFE6DC]" />
 
           <CardContent className="py-4 flex flex-col gap-2">
-            <Button className="w-full bg-[#7A1B2B] hover:bg-[#651823] text-white" asChild>
+            <Button
+              className="w-full bg-[#7A1B2B] hover:bg-[#651823] text-white"
+              asChild
+            >
               <Link href="/applicant/dashboard">Try Again</Link>
             </Button>
-            <Button variant="outline" className="w-full border-[#E8DDD3] text-[#3B2A28] hover:bg-[#F4ECE3]" asChild>
+            <Button
+              variant="outline"
+              className="w-full border-[#E8DDD3] text-[#3B2A28] hover:bg-[#F4ECE3]"
+              asChild
+            >
               <Link href="/contact">Contact Support</Link>
             </Button>
           </CardContent>
         </Card>
 
         <div className="flex items-center gap-4 mt-8">
-          <Button variant="ghost" className="text-[#8A7B72] hover:text-[#3B2A28] gap-1.5" asChild>
+          <Button
+            variant="ghost"
+            className="text-[#8A7B72] hover:text-[#3B2A28] gap-1.5"
+            asChild
+          >
             <Link href="/applicant/dashboard">
               Return to Dashboard
               <ArrowRight className="h-4 w-4" />
@@ -75,7 +91,13 @@ function PaymentFailedContent() {
 
 export default function PaymentFailedPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen w-full bg-white flex items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen w-full bg-white flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
       <PaymentFailedContent />
     </Suspense>
   );
