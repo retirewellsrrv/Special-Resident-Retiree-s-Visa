@@ -5,7 +5,7 @@ import { Inter, Manrope } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/navbar";
-import { ChatWidget } from "@/components/chat";
+import { ConditionalChat } from "@/components/chat/conditional-chat";
 import { getSession } from "@/actions/auth";
 
 const geistSans = localFont({
@@ -50,7 +50,7 @@ export default function RootLayout({
       <body className="antialiased">
         {children}
         <Toaster />
-        <ChatWidget />
+        <ConditionalChat />
       </body>
     </html>
   );

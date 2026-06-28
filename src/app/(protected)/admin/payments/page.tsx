@@ -8,14 +8,10 @@ import PaymentFilters from '@/components/admin/payments/payments-filter'
 import PaymentTable from '@/components/admin/payments/payments-table'
 import StatCard from '@/components/admin/payments/payments-stats-card'
 import { Pagination } from '@/components/ui/pagination'
-import { createClient } from '@/lib/supabase/client'
 import { downloadCsv } from '@/lib/utils'
-import type { Database } from '@/types/supabase'
+import { getPayments, getPaymentStats } from '@/actions/admin/payments'
+import type { PaymentRow, PaymentStats } from '@/actions/admin/payments'
 
-type Payment = Database['public']['Tables']['payments']['Row']
-type PaymentWithName = Payment & { client_name?: string }
-
-const supabase = createClient()
 const PER_PAGE = 10
 
 const EMPTY_FILTERS = { code: '', name: '', method: 'all', status: 'all' }
@@ -24,53 +20,32 @@ const fmt = (n: number) =>
   '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export default function PaymentLogsPage() {
-  const [rows, setRows] = useState<PaymentWithName[]>([])
+  const [rows, setRows] = useState<PaymentRow[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [globalSearch, setGlobalSearch] = useState('')
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ revenue: 0, pending: 0, success: 0, refunded: 0, refundAmt: 0, total: 0 })
+  const [stats, setStats] = useState<PaymentStats>({ revenue: 0, pending: 0, success: 0, refunded: 0, refundAmt: 0, total: 0 })
 
   const fetchStats = useCallback(async () => {
-    const { data } = await supabase.from('payments').select('status, amount')
-    if (!data) return
-    const all = data as { status: string; amount: number }[]
-    const completed = all.filter((r) => r.status === 'success')
-    const refunded = all.filter((r) => r.status === 'cancelled')
-    setStats({
-      revenue: completed.reduce((a, r) => a + Number(r.amount), 0),
-      pending: all.filter((r) => r.status === 'pending').length,
-      success: completed.length,
-      refunded: refunded.length,
-      refundAmt: refunded.reduce((a, r) => a + Number(r.amount), 0),
-      total: all.length,
-    })
+    const data = await getPaymentStats()
+    setStats(data)
   }, [])
 
   const fetchRows = useCallback(async () => {
     setLoading(true)
-    let q = supabase
-      .from('payments')
-      .select('*, client_profiles!payments_user_id_fkey(name)', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range((page - 1) * PER_PAGE, page * PER_PAGE - 1)
-
-    if (filters.status && filters.status !== 'all') q = q.eq('status', filters.status as Database['public']['Enums']['payment_status'])
-    if (filters.method && filters.method !== 'all') q = q.eq('payment_method', filters.method as Database['public']['Enums']['payment_methods'])
-    if (filters.code) q = q.ilike('transaction_code', `%${filters.code}%`)
-    if (filters.name) q = q.ilike('client_profiles.name', `%${filters.name}%`)
-    if (globalSearch) q = q.or(
-      `transaction_code.ilike.%${globalSearch}%,client_profiles.name.ilike.%${globalSearch}%,payment_method.ilike.%${globalSearch}%`
-    )
-
-    const { data, count } = await q
-    const mapped = (data ?? []).map((row: Record<string, unknown>) => ({
-      ...(row as Payment),
-      client_name: ((row as Record<string, unknown>).client_profiles as Record<string, unknown> | null)?.name as string | undefined,
-    }))
-    setRows(mapped)
-    setTotal(count ?? 0)
+    const result = await getPayments({
+      page,
+      limit: PER_PAGE,
+      status: filters.status !== 'all' ? filters.status : undefined,
+      method: filters.method !== 'all' ? filters.method : undefined,
+      code: filters.code || undefined,
+      name: filters.name || undefined,
+      search: globalSearch || undefined,
+    })
+    setRows(result.rows)
+    setTotal(result.total)
     setLoading(false)
   }, [page, filters, globalSearch])
 
@@ -82,18 +57,9 @@ export default function PaymentLogsPage() {
   const handleSearch = (val: string) => { setGlobalSearch(val); setPage(1) }
 
   const handleExport = async () => {
-    const { data } = await supabase
-      .from('payments')
-      .select('*, client_profiles!payments_user_id_fkey(name)')
-      .order('created_at', { ascending: false })
-    if (!data) return
-    const mapped = data.map((r) => {
-      const row = r as Record<string, unknown>
-      const profiles = row.client_profiles as Record<string, unknown> | null
-      return { ...row, client_name: profiles?.name ?? '' }
-    })
+    const { rows: all } = await getPayments({ limit: 10000 })
     const headers = ['id', 'client_name', 'amount', 'status', 'payment_method', 'transaction_code', 'created_at']
-    downloadCsv(mapped, headers, `payment-logs-${new Date().toISOString().slice(0, 10)}.csv`)
+    downloadCsv(all, headers, `payment-logs-${new Date().toISOString().slice(0, 10)}.csv`)
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))

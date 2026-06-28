@@ -12,7 +12,6 @@ const STATUS_STYLES: Record<string, string> = {
   approved: 'bg-green-50 text-green-700 border border-green-200',
   rejected: 'bg-red-50 text-red-700 border border-red-200',
   paused: 'bg-blue-50 text-blue-700 border border-blue-200',
-  pending_documents: 'bg-purple-50 text-purple-700 border border-purple-200',
 }
 
 export function UsersTable({ users }: Props) {
@@ -71,7 +70,6 @@ export function UsersTable({ users }: Props) {
                           user.application_status === 'approved' ? 'bg-green-500' :
                           user.application_status === 'rejected' ? 'bg-red-500' :
                           user.application_status === 'paused' ? 'bg-blue-500' :
-                          user.application_status === 'pending_documents' ? 'bg-purple-500' :
                           'bg-amber-500'
                         }`} />
                         {user.application_status.replace('_', ' ')}

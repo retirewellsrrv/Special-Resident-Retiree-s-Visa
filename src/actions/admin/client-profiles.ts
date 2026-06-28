@@ -205,8 +205,7 @@ export async function resolveReview(
       status: "pending",
       updated_at: new Date().toISOString(),
     })
-    .eq("user_id", client_id)
-    .eq("status", "pending_documents");
+    .eq("user_id", client_id);
 
   if (error) return { error: error.message, success: false };
 
