@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/supabase";
 import { ApplicationStatusEnum } from "@/schemas/client-profiles";
 
 export type AppRow = {
@@ -97,7 +98,7 @@ export async function getApplications({
         .order('created_at', { ascending: false })
         .range(from, to)
 
-    if (status) query = query.eq('status', status as any)
+    if (status) query = query.eq('status', status as Database['public']['Enums']['application_status'])
 
     const { data, count, error } = await query
     if (error) throw new Error(error.message)

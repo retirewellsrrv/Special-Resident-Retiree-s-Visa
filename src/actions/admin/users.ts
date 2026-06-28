@@ -1,7 +1,6 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/client'
 
 export type UserWithProfile = {
   user_id: string
@@ -25,7 +24,7 @@ export async function getUsers(): Promise<UserWithProfile[]> {
     .select('*')
     .order('name')
 
-  const { data: { users } } = await supabaseAdmin().auth.admin.listUsers()
+  const { data: { users } } = await supabase.auth.admin.listUsers()
 
   if (!profiles) return []
 

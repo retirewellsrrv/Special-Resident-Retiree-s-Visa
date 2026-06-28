@@ -1,6 +1,6 @@
 'use client'
 
-import { getSession } from '@/actions/auth'
+import { createClient } from '@/lib/supabase/client'
 import { SidebarLayout } from '@/components/layout/sidebar-layout'
 import { LayoutDashboard, Users, Package2, FileText, Wallet } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -22,7 +22,7 @@ export default function AdminLayout({
 }) {
   const [user, setUser] = useState<User | null>(null)
   useEffect(() => {
-    getSession().then(setUser)
+    createClient().auth.getUser().then(({ data }) => setUser(data.user ?? null))
   }, [])
 
   const role = user?.user_metadata.role;

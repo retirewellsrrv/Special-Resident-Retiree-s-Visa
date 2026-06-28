@@ -9,6 +9,7 @@ import PaymentTable from '@/components/admin/payments/payments-table'
 import StatCard from '@/components/admin/payments/payments-stats-card'
 import { Pagination } from '@/components/ui/pagination'
 import { createClient } from '@/lib/supabase/client'
+import { downloadCsv } from '@/lib/utils'
 import type { Database } from '@/types/supabase'
 
 type Payment = Database['public']['Tables']['payments']['Row']
@@ -86,22 +87,13 @@ export default function PaymentLogsPage() {
       .select('*, client_profiles!payments_user_id_fkey(name)')
       .order('created_at', { ascending: false })
     if (!data) return
+    const mapped = data.map((r) => {
+      const row = r as Record<string, unknown>
+      const profiles = row.client_profiles as Record<string, unknown> | null
+      return { ...row, client_name: profiles?.name ?? '' }
+    })
     const headers = ['id', 'client_name', 'amount', 'status', 'payment_method', 'transaction_code', 'created_at']
-    const csv = [
-      headers.join(','),
-      ...data.map((r) => {
-        const row = r as Record<string, unknown>
-        const profiles = row.client_profiles as Record<string, unknown> | null
-        return headers.map((h) => {
-          if (h === 'client_name') return JSON.stringify(profiles?.name ?? '')
-          return JSON.stringify(row[h] ?? '')
-        }).join(',')
-      })
-    ].join('\n')
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
-    a.download = `payment-logs-${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
+    downloadCsv(mapped, headers, `payment-logs-${new Date().toISOString().slice(0, 10)}.csv`)
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
