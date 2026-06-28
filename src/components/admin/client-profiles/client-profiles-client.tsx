@@ -1,12 +1,11 @@
 'use client'
 
-import { useActionState, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import {
-    resolveReview,
     type ClientRow,
     type ClientStats,
-    type ActionState,
 } from '@/actions/admin/client-profiles'
 import { Badge } from '@/components/ui/badge'
 import { StatusChip } from '@/components/ui/status-chip'
@@ -77,11 +76,7 @@ function StatCard({
     )
 }
 
-const initialState: ActionState = { error: null, success: false }
-
 function ClientDirectoryRow({ row }: { row: ClientRow }) {
-    const [state, formAction, pending] = useActionState(resolveReview, initialState)
-    const needsReview = row.status === 'pending_documents'
     const StatusIcon = STATUS_ICON[row.status]
 
     return (
@@ -111,24 +106,13 @@ function ClientDirectoryRow({ row }: { row: ClientRow }) {
                     : '\u2014'}
             </td>
             <td className="py-4">
-                {needsReview ? (
-                    <form action={formAction} className="flex items-center gap-2">
-                        <input type="hidden" name="user_id" value={row.user_id} />
-                        <button
-                            type="submit"
-                            disabled={pending}
-                            className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 disabled:opacity-50 text-brand-primary-50 text-sm font-medium rounded-md px-3 py-1.5 transition-colors"
-                        >
-                            {pending ? 'Resolving\u2026' : 'Resolve'}
-                        </button>
-                        {state.error && <p className="text-xs text-brand-primary-500">{state.error}</p>}
-                    </form>
-                ) : (
-                    <button className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3 py-1.5 transition-colors">
-                        <Eye className="w-3.5 h-3.5" />
-                        View Details
-                    </button>
-                )}
+                <Link
+                    href={`/admin/applications?userId=${row.user_id}`}
+                    className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3 py-1.5 transition-colors"
+                >
+                    <Eye className="w-3.5 h-3.5" />
+                    Review Application
+                </Link>
             </td>
         </tr>
     )
@@ -208,8 +192,8 @@ export function ClientProfilesClient({
                                 disabled={isPending}
                                 onClick={() => navigate({ filter: f, page: '1' })}
                                 className={`inline-flex items-center gap-1.5 text-sm font-medium rounded-md px-3 py-1.5 transition-colors disabled:opacity-50 ${filter === f
-                                    ? 'bg-red-800 text-red-50'
-                                    : 'border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50'
+                                    ? 'bg-brand-primary-800 text-brand-primary-50'
+                                    : 'border border-brand-neutral-300 text-brand-neutral-700 hover:bg-brand-neutral-50'
                                     }`}
                             >
                                 {f === 'all' ? 'All Clients' : 'New (30d)'}

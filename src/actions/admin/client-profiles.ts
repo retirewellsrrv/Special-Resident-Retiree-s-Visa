@@ -35,13 +35,13 @@ export async function getClientStats(): Promise<ClientStats> {
 
   const [
     { count: total },
-    { count: processingCount },
+    { count: pendingCount },
     { count: approved },
     { count: rejected },
     { count: paused },
   ] = await Promise.all([
     supabase
-      .from("client_profiles")
+      .from("applications")
       .select("*", { count: "exact", head: true }),
     supabase
       .from("applications")
@@ -63,7 +63,7 @@ export async function getClientStats(): Promise<ClientStats> {
 
   return {
     total: total ?? 0,
-    pending: processingCount ?? 0,
+    pending: pendingCount ?? 0,
     approved: approved ?? 0,
     rejected: rejected ?? 0,
     paused: paused ?? 0,
@@ -205,8 +205,7 @@ export async function resolveReview(
       status: "pending",
       updated_at: new Date().toISOString(),
     })
-    .eq("user_id", client_id)
-    .eq("status", "pending_documents" as any);
+    .eq("user_id", client_id);
 
   if (error) return { error: error.message, success: false };
 

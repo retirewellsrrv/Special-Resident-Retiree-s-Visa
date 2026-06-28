@@ -35,7 +35,7 @@ export async function createServicePlan(payload: unknown) {
     await supabase
       .from('service_plans')
       .update({ highlighted: false })
-      .neq('highlighted', false)
+      .eq('highlighted', true)
   }
 
   const { error } = await supabase
@@ -65,7 +65,7 @@ export async function updateServicePlan(
       .from('service_plans')
       .update({ highlighted: false })
       .neq('id', id)
-      .neq('highlighted', false)
+      .eq('highlighted', true)
   }
 
   const { error } = await supabase
@@ -100,11 +100,19 @@ export async function deleteServicePlan(id: number) {
 export async function setFeaturedService(id: number) {
   const supabase = createAdminClient()
 
+  const { data: previouslyFeatured } = await supabase
+    .from('service_plans')
+    .select('id')
+    .eq('highlighted', true)
+    .neq('id', id)
+
+  const previouslyFeaturedIds = (previouslyFeatured ?? []).map(p => p.id)
+
   const { error: resetError } = await supabase
     .from('service_plans')
     .update({ highlighted: false })
     .neq('id', id)
-    .neq('highlighted', false)
+    .eq('highlighted', true)
 
   if (resetError) return { error: resetError.message }
 
@@ -113,7 +121,15 @@ export async function setFeaturedService(id: number) {
     .update({ highlighted: true })
     .eq('id', id)
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (previouslyFeaturedIds.length > 0) {
+      await supabase
+        .from('service_plans')
+        .update({ highlighted: true })
+        .in('id', previouslyFeaturedIds)
+    }
+    return { error: error.message }
+  }
 
   revalidatePath('/admin/services')
 

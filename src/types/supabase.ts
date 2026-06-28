@@ -367,7 +367,7 @@ export type Database = {
         | "bank_transfer"
         | "paylater"
         | "cryptocurrency"
-      payment_status: "processing" | "pending" | "cancelled" | "success"
+      payment_status: "processing" | "pending" | "cancelled" | "success" | "failed"
       service_type: "basic" | "premium" | "vip"
       sex: "male" | "female"
     }
@@ -539,7 +539,7 @@ export const Constants = {
         "paylater",
         "cryptocurrency",
       ],
-      payment_status: ["processing", "pending", "cancelled", "success"],
+      payment_status: ["processing", "pending", "cancelled", "success", "failed"],
       service_type: ["basic", "premium", "vip"],
       sex: ["male", "female"],
     },

@@ -24,7 +24,7 @@ export const DocumentFormatEnum = z.enum(
 );
 
 export const DocumentStatusEnum = z.enum(
-  ["pending", "accepted", "rejected", "action need"],
+  ["pending", "processing", "accepted", "rejected", "action need"],
   {
     error: "Please select a valid document status",
   },
