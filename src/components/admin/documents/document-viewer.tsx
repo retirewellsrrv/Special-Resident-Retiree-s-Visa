@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { ZoomIn, ZoomOut, Printer, Download, FileIcon, Loader2 } from 'lucide-react'
+import { getDocumentSignedUrl } from '@/actions/admin/documents'
 import type { DocumentForReview } from '@/actions/admin/documents'
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -26,7 +27,6 @@ export function DocumentViewer({ doc }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const { getDocumentSignedUrl } = await import('@/actions/admin/documents')
       const result = await getDocumentSignedUrl(doc.path)
       if (result.error) {
         setError(result.error)
@@ -43,7 +43,15 @@ export function DocumentViewer({ doc }: Props) {
   }, [doc.path])
 
   useEffect(() => {
-    fetchUrl()
+    let cancelled = false
+    fetchUrl().then(() => {
+      if (cancelled) {
+        setSignedUrl(null)
+        setLoading(true)
+        setError(null)
+      }
+    })
+    return () => { cancelled = true }
   }, [fetchUrl])
 
   const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'tif'].includes(doc.format)

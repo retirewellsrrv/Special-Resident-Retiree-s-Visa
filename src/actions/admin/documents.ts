@@ -48,10 +48,11 @@ export async function getDocumentsForReview(opts?: {
   }
 
   if (opts?.search) {
+    const q = opts.search.replace(/[%_]/g, '\\$&')
     const { data: matchingUsers } = await supabase
       .from('client_profiles')
       .select('user_id')
-      .ilike('name', `%${opts.search}%`)
+      .ilike('name', `%${q}%`)
     const matchedUserIds = (matchingUsers ?? []).map((u) => u.user_id)
     if (matchedUserIds.length > 0) {
       const { data: apps } = await supabase

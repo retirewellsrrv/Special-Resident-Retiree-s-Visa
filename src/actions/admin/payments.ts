@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/supabase";
 
 export type PaymentRow = {
   id: number
@@ -39,6 +40,10 @@ export async function getPaymentStats(): Promise<PaymentStats> {
   };
 }
 
+function escapeSearch(val: string) {
+  return val.replace(/[%_]/g, '\\$&')
+}
+
 export async function getPayments({
   page = 1,
   limit = 10,
@@ -60,11 +65,51 @@ export async function getPayments({
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const { data: allData, count } = await supabase
+  let query = supabase
     .from("payments")
     .select("id, amount, status, payment_method, transaction_code, created_at, user_id", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+
+  if (status && status !== "all") {
+    query = query.eq("status", status as Database["public"]["Enums"]["payment_status"])
+  }
+  if (method && method !== "all") {
+    query = query.eq("payment_method", method as Database["public"]["Enums"]["payment_methods"])
+  }
+  if (code) {
+    query = query.ilike("transaction_code", `%${escapeSearch(code)}%`)
+  }
+  if (name) {
+    const { data: matchingUsers } = await supabase
+      .from("client_profiles")
+      .select("user_id")
+      .ilike("name", `%${escapeSearch(name)}%`)
+    const targetIds = (matchingUsers ?? []).map((u) => u.user_id)
+    if (targetIds.length > 0) {
+      query = query.in("user_id", targetIds)
+    } else {
+      query = query.in("user_id", [])
+    }
+  }
+  if (search) {
+    const q = escapeSearch(search)
+    const { data: matchingUsers } = await supabase
+      .from("client_profiles")
+      .select("user_id")
+      .ilike("name", `%${q}%`)
+    const targetIds = (matchingUsers ?? []).map((u) => u.user_id)
+    const codeCond = `transaction_code.ilike.%${q}%`
+    const methodCond = `payment_method.ilike.%${q}%`
+    if (targetIds.length > 0) {
+      const userIdConds = targetIds.map((id) => `user_id.eq.${id}`).join(",")
+      query = query.or(`${userIdConds},${codeCond},${methodCond}`)
+    } else {
+      query = query.or(`${codeCond},${methodCond}`)
+    }
+  }
+
+  query = query.order("created_at", { ascending: false }).range(from, to)
+
+  const { data: allData, count } = await query;
 
   if (!allData || allData.length === 0) {
     return { rows: [], total: count ?? 0 };
@@ -78,7 +123,7 @@ export async function getPayments({
 
   const nameMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.name]));
 
-  let rows: PaymentRow[] = allData.map((r) => ({
+  const rows: PaymentRow[] = allData.map((r) => ({
     id: r.id,
     client_name: nameMap[r.user_id] ?? undefined,
     amount: r.amount,
@@ -87,28 +132,6 @@ export async function getPayments({
     transaction_code: r.transaction_code,
     created_at: r.created_at,
   }));
-
-  if (status && status !== "all") {
-    rows = rows.filter((r) => r.status === status);
-  }
-  if (method && method !== "all") {
-    rows = rows.filter((r) => r.payment_method === method);
-  }
-  if (code) {
-    rows = rows.filter((r) => r.transaction_code.toLowerCase().includes(code.toLowerCase()));
-  }
-  if (name) {
-    rows = rows.filter((r) => r.client_name?.toLowerCase().includes(name.toLowerCase()));
-  }
-  if (search) {
-    const q = search.toLowerCase();
-    rows = rows.filter(
-      (r) =>
-        r.transaction_code.toLowerCase().includes(q) ||
-        r.client_name?.toLowerCase().includes(q) ||
-        r.payment_method.toLowerCase().includes(q),
-    );
-  }
 
   return { rows, total: count ?? 0 };
 }

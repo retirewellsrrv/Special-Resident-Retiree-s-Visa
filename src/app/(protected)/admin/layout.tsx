@@ -23,7 +23,7 @@ export default function AdminLayout({
 }) {
   const [user, setUser] = useState<User | null>(null)
   useEffect(() => {
-    createClient().auth.getUser().then(({ data }) => setUser(data.user ?? null))
+    createClient().auth.getUser().then(({ data }) => setUser(data.user ?? null)).catch(() => setUser(null))
   }, [])
 
   const role = user?.user_metadata.role;

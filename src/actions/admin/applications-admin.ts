@@ -65,6 +65,10 @@ export async function getApplicationStats(): Promise<AppStats> {
   };
 }
 
+function escapeSearch(val: string) {
+  return val.replace(/[%_]/g, '\\$&')
+}
+
 export async function getApplications({
   page = 1,
   limit = 10,
@@ -106,17 +110,18 @@ export async function getApplications({
     if (userId) query = query.eq('user_id', userId)
 
     if (search) {
+      const q = escapeSearch(search)
       const { data: matchingUsers } = await supabase
         .from('client_profiles')
         .select('user_id')
-        .ilike('name', `%${search}%`)
+        .ilike('name', `%${q}%`)
       const targetIds = (matchingUsers ?? []).map((u) => u.user_id)
-      const appCodeCond = `application_code.ilike.%${search}%`
+      const appCodeCond = `application_code.ilike.%${q}%`
       if (targetIds.length > 0) {
         const userIdConds = targetIds.map((id) => `user_id.eq.${id}`).join(',')
         query = query.or(`${userIdConds},${appCodeCond}`)
       } else {
-        query = query.ilike('application_code', `%${search}%`)
+        query = query.ilike('application_code', `%${q}%`)
       }
     }
 
@@ -124,11 +129,14 @@ export async function getApplications({
     if (error) throw new Error(error.message)
 
     const serviceTypes = [...new Set((data ?? []).map((r: any) => r.service_type))]
-    const { data: plans } = await supabase
-        .from('service_plans')
-        .select('type, name')
-        .in('type', serviceTypes as any[])
-    const planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+    let planNameMap: Record<string, string> = {}
+    if (serviceTypes.length > 0) {
+      const { data: plans } = await supabase
+          .from('service_plans')
+          .select('type, name')
+          .in('type', serviceTypes)
+      planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+    }
 
     const rows: AppRow[] = (data ?? []).map((row: any) => ({
         id: row.id,
