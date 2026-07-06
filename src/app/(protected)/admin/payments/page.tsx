@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Download, Plus } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/loading'
 import { PageHeader } from '@/components/admin/shared/page-header'
@@ -27,13 +27,16 @@ export default function PaymentLogsPage() {
   const [globalSearch, setGlobalSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<PaymentStats>({ revenue: 0, pending: 0, success: 0, refunded: 0, refundAmt: 0, total: 0 })
+  const fetchRef = useRef(0)
 
   const fetchStats = useCallback(async () => {
+    const id = ++fetchRef.current
     const data = await getPaymentStats()
-    setStats(data)
+    if (id === fetchRef.current) setStats(data)
   }, [])
 
   const fetchRows = useCallback(async () => {
+    const id = ++fetchRef.current
     setLoading(true)
     const result = await getPayments({
       page,
@@ -44,9 +47,11 @@ export default function PaymentLogsPage() {
       name: filters.name || undefined,
       search: globalSearch || undefined,
     })
-    setRows(result.rows)
-    setTotal(result.total)
-    setLoading(false)
+    if (id === fetchRef.current) {
+      setRows(result.rows)
+      setTotal(result.total)
+      setLoading(false)
+    }
   }, [page, filters, globalSearch])
 
   useEffect(() => { fetchStats() }, [fetchStats])

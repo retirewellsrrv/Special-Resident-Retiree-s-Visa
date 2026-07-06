@@ -30,6 +30,7 @@ export type DashboardStats = {
   appsByStatus: { label: string; count: number }[]
   recentApplications: {
     id: number
+    user_id: string
     applicant_name: string
     application_code: string
     service_type: string
@@ -120,6 +121,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   const recentApplications = ((recentApps.data ?? []) as any[]).map((r) => ({
     id: r.id,
+    user_id: r.user_id,
     applicant_name: r.client_profiles?.name ?? "Unknown",
     application_code: r.application_code,
     service_type: r.service_type,

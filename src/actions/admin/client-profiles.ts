@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import {
   clientProfileSchema,
@@ -119,11 +119,14 @@ export async function getClientDirectory({
     if (error) throw new Error(error.message)
 
     const serviceTypes = [...new Set((data ?? []).map((r: any) => r.service_type))]
-    const { data: plans } = await supabase
-        .from('service_plans')
-        .select('type, name')
-        .in('type', serviceTypes as any[])
-    const planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+    let planNameMap: Record<string, string> = {}
+    if (serviceTypes.length > 0) {
+      const { data: plans } = await supabase
+          .from('service_plans')
+          .select('type, name')
+          .in('type', serviceTypes)
+      planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+    }
 
     const rows: ClientRow[] = (data ?? []).map((row: any) => ({
         user_id: row.user_id,
@@ -167,7 +170,7 @@ export async function updateClientProfile(
     sex: formData.get("sex"),
     birthday: formData.get("birthday"),
     nationality: formData.get("nationality"),
-    age: formData.get("age") ? Number(formData.get("age")) : undefined,
+    age: ((v) => (v ? Number(v) : undefined))(formData.get("age")),
   };
 
   const parsed = clientProfileSchema.safeParse(raw);
@@ -217,20 +220,20 @@ export async function createClientProfile(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const supabase = createAdminClient();
-
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await (await createClient()).auth.getUser();
   if (authError || !user) return { error: "Unauthorized", success: false };
+
+  const supabase = createAdminClient();
 
   const raw = {
     name: formData.get("name"),
     sex: formData.get("sex"),
     birthday: formData.get("birthday"),
     nationality: formData.get("nationality"),
-    age: formData.get("age") ? Number(formData.get("age")) : undefined,
+    age: ((v) => (v ? Number(v) : undefined))(formData.get("age")),
   };
 
   const parsed = clientProfileSchema.safeParse(raw);

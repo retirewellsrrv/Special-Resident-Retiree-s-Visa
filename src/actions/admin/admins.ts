@@ -113,6 +113,9 @@ export async function deleteAdmin(userId: string) {
 
   if (profileError) return { error: profileError.message }
 
+  const { error: authError } = await supabase.auth.admin.deleteUser(userId)
+  if (authError) return { error: authError.message }
+
   revalidatePath('/super-admin/manage-admins')
   return { success: true }
 }

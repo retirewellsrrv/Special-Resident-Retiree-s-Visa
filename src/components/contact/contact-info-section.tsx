@@ -30,7 +30,7 @@ interface InfoCardProps {
     secondaryText?: ReactElement;
 }
 
-export function InfoCard({ icon, title, primaryText, secondaryText }: InfoCardProps) {
+function InfoCard({ icon, title, primaryText, secondaryText }: InfoCardProps) {
     return (
         <div className="flex items-start gap-4">
             <div className="w-12 h-12 shrink-0 bg-[#E2E8F0] rounded-xl flex items-center justify-center text-[#9E1B32]">

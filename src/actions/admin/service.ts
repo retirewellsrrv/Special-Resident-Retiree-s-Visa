@@ -31,7 +31,14 @@ export async function createServicePlan(payload: unknown) {
     return { error: validated.error.message }
   }
 
+  let previouslyHighlightedIds: number[] = []
   if (validated.data.highlighted) {
+    const { data: featured } = await supabase
+      .from('service_plans')
+      .select('id')
+      .eq('highlighted', true)
+    previouslyHighlightedIds = (featured ?? []).map(p => p.id)
+
     await supabase
       .from('service_plans')
       .update({ highlighted: false })
@@ -42,7 +49,15 @@ export async function createServicePlan(payload: unknown) {
     .from('service_plans')
     .insert(validated.data)
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (previouslyHighlightedIds.length > 0) {
+      await supabase
+        .from('service_plans')
+        .update({ highlighted: true })
+        .in('id', previouslyHighlightedIds)
+    }
+    return { error: error.message }
+  }
 
   revalidatePath('/admin/services')
 
