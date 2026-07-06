@@ -6,7 +6,6 @@ import {
   ServicesSection,
   EligibilitySection,
   WhyChooseSection,
-  ContactSection,
 } from "@/components/public";
 import { Footer } from "@/components/layout/Footer";
 

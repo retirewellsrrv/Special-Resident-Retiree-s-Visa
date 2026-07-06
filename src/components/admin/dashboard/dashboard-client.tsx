@@ -31,6 +31,14 @@ const STATUS_LABEL: Record<string, string> = {
 
 const MAX_BAR_HEIGHT = 160
 
+const STATUS_BAR_COLORS: Record<string, string> = {
+  approved: 'bg-green-500',
+  rejected: 'bg-red-400',
+  pending: 'bg-amber-400',
+  processing: 'bg-blue-400',
+  paused: 'bg-gray-400',
+}
+
 interface Props {
   stats: DashboardStats
 }
@@ -92,6 +100,7 @@ export function DashboardClient({ stats }: Props) {
           const Icon = kpi.icon
           return (
             <button
+              type="button"
               key={kpi.label}
               onClick={() => router.push(kpi.href)}
               className="flex items-start gap-4 rounded-xl border border-brand-neutral-200 bg-white p-5 text-left transition-all duration-200 hover:border-brand-neutral-300 hover:shadow-sm"
@@ -127,7 +136,8 @@ export function DashboardClient({ stats }: Props) {
                     <div
                       className="w-full rounded-md bg-brand-primary-600/80 transition-all hover:bg-brand-primary-600"
                       style={{ height: `${height}px` }}
-                      title={`${m.month}: ${fmtMoney(m.revenue)}`}
+                      role="img"
+                      aria-label={`${m.month}: ${fmtMoney(m.revenue)}`}
                     />
                     <span className="text-[10px] text-brand-neutral-400">
                       {new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'short' })}
@@ -153,14 +163,7 @@ export function DashboardClient({ stats }: Props) {
                   </div>
                   <div className="h-2 rounded-full bg-brand-neutral-100 overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${
-                        item.label === 'approved' ? 'bg-green-500' :
-                        item.label === 'rejected' ? 'bg-red-400' :
-                        item.label === 'pending' ? 'bg-amber-400' :
-                        item.label === 'processing' ? 'bg-blue-400' :
-                        item.label === 'paused' ? 'bg-gray-400' :
-                        'bg-brand-primary-400'
-                      }`}
+                      className={`h-full rounded-full transition-all ${STATUS_BAR_COLORS[item.label] ?? 'bg-brand-primary-400'}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -189,8 +192,9 @@ export function DashboardClient({ stats }: Props) {
             <div className="divide-y divide-brand-neutral-50">
               {stats.recentApplications.map((app) => (
                 <button
+                  type="button"
                   key={app.id}
-                  onClick={() => router.push(`/admin/applications?userId=${app.id}`)}
+                  onClick={() => router.push(`/admin/applications?userId=${app.user_id}`)}
                   className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-brand-neutral-50"
                 >
                   <div className="flex-1 min-w-0">
@@ -223,6 +227,7 @@ export function DashboardClient({ stats }: Props) {
             <div className="divide-y divide-brand-neutral-50">
               {stats.pendingDocuments.map((doc) => (
                 <button
+                  type="button"
                   key={doc.id}
                   onClick={() => router.push('/admin/documents')}
                   className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-brand-neutral-50"

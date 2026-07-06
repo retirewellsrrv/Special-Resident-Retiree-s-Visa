@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, FileIcon, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
@@ -25,6 +25,10 @@ export function ApplicationDetail({ detail, onStatusChange }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [selectedAppStatus, setSelectedAppStatus] = useState(detail.status)
+
+  useEffect(() => {
+    setSelectedAppStatus(detail.status)
+  }, [detail.id, detail.status])
 
   const handleAppStatus = (status: string) => {
     const formData = new FormData()
