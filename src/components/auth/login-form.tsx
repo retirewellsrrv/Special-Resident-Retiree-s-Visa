@@ -9,7 +9,9 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { isRedirectError } from 'next/dist/client/components/redirect-error'
+function isRedirectError(error: unknown): boolean {
+  return error instanceof Error && 'digest' in error && String((error as Error & { digest: string }).digest).startsWith('NEXT_REDIRECT')
+}
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck, AlertCircle, Ban } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'

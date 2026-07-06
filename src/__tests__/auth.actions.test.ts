@@ -37,19 +37,6 @@ function resetAdminClientToDefault() {
   }))
 }
 
-vi.mock('../lib/supabase/client', () => ({
-  supabaseAdmin: vi.fn(() => ({
-    auth: {
-      admin: {
-        listUsers: vi.fn().mockResolvedValue({
-          data: { users: [] },
-          error: null,
-        }),
-      },
-    },
-  })),
-}))
-
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
 }))

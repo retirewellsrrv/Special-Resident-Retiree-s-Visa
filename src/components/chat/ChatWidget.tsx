@@ -193,13 +193,6 @@ export default function ChatWidget() {
 
   return (
     <>
-      <style>{`
-        @keyframes budji-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(166,25,46,0.4); }
-          50% { box-shadow: 0 0 0 14px rgba(166,25,46,0); }
-        }
-      `}</style>
-
       <button
         onClick={handleToggle}
         className={cn(
@@ -209,7 +202,7 @@ export default function ChatWidget() {
             : 'bg-[#A6192E] hover:bg-[#81001C] hover:scale-105',
           !isOpen &&
             showNotification &&
-            'animate-[budji-pulse_2.5s_ease-in-out_infinite]',
+            'animate-budji-pulse',
         )}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >

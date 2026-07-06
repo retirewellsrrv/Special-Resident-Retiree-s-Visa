@@ -1,9 +1,6 @@
-// middleware.ts
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/supabase";
-import { getSession } from "@/actions/auth";
-import { getUserRole, getUser } from "@/utils/auth/getUser"
 
 const PROTECTED_PREFIXES = ["/applicant", "/admin", "/super-admin"];
 const PUBLIC_ONLY_PATHS = [
@@ -14,8 +11,6 @@ const PUBLIC_ONLY_PATHS = [
   "/pricing",
   "/view-services",
 ];
-const ADMIN_ONLY_PREFIXES = ["/admin"];
-const APPLICANT_ONLY_PREFIXES = ["/applicant"];
 
 function isProtected(pathname: string) {
   return PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
@@ -23,6 +18,24 @@ function isProtected(pathname: string) {
 
 function isPublicOnly(pathname: string) {
   return PUBLIC_ONLY_PATHS.some((p) => pathname.startsWith(p));
+}
+
+async function getUserRole(supabase: ReturnType<typeof createServerClient<Database>>): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const role = user.user_metadata?.role as string | undefined;
+  if (role === "super_admin") return "super_admin";
+
+  const [{ data: superAdminProfile }, { data: adminProfile }] = await Promise.all([
+    supabase.from("super_admin_profiles").select("user_id").eq("user_id", user.id).maybeSingle(),
+    supabase.from("admin_profiles").select("is_active").eq("user_id", user.id).maybeSingle(),
+  ]);
+
+  if (superAdminProfile) return "super_admin";
+  if (adminProfile?.is_active) return "admin";
+  if (role === "applicant") return "applicant";
+  return null;
 }
 
 export async function proxy(request: NextRequest) {
@@ -47,60 +60,38 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const user = await getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
-  console.log("🔵 middleware hit:", pathname);
-  console.log("👤 user:", user?.id ?? "null");
-  console.log("👤 role:", user?.role ?? "null");
 
   if (!user && isProtected(pathname)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("redirectTo", pathname); // optional: preserve intent
+    loginUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   if (user && isPublicOnly(pathname)) {
-    let userRole = await getUserRole();
+    const userRole = await getUserRole(supabase);
 
-    // Check super_admin_profiles — overrides metadata role
-    if (userRole !== "super_admin") {
-      const { data: superAdminProfile } = await supabase
-        .from("super_admin_profiles")
-        .select("user_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+    if (userRole === "super_admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/super-admin/dashboard";
+      return NextResponse.redirect(url);
+    }
 
-      if (superAdminProfile) {
-        userRole = "super_admin";
-      }
+    if (userRole === "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    if (userRole === "applicant") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/applicant/dashboard";
+      return NextResponse.redirect(url);
     }
 
     const homeUrl = request.nextUrl.clone();
-
-    if (userRole === "super_admin") {
-      const superAdminUrl = request.nextUrl.clone();
-      superAdminUrl.pathname = "/super-admin/dashboard";
-      return NextResponse.redirect(superAdminUrl);
-    } else if (userRole === "admin") {
-      const adminUrl = request.nextUrl.clone();
-      adminUrl.pathname = "/admin/dashboard";
-      return NextResponse.redirect(adminUrl);
-    } else if (userRole === "applicant") {
-      const applicantUrl = request.nextUrl.clone();
-      applicantUrl.pathname = "/applicant/dashboard";
-      return NextResponse.redirect(applicantUrl);
-    }
-
-    // TODO: yet yet working properly, need to update this
-    // if (userRole === 'applicant' && ADMIN_ONLY_PREFIXES.some(p => pathname.startsWith(p))) {
-    //   return NextResponse.redirect(new URL('/unauthorized', request.url))
-    // }
-
-    // if (userRole === 'admin' && APPLICANT_ONLY_PREFIXES.some(p => pathname.startsWith(p))) {
-    //   return NextResponse.redirect(new URL('/unauthorized', request.url))
-    // }
-
     homeUrl.pathname = "/";
     return NextResponse.redirect(homeUrl);
   }

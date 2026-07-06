@@ -14,8 +14,6 @@ import {
   type LoginInput,
   type RegisterInput,
 } from '@/schemas/auth'
-import { getUserRole } from '@/utils/auth/getUser'
-
 // Register flow: registerAction() → signUp() → redirect /confirm-email
 // Email flow: user clicks link → Supabase verifies → callback?code=xxx → exchangeCodeForSession() → dashboard
 
