@@ -14,13 +14,13 @@ import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck, AlertCircle, Ban } fr
 
 import { Button } from '@/components/ui/button'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogFooter,
+    AlertDialogTitle,
+    AlertDialogDescription,
 } from '@/components/ui/alert-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -88,6 +88,7 @@ export function LoginForm({
         } catch (error) {
             if (isRedirectError(error)) throw error
             console.error(error)
+            if (isRedirectError(error)) throw error
             setServerError('Something went wrong.')
         }
     }

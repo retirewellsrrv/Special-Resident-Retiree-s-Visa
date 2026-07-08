@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [develop, staging, main]
 
 jobs:
   ci:
@@ -22,8 +22,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # - name: Type check
-      #   run: pnpm tsc --noEmit
+      - name: Type check
+        run: pnpm tsc --noEmit
 
       - name: Test
         run: pnpm test:coverage

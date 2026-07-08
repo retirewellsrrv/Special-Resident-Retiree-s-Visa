@@ -109,7 +109,7 @@ export default function ConfirmEmailForm({ email }: Props) {
                 Can't find it? Check your{' '}
                 <span className="font-medium text-foreground">spam or junk folder</span>.
                 The sender is{' '}
-                <span className="font-medium text-foreground">admin@retirwellsrrv.com</span>.
+                <span className="font-medium text-foreground">admin@retirewellsrrv.com</span>.
               </p>
             </div>
 
@@ -133,13 +133,12 @@ export default function ConfirmEmailForm({ email }: Props) {
             )}
           </div>
         </CardContent>
+        <div className="flex items-center justify-center">
+          <Link href="/register" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            ← Back to register
+          </Link>
+        </div>
       </Card>
-
-      <div className="flex items-center justify-center">
-        <Link href="/register" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          ← Back to register
-        </Link>
-      </div>
     </div>
   )
 }
