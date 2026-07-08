@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import type { Provider } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase/client'
 
 import { headers } from 'next/headers'
 
@@ -213,15 +214,46 @@ export async function resendConfirmationAction(email: string): Promise<ActionRes
 // FORGOT PASSWORD
 // ─────────────────────────────────────────────
 
-export async function forgotPasswordAction(email: string): Promise<ActionResult> {
+export async function handleResetRequest(email: string): Promise<ActionResult> {
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
+  // check if email exists in the db
+  const user = await supabaseAdmin().auth.admin.listUsers();
+
+  //! only used for debugging, REMOVE WHEN FEATURE IS DONE
+  console.log('email exists, proceeding with reset:', email)
+  console.log('user: ', user.data.users.find((u) => u.email === email))
+  console.log('user from if: ', user)
+
+  if (!user.data.users.find((u) => u.email === email)) {
+    return { success: false, error: 'No account found with this email.' }
+  }
+
+  //* request for the change password email
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/api/auth/callback?next=/forgot-password/change-password`,
+  })
+
+  //! only used for debugging, REMOVE WHEN FEATURE IS DONE
+  console.log('reset password result:', { data, error })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, message: 'Password reset link sent. Check your email.' }
+}
+
+export async function savePasswordChange(email: string): Promise<ActionResult> {
   if (!email || !email.includes('@')) {
     return { success: false, error: 'Please enter a valid email address.' }
   }
 
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
+    redirectTo: `${origin}/api/auth/callback?next=/forgot-password/change-password`,
   })
 
   if (error) {
@@ -240,7 +272,14 @@ export async function resetPasswordAction(newPassword: string): Promise<ActionRe
     return { success: false, error: 'Password must be at least 8 characters.' }
   }
 
+  console.log('Password: ', newPassword)
+
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { success: false, error: 'No active session. Please request a new password reset link.' }
+  }
 
   const { error } = await supabase.auth.updateUser({ password: newPassword })
 
@@ -268,11 +307,12 @@ export async function getSession() {
 
 export async function oauthAction(provider: Provider): Promise<ActionResult> {
   const supabase = await createClient()
+  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
+      redirectTo: `${origin}/api/auth/callback`,
     },
   })
 

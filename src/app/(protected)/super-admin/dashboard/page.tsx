@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { Shield, Users, Building2, Clock, CheckCircle, XCircle, Pause, Loader } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 async function getStats() {
   const supabase = createAdminClient()
 
