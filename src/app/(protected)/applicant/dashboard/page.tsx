@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/status-chip";
 import {
@@ -15,6 +16,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Clock,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Check, PenLine, Flag, Phone, Mail, MapPin } from "lucide-react";
@@ -329,9 +331,8 @@ export default function ApplicantDashboardPage() {
                 const isVerified = displayStatus === "verified";
                 const isActionRequired = displayStatus === "action_required";
 
-                return (
+                const row = (
                   <div
-                    key={doc.type}
                     className={cn(
                       "flex items-center justify-between gap-3 p-3 rounded-lg border",
                       isActionRequired
@@ -364,11 +365,28 @@ export default function ApplicantDashboardPage() {
                       </div>
                     </div>
 
-                    <StatusChip
-                      status={displayStatus}
-                      icon={isVerified ? CheckCircle2 : isActionRequired ? AlertTriangle : Clock}
-                    />
+                    <div className="flex items-center gap-2">
+                      <StatusChip
+                        status={displayStatus}
+                        icon={isVerified ? CheckCircle2 : isActionRequired ? AlertTriangle : Clock}
+                      />
+                      {isActionRequired && (
+                        <ArrowRight className="w-4 h-4 text-[#8B1A2B]" />
+                      )}
+                    </div>
                   </div>
+                );
+
+                return isActionRequired ? (
+                  <Link
+                    key={doc.type}
+                    href={`/applicant/dashboard/documents/${doc.type}`}
+                    className="block transition-opacity hover:opacity-80"
+                  >
+                    {row}
+                  </Link>
+                ) : (
+                  <div key={doc.type}>{row}</div>
                 );
               })}
             </div>
