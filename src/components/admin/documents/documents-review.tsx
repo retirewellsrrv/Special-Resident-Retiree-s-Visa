@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, X } from 'lucide-react'
+import { Search, X, Loader2 } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import { ReviewQueue } from './review-queue'
 import { DocumentViewer } from './document-viewer'
@@ -13,10 +13,12 @@ interface Props {
   docs: DocumentForReview[]
   stats: ReviewStats
   search?: string
+  sort: 'latest' | 'oldest' | 'most-pending' | 'alphabetical'
 }
 
-export function DocumentsReview({ docs, stats, search }: Props) {
+export function DocumentsReview({ docs, stats, search, sort }: Props) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [searchValue, setSearchValue] = useState(search ?? '')
   const [selectedDoc, setSelectedDoc] = useState<DocumentForReview | null>(docs[0] ?? null)
 
@@ -24,9 +26,20 @@ export function DocumentsReview({ docs, stats, search }: Props) {
     (q: string) => {
       const params = new URLSearchParams()
       if (q) params.set('q', q)
-      router.push(`/admin/documents?${params.toString()}`)
+      params.set('sort', sort)
+      startTransition(() => router.push(`/admin/documents?${params.toString()}`))
     },
-    [router],
+    [router, startTransition, sort],
+  )
+
+  const handleSortChange = useCallback(
+    (newSort: 'latest' | 'oldest' | 'most-pending' | 'alphabetical') => {
+      const params = new URLSearchParams()
+      if (searchValue) params.set('q', searchValue)
+      params.set('sort', newSort)
+      startTransition(() => router.push(`/admin/documents?${params.toString()}`))
+    },
+    [router, startTransition, searchValue],
   )
 
   const handleClear = useCallback(() => {
@@ -53,7 +66,11 @@ export function DocumentsReview({ docs, stats, search }: Props) {
         description="Review applicant documents, verify authenticity, and approve or request changes."
         actions={
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-neutral-400" />
+            {isPending ? (
+              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-brand-primary-600" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-neutral-400" />
+            )}
             <input
               type="text"
               placeholder="Search by applicant name..."
@@ -63,9 +80,10 @@ export function DocumentsReview({ docs, stats, search }: Props) {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearch(searchValue)
               }}
-              className="w-72 pl-9 pr-8 py-2 text-sm rounded-lg border border-brand-neutral-200 bg-white text-brand-neutral-900 placeholder:text-brand-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500"
+              disabled={isPending}
+              className="w-72 pl-9 pr-8 py-2 text-sm rounded-lg border border-brand-neutral-200 bg-white text-brand-neutral-900 placeholder:text-brand-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 disabled:opacity-50 disabled:cursor-wait"
             />
-            {searchValue && (
+            {searchValue && !isPending && (
               <button
                 onClick={handleClear}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-neutral-400 hover:text-brand-neutral-600"
@@ -83,6 +101,8 @@ export function DocumentsReview({ docs, stats, search }: Props) {
           stats={stats}
           selectedId={selectedDoc?.id ?? null}
           onSelect={handleSelect}
+          sort={sort}
+          onSortChange={handleSortChange}
         />
 
         {selectedDoc ? (

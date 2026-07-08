@@ -74,6 +74,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .from("applications")
       .select(`
         id,
+        user_id,
         application_code,
         service_type,
         status,

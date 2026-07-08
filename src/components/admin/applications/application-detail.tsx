@@ -118,8 +118,9 @@ export function ApplicationDetail({ detail, onStatusChange }: Props) {
               Documents ({detail.documents.length})
             </h4>
             <button
-              onClick={() => router.push(`/admin/documents?userId=${detail.user_id}`)}
-              className="inline-flex items-center gap-1.5 text-brand-primary-600 hover:text-brand-primary-800 text-sm font-medium"
+              onClick={() => startTransition(() => router.push(`/admin/documents?userId=${detail.user_id}`))}
+              disabled={isPending}
+              className="inline-flex items-center gap-1.5 text-brand-primary-600 hover:text-brand-primary-800 text-sm font-medium disabled:opacity-50"
             >
               <ExternalLink className="h-4 w-4" />
               Review Docs

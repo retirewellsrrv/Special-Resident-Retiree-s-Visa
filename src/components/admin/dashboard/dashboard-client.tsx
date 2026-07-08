@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
 import {
   Users,
   FileText,
@@ -16,6 +17,18 @@ import {
 import { StatusChip } from '@/components/ui/status-chip'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import type { DashboardStats } from '@/actions/admin/dashboard'
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts'
 
 function fmtMoney(n: number) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -29,26 +42,42 @@ const STATUS_LABEL: Record<string, string> = {
   paused: 'Paused',
 }
 
-const MAX_BAR_HEIGHT = 160
-
-const STATUS_BAR_COLORS: Record<string, string> = {
-  approved: 'bg-green-500',
-  rejected: 'bg-red-400',
-  pending: 'bg-amber-400',
-  processing: 'bg-blue-400',
-  paused: 'bg-gray-400',
+const STATUS_PIE_COLORS: Record<string, string> = {
+  pending: '#f59e0b',
+  processing: '#3b82f6',
+  approved: '#22c55e',
+  rejected: '#ef4444',
+  paused: '#9ca3af',
 }
 
 interface Props {
   stats: DashboardStats
 }
 
+function CustomTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="rounded-lg border border-brand-neutral-200 bg-white px-3 py-2 shadow-sm">
+      <p className="text-xs text-brand-neutral-500">{label}</p>
+      <p className="text-sm font-semibold text-brand-neutral-900">{fmtMoney(payload[0].value)}</p>
+    </div>
+  )
+}
+
+function StatusTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null
+  const { name, value } = payload[0]
+  return (
+    <div className="rounded-lg border border-brand-neutral-200 bg-white px-3 py-2 shadow-sm">
+      <p className="text-xs text-brand-neutral-500 capitalize">{name}</p>
+      <p className="text-sm font-semibold text-brand-neutral-900">{value}</p>
+    </div>
+  )
+}
+
 export function DashboardClient({ stats }: Props) {
   const router = useRouter()
-
-  const maxRevenue = Math.max(...stats.monthlyRevenue.map((m) => m.revenue), 1)
-  const maxApps = Math.max(...stats.appsByService.map((a) => a.count), 1)
-  const maxStatus = Math.max(...stats.appsByStatus.map((a) => a.count), 1)
+  const [isPending, startTransition] = useTransition()
 
   const totalPendingReview = stats.applications.pending + stats.applications.processing
 
@@ -87,6 +116,19 @@ export function DashboardClient({ stats }: Props) {
     },
   ]
 
+  const revenueData = stats.monthlyRevenue.map((m) => ({
+    ...m,
+    label: new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'short' }),
+  }))
+
+  const pieData = stats.appsByStatus
+    .filter((d) => d.count > 0)
+    .map((d) => ({
+      name: STATUS_LABEL[d.label] ?? d.label,
+      value: d.count,
+      color: STATUS_PIE_COLORS[d.label] ?? '#6b7280',
+    }))
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -102,8 +144,9 @@ export function DashboardClient({ stats }: Props) {
             <button
               type="button"
               key={kpi.label}
-              onClick={() => router.push(kpi.href)}
-              className="flex items-start gap-4 rounded-xl border border-brand-neutral-200 bg-white p-5 text-left transition-all duration-200 hover:border-brand-neutral-300 hover:shadow-sm"
+              onClick={() => startTransition(() => router.push(kpi.href))}
+              disabled={isPending}
+              className="flex items-start gap-4 rounded-xl border border-brand-neutral-200 bg-white p-5 text-left transition-all duration-200 hover:border-brand-neutral-300 hover:shadow-sm disabled:opacity-50 disabled:cursor-wait"
             >
               <div className={`flex size-11 shrink-0 items-center justify-center rounded-lg ${kpi.color}`}>
                 <Icon className="size-5" />
@@ -118,59 +161,87 @@ export function DashboardClient({ stats }: Props) {
         })}
       </div>
 
+      {/* Revenue + Status Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Monthly Revenue Chart */}
+        {/* Revenue Area Chart */}
         <div className="lg:col-span-2 rounded-xl border border-brand-neutral-200 bg-white p-5">
           <h3 className="text-sm font-semibold text-brand-neutral-900 mb-4">Revenue (Last 90 Days)</h3>
-          {stats.monthlyRevenue.length === 0 ? (
+          {revenueData.length === 0 ? (
             <p className="text-sm text-brand-neutral-400 py-8 text-center">No revenue data yet.</p>
           ) : (
-            <div className="flex items-end gap-3 h-40">
-              {stats.monthlyRevenue.map((m) => {
-                const height = Math.max((m.revenue / maxRevenue) * MAX_BAR_HEIGHT, 8)
-                return (
-                  <div key={m.month} className="flex-1 flex flex-col items-center gap-1.5">
-                    <span className="text-[11px] font-medium text-brand-neutral-500">
-                      {fmtMoney(m.revenue)}
-                    </span>
-                    <div
-                      className="w-full rounded-md bg-brand-primary-600/80 transition-all hover:bg-brand-primary-600"
-                      style={{ height: `${height}px` }}
-                      role="img"
-                      aria-label={`${m.month}: ${fmtMoney(m.revenue)}`}
-                    />
-                    <span className="text-[10px] text-brand-neutral-400">
-                      {new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'short' })}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#871426" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="#871426" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: '#9ca3af' }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#9ca3af' }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#871426"
+                  strokeWidth={2}
+                  fill="url(#revenueGradient)"
+                  dot={{ r: 3, fill: '#871426', stroke: '#fff', strokeWidth: 2 }}
+                  activeDot={{ r: 5, fill: '#871426', stroke: '#fff', strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           )}
         </div>
 
-        {/* Applications by Status */}
+        {/* Applications by Status — Donut Chart */}
         <div className="rounded-xl border border-brand-neutral-200 bg-white p-5">
           <h3 className="text-sm font-semibold text-brand-neutral-900 mb-4">Applications by Status</h3>
-          <div className="space-y-3">
-            {stats.appsByStatus.map((item) => {
-              const pct = stats.applications.total ? (item.count / stats.applications.total) * 100 : 0
-              return (
-                <div key={item.label}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-brand-neutral-700 capitalize">{STATUS_LABEL[item.label] ?? item.label}</span>
-                    <span className="text-sm font-medium text-brand-neutral-900">{item.count}</span>
+          {pieData.length === 0 ? (
+            <p className="text-sm text-brand-neutral-400 py-8 text-center">No applications yet.</p>
+          ) : (
+            <div className="flex flex-col items-center">
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={52}
+                    outerRadius={78}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} stroke="transparent" />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<StatusTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2">
+                {pieData.map((d) => (
+                  <div key={d.name} className="flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                    <span className="text-[11px] text-brand-neutral-600 capitalize">{d.name}</span>
+                    <span className="text-[11px] font-medium text-brand-neutral-900">{d.value}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-brand-neutral-100 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${STATUS_BAR_COLORS[item.label] ?? 'bg-brand-primary-400'}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -180,8 +251,9 @@ export function DashboardClient({ stats }: Props) {
           <div className="flex items-center justify-between px-5 py-4 border-b border-brand-neutral-100">
             <h3 className="text-sm font-semibold text-brand-neutral-900">Recent Applications</h3>
             <button
-              onClick={() => router.push('/admin/applications')}
-              className="text-xs font-medium text-brand-primary-600 hover:text-brand-primary-800"
+              onClick={() => startTransition(() => router.push('/admin/applications'))}
+              disabled={isPending}
+              className="text-xs font-medium text-brand-primary-600 hover:text-brand-primary-800 disabled:opacity-50"
             >
               View all
             </button>
@@ -194,8 +266,9 @@ export function DashboardClient({ stats }: Props) {
                 <button
                   type="button"
                   key={app.id}
-                  onClick={() => router.push(`/admin/applications?userId=${app.user_id}`)}
-                  className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-brand-neutral-50"
+                  onClick={() => startTransition(() => router.push(`/admin/applications?userId=${app.user_id}`))}
+                  disabled={isPending}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-brand-neutral-50 disabled:opacity-50"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-brand-neutral-900 truncate">{app.applicant_name}</p>
@@ -215,8 +288,9 @@ export function DashboardClient({ stats }: Props) {
           <div className="flex items-center justify-between px-5 py-4 border-b border-brand-neutral-100">
             <h3 className="text-sm font-semibold text-brand-neutral-900">Documents Pending Review</h3>
             <button
-              onClick={() => router.push('/admin/documents')}
-              className="text-xs font-medium text-brand-primary-600 hover:text-brand-primary-800"
+              onClick={() => startTransition(() => router.push('/admin/documents'))}
+              disabled={isPending}
+              className="text-xs font-medium text-brand-primary-600 hover:text-brand-primary-800 disabled:opacity-50"
             >
               View all
             </button>
@@ -229,8 +303,9 @@ export function DashboardClient({ stats }: Props) {
                 <button
                   type="button"
                   key={doc.id}
-                  onClick={() => router.push('/admin/documents')}
-                  className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-brand-neutral-50"
+                  onClick={() => startTransition(() => router.push('/admin/documents'))}
+                  disabled={isPending}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-brand-neutral-50 disabled:opacity-50"
                 >
                   <div className="flex size-8 items-center justify-center rounded-full bg-amber-50 text-amber-600">
                     <Clock className="size-4" />

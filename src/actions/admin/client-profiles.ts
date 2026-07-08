@@ -75,11 +75,17 @@ export async function getClientDirectory({
   limit = 10,
   filter = "all",
   service_type,
+  status,
+  q,
+  application_code,
 }: {
   page?: number;
   limit?: number;
   filter?: "all" | "new";
   service_type?: string;
+  status?: string;
+  q?: string;
+  application_code?: string;
 } = {}): Promise<{ rows: ClientRow[]; total: number }> {
   const supabase = createAdminClient();
   const from = (page - 1) * limit;
@@ -114,6 +120,16 @@ export async function getClientDirectory({
     const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
     query = query.gte("created_at", cutoff);
   }
+  if (status) query = query.eq("status", status as any);
+  if (q) {
+    const { data: matching } = await supabase
+      .from("client_profiles")
+      .select("user_id")
+      .ilike("name", `%${q}%`)
+    const ids = (matching ?? []).map((u) => u.user_id)
+    query = query.in("user_id", ids.length > 0 ? ids : [''])
+  }
+  if (application_code) query = query.ilike("application_code", `%${application_code}%`);
 
     const { data, count, error } = await query
     if (error) throw new Error(error.message)
