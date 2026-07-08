@@ -2,9 +2,9 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import type { Provider } from '@supabase/supabase-js'
-import { supabaseAdmin } from '@/lib/supabase/client'
+
 import { headers } from 'next/headers'
 
 
@@ -48,12 +48,37 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     return { success: false, error: error.message }
   }
 
-  const role = data.user.user_metadata?.role as string | undefined
+  let role = data.user.user_metadata?.role as string | undefined
 
+  // Check super_admin_profiles first — overrides metadata role
+  const { data: superAdminProfile } = await supabase
+    .from('super_admin_profiles')
+    .select('user_id')
+    .eq('user_id', data.user.id)
+    .maybeSingle()
+
+  if (superAdminProfile) {
+    role = 'super_admin'
+  }
 
   // revalidatePath must run before any redirect()
   revalidatePath('/', 'layout')
 
+  if (role === 'admin') {
+    const adminSupabase = createAdminClient()
+    const { data: adminProfile } = await adminSupabase
+      .from('admin_profiles')
+      .select('is_active')
+      .eq('user_id', data.user.id)
+      .maybeSingle()
+
+    if (!adminProfile || !adminProfile.is_active) {
+      await supabase.auth.signOut()
+      return { success: false, error: 'ACCOUNT_DISABLED' }
+    }
+  }
+
+  if (role === 'super_admin') redirect('/super-admin/dashboard')
   if (role === 'admin') redirect('/admin/dashboard')
   if (role === 'applicant') redirect('/applicant/dashboard')
   redirect('/')
@@ -82,7 +107,8 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
   console.log(parsed.data.birthday)
 
   // check user if existing first
-  const { data: userData, error: userDataError } = await supabaseAdmin().auth.admin.listUsers()
+  const adminSupabase = createAdminClient()
+  const { data: userData, error: userDataError } = await adminSupabase.auth.admin.listUsers()
 
   if (userDataError) {
     console.error('Error fetching users:', userDataError)
@@ -151,78 +177,7 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
   // return { success: true, message: 'Please check your email to confirm your account' }
 }
 
-// ─────────────────────────────────────────────
-// Create Admin
-// ─────────────────────────────────────────────
 
-
-export async function CreateAdminAction(input: RegisterInput): Promise<ActionResult> {
-  const parsed = registerSchema.safeParse(input)
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message }
-  }
-
-  const supabase = await createClient()
-
-  const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-
-  const firstName = capitalize(parsed.data?.firstName);
-  const surname = capitalize(parsed.data?.surname);
-  const fullName = `${firstName} ${surname}`;
-  console.log(fullName)
-  console.log(parsed.data.email)
-  console.log(parsed.data.birthday)
-
-  // check user if existing first
-  const { data: userData, error: userDataError } = await supabaseAdmin().auth.admin.listUsers()
-
-  if (userDataError) {
-    console.error('Error fetching users:', userDataError)
-    return { success: false, error: 'An error occurred while checking existing users.' }
-  }
-
-  const existingUser = userData.users.find(
-    (user) => user.email?.toLowerCase() === parsed.data?.email
-  )
-
-  if (existingUser) {
-    if (existingUser.email_confirmed_at) {
-      return {
-        success: false,
-        error: 'An account with this email already exists.',
-      }
-    }
-    return {
-      success: false,
-      error:
-        'This email is already registered but has not been confirmed yet. Please check your inbox.',
-    }
-  }
-
-  // if no existing user, proceed to sign up
-  const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
-
-  const { data, error: signUpError } = await supabase.auth.signUp({
-    email: parsed.data.email.toLowerCase(),
-    password: parsed.data.password,
-    options: {
-      emailRedirectTo: `${origin}/api/auth/callback?roleType=admin`,
-      data: {
-        role: 'admin',
-        name: fullName,
-      },
-    },
-  })
-
-  if (signUpError) {
-    console.error('signup error:', signUpError)
-    return { success: false, error: signUpError.message }
-  }
-
-  revalidatePath('/', 'layout')
-  redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
-  // return { success: true, message: 'Please check your email to confirm your account' }
-}
 
 
 export async function logoutAction(): Promise<void> {

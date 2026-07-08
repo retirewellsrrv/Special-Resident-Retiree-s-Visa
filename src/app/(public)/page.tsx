@@ -1,5 +1,6 @@
 import { getSession } from "@/actions/auth";
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import {
   HeroSection,
   ServicesSection,
@@ -13,7 +14,21 @@ export default async function Page() {
   const user = await getSession();
 
   if (user) {
-    const role = user.user_metadata?.role as string | undefined;
+    let role = user.user_metadata?.role as string | undefined;
+
+    // Check super_admin_profiles — overrides metadata role
+    const supabase = await createClient();
+    const { data: superAdminProfile } = await supabase
+      .from("super_admin_profiles")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (superAdminProfile) {
+      role = "super_admin";
+    }
+
+    if (role === "super_admin") redirect("/super-admin/dashboard");
     if (role === "admin") redirect("/admin/dashboard");
     if (role === "applicant") redirect("/applicant/dashboard");
     redirect("/");

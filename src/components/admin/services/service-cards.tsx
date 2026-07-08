@@ -59,7 +59,13 @@ export function ServiceCards({ services }: Props) {
       .slice(0, 3)
   }, [services])
 
-  if (!services.length) return null
+  if (!services.length) {
+    return (
+      <div className="text-center py-12 text-sm text-brand-neutral-400">
+        No service plans available.
+      </div>
+    )
+  }
 
   function handleSetFeatured(service: ServicePlan) {
     setFeaturingIds((prev) => new Set(prev).add(service.id))

@@ -16,14 +16,17 @@ export type Database = {
     Tables: {
       admin_profiles: {
         Row: {
+          is_active: boolean | null
           name: string
           user_id: string
         }
         Insert: {
+          is_active?: boolean | null
           name: string
           user_id: string
         }
         Update: {
+          is_active?: boolean | null
           name?: string
           user_id?: string
         }
@@ -303,6 +306,21 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admin_profiles: {
+        Row: {
+          name: string | null
+          user_id: string
+        }
+        Insert: {
+          name?: string | null
+          user_id: string
+        }
+        Update: {
+          name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -349,7 +367,7 @@ export type Database = {
         | "bank_transfer"
         | "paylater"
         | "cryptocurrency"
-      payment_status: "processing" | "pending" | "cancelled" | "success"
+      payment_status: "processing" | "pending" | "cancelled" | "success" | "failed"
       service_type: "basic" | "premium" | "vip"
       sex: "male" | "female"
     }
@@ -521,7 +539,7 @@ export const Constants = {
         "paylater",
         "cryptocurrency",
       ],
-      payment_status: ["processing", "pending", "cancelled", "success"],
+      payment_status: ["processing", "pending", "cancelled", "success", "failed"],
       service_type: ["basic", "premium", "vip"],
       sex: ["male", "female"],
     },

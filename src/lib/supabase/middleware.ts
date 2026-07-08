@@ -5,7 +5,7 @@ import type { Database } from "@/types/supabase";
 import { getSession } from "@/actions/auth";
 import { getUserRole, getUser } from "@/utils/auth/getUser"
 
-const PROTECTED_PREFIXES = ["/applicant", "/admin"];
+const PROTECTED_PREFIXES = ["/applicant", "/admin", "/super-admin"];
 const PUBLIC_ONLY_PATHS = [
   "/login",
   "/register",
@@ -61,11 +61,28 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && isPublicOnly(pathname)) {
-    const userRole = await getUserRole();
+    let userRole = await getUserRole();
+
+    // Check super_admin_profiles — overrides metadata role
+    if (userRole !== "super_admin") {
+      const { data: superAdminProfile } = await supabase
+        .from("super_admin_profiles")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (superAdminProfile) {
+        userRole = "super_admin";
+      }
+    }
 
     const homeUrl = request.nextUrl.clone();
 
-    if (userRole === "admin") {
+    if (userRole === "super_admin") {
+      const superAdminUrl = request.nextUrl.clone();
+      superAdminUrl.pathname = "/super-admin/dashboard";
+      return NextResponse.redirect(superAdminUrl);
+    } else if (userRole === "admin") {
       const adminUrl = request.nextUrl.clone();
       adminUrl.pathname = "/admin/dashboard";
       return NextResponse.redirect(adminUrl);

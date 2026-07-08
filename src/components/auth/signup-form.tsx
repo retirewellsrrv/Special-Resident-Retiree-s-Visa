@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterInput } from '@/schemas/auth'
-import { registerAction, oauthAction, CreateAdminAction } from '@/actions/auth'
+import { registerAction, oauthAction } from '@/actions/auth'
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -68,7 +68,7 @@ export function SignupForm({
       setServerError(null)
 
       const result = await registerAction(data)
-      // const result = await CreateAdminAction(data) //* to create an admin
+      // const result = await createAdmin(formData) //* to create an admin via actions/admin/admins
 
       if (!result.success) {
         toast.error(`Something went wrong: ${result.error}`)
