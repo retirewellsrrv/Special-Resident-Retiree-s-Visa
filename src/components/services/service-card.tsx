@@ -64,13 +64,6 @@ export default function ServiceCard({
                     <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Required Deposit</span>
                     <span className="text-sm font-bold text-[#0F172A]">{depositDisplay}</span>
                 </div>
-                <button 
-                    onClick={onConsultClick}
-                    className="p-2 rounded-xl bg-gray-50 hover:bg-[#E2E8F0] text-[#9E1B32] transition"
-                    aria-label={`Inquire about ${name}`}
-                >
-                    <ArrowRight className="w-4 h-4" />
-                </button>
             </div>
         </div>
     );
