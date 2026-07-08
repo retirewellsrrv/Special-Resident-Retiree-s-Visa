@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Download, Plus } from 'lucide-react'
+import { Download, Plus, Wallet, Clock, CheckCircle2, RotateCcw } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/loading'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import PaymentFilters from '@/components/admin/payments/payments-filter'
 import PaymentTable from '@/components/admin/payments/payments-table'
-import StatCard from '@/components/admin/payments/payments-stats-card'
+import { StatCard } from '@/components/admin/shared/stat-card'
 import { Pagination } from '@/components/ui/pagination'
 import { downloadCsv } from '@/lib/utils'
 import { getPayments, getPaymentStats } from '@/actions/admin/payments'
@@ -94,32 +94,32 @@ export default function PaymentLogsPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
         <StatCard
+          icon={Wallet}
           label="Total Revenue"
-          icon="ti-cash"
           value={fmt(stats.revenue)}
           barWidth={78}
           barColor="#871426"
           footer={<><span className="text-green-600 font-medium">↑8.2%</span> from last month</>}
         />
         <StatCard
+          icon={Clock}
           label="Pending Payments"
-          icon="ti-clock"
           value={stats.pending}
           barWidth={stats.total ? (stats.pending / stats.total) * 100 : 0}
           barColor="#d97706"
           footer={`${stats.pending} application${stats.pending !== 1 ? 's' : ''} awaiting deposit`}
         />
         <StatCard
+          icon={CheckCircle2}
           label="Successful Txns"
-          icon="ti-check"
           value={stats.success}
           barWidth={stats.total ? (stats.success / stats.total) * 100 : 0}
           barColor="#16a34a"
           footer="Prior year 2024 baseline"
         />
         <StatCard
+          icon={RotateCcw}
           label="Refunds Issued"
-          icon="ti-refresh"
           value={fmt(stats.refundAmt)}
           barWidth={stats.total ? (stats.refunded / stats.total) * 100 : 0}
           barColor="#a6192e"
@@ -170,6 +170,7 @@ export default function PaymentLogsPage() {
           total={total}
           perPage={PER_PAGE}
           onChange={setPage}
+          disabled={loading}
         />
       )}
     </div>

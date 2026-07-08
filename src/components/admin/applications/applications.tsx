@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Search, X } from 'lucide-react'
+import { Loader2, Search, X, FileText, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
+import { StatCard } from '@/components/admin/shared/stat-card'
 import { ApplicationQueue } from './applications-queue'
 import { ApplicationDetail } from './application-detail'
 import { Pagination } from '@/components/ui/pagination'
@@ -31,6 +32,7 @@ interface Props {
 
 export function ApplicationsClient({ stats, rows, total, page, statusFilter, userId, search }: Props) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detail, setDetail] = useState<AppDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -69,18 +71,25 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
 
   const handlePageChange = useCallback(
     (newPage: number) => {
-      router.push(`/admin/applications?${buildQuery({ status: statusFilter, userId, search, page: newPage })}`)
+      startTransition(() => router.push(`/admin/applications?${buildQuery({ status: statusFilter, userId, search, page: newPage })}`))
     },
-    [router, statusFilter, userId, search],
+    [router, statusFilter, userId, search, startTransition],
+  )
+
+  const handleFilterStatus = useCallback(
+    (status?: string) => {
+      startTransition(() => router.push(`/admin/applications?${buildQuery({ status, userId, search, page: 1 })}`))
+    },
+    [router, userId, search, startTransition],
   )
 
   const [searchValue, setSearchValue] = useState(search ?? '')
 
   const handleSearch = useCallback(
     (q: string) => {
-      router.push(`/admin/applications?${buildQuery({ status: statusFilter, userId, search: q, page: 1 })}`)
+      startTransition(() => router.push(`/admin/applications?${buildQuery({ status: statusFilter, userId, search: q, page: 1 })}`))
     },
-    [router, statusFilter, userId],
+    [router, statusFilter, userId, startTransition],
   )
 
   const handleClear = useCallback(() => {
@@ -95,7 +104,11 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
         description="Review and manage visa applications, their details, and submitted documents."
         actions={
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-neutral-400" />
+            {isPending ? (
+              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-brand-primary-600" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-neutral-400" />
+            )}
             <input
               type="text"
               placeholder="Search by name or application code..."
@@ -105,9 +118,10 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearch(searchValue)
               }}
-              className="w-72 pl-9 pr-8 py-2 text-sm rounded-lg border border-brand-neutral-200 bg-white text-brand-neutral-900 placeholder:text-brand-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500"
+              disabled={isPending}
+              className="w-72 pl-9 pr-8 py-2 text-sm rounded-lg border border-brand-neutral-200 bg-white text-brand-neutral-900 placeholder:text-brand-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 disabled:opacity-50 disabled:cursor-wait"
             />
-            {searchValue && (
+            {searchValue && !isPending && (
               <button
                 onClick={handleClear}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-neutral-400 hover:text-brand-neutral-600"
@@ -118,6 +132,13 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
           </div>
         }
       />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={FileText} label="Total" value={stats.total} onClick={() => handleFilterStatus(undefined)} active={!statusFilter} />
+        <StatCard icon={Clock} label="Pending" value={stats.pending} iconBgClass="bg-amber-50" iconColorClass="text-amber-600" onClick={() => handleFilterStatus('pending')} active={statusFilter === 'pending'} />
+        <StatCard icon={CheckCircle2} label="Approved" value={stats.approved} iconBgClass="bg-green-50" iconColorClass="text-green-600" onClick={() => handleFilterStatus('approved')} active={statusFilter === 'approved'} />
+        <StatCard icon={AlertTriangle} label="Rejected" value={stats.rejected} badge={stats.rejected > 0 ? 'Needs Review' : undefined} iconBgClass="bg-red-50" iconColorClass="text-red-600" onClick={() => handleFilterStatus('rejected')} active={statusFilter === 'rejected'} />
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-4 flex-1 min-h-0">
         <ApplicationQueue
@@ -153,6 +174,7 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
         total={total}
         perPage={10}
         onChange={handlePageChange}
+        disabled={isPending}
       />
     </div>
   )

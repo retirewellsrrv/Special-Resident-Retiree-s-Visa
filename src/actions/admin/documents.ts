@@ -7,6 +7,7 @@ import { DocumentStatusEnum } from "@/schemas/document";
 export type DocumentForReview = {
   id: number
   application_id: number
+  user_id: string
   name: string
   path: string
   type: string
@@ -138,6 +139,7 @@ function formatResults(data: any[]): { rows: DocumentForReview[]; stats: ReviewS
   const rows: DocumentForReview[] = data.map((d) => ({
     id: d.id,
     application_id: d.application_id,
+    user_id: d.applications?.user_id ?? "",
     name: d.name,
     path: d.path,
     type: d.type,
