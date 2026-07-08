@@ -2,8 +2,29 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { loginAction, registerAction, logoutAction } from '../actions/auth'
 import type { LoginInput, RegisterInput } from '../schemas/auth'
 
+function createAdminClientMock() {
+  return {
+    auth: {
+      admin: {
+        listUsers: vi.fn().mockResolvedValue({
+          data: { users: [] },
+          error: null,
+        }),
+      },
+    },
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn().mockResolvedValue({ data: { is_active: true }, error: null }),
+        })),
+      })),
+    })),
+  }
+}
+
 vi.mock('../lib/supabase/server', () => ({
   createClient: vi.fn(),
+  createAdminClient: vi.fn(createAdminClientMock),
 }))
 
 vi.mock('../lib/supabase/client', () => ({
@@ -48,7 +69,14 @@ function mockAuth(authOverrides: Partial<{
     signOut: vi.fn(),
     ...authOverrides,
   }
-  vi.mocked(createClient).mockResolvedValue({ auth } as any)
+  const fromChain = {
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      })),
+    })),
+  }
+  vi.mocked(createClient).mockResolvedValue({ auth, from: vi.fn(() => fromChain) } as any)
   return auth
 }
 

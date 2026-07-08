@@ -14,13 +14,13 @@ import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck, AlertCircle, Ban } fr
 
 import { Button } from '@/components/ui/button'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogFooter,
+    AlertDialogTitle,
+    AlertDialogDescription,
 } from '@/components/ui/alert-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -31,7 +31,6 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 //? place holder for now 
 const LOGO_SRC =
@@ -89,7 +88,7 @@ export function LoginForm({
         } catch (error) {
             if (isRedirectError(error)) throw error
             console.error(error)
-            if(isRedirectError(error)) throw error 
+            if (isRedirectError(error)) throw error
             setServerError('Something went wrong.')
         }
     }
