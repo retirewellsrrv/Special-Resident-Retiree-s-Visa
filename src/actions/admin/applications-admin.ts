@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import { ApplicationStatusEnum } from "@/schemas/client-profiles";
@@ -27,7 +27,8 @@ export type AppStats = {
 
 export type ActionState = { error: string | null; success: boolean };
 
-export async function getApplicationStats(): Promise<AppStats> {
+export const getApplicationStats = unstable_cache(
+  async (): Promise<AppStats> => {
   const supabase = createAdminClient();
 
   const [
@@ -63,7 +64,10 @@ export async function getApplicationStats(): Promise<AppStats> {
     approved: approved ?? 0,
     rejected: rejected ?? 0,
   };
-}
+},
+  ["admin-applications-stats"],
+  { revalidate: 30, tags: ["admin-applications"] },
+)
 
 function escapeSearch(val: string) {
   return val.replace(/[%_]/g, '\\$&')
@@ -344,5 +348,6 @@ export async function updateAppStatus(
   if (error) return { error: error.message, success: false };
 
   revalidatePath("/admin/applications");
+  revalidateTag("admin-applications", 'seconds');
   return { error: null, success: true };
 }

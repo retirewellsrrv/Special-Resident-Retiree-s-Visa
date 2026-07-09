@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, X, Loader2 } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
+import { FilterInput } from '@/components/admin/shared/filters'
 import { ReviewQueue } from './review-queue'
 import { DocumentViewer } from './document-viewer'
 import { ReviewActions } from './review-actions'
@@ -19,7 +19,6 @@ interface Props {
 export function DocumentsReview({ docs, stats, search, sort }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [searchValue, setSearchValue] = useState(search ?? '')
   const [selectedDoc, setSelectedDoc] = useState<DocumentForReview | null>(docs[0] ?? null)
 
   const handleSearch = useCallback(
@@ -35,17 +34,12 @@ export function DocumentsReview({ docs, stats, search, sort }: Props) {
   const handleSortChange = useCallback(
     (newSort: 'latest' | 'oldest' | 'most-pending' | 'alphabetical') => {
       const params = new URLSearchParams()
-      if (searchValue) params.set('q', searchValue)
+      if (search?.trim()) params.set('q', search)
       params.set('sort', newSort)
       startTransition(() => router.push(`/admin/documents?${params.toString()}`))
     },
-    [router, startTransition, searchValue],
+    [router, startTransition, search],
   )
-
-  const handleClear = useCallback(() => {
-    setSearchValue('')
-    handleSearch('')
-  }, [handleSearch])
 
   const handleSelect = useCallback((doc: DocumentForReview) => {
     setSelectedDoc(doc)
@@ -65,45 +59,46 @@ export function DocumentsReview({ docs, stats, search, sort }: Props) {
         title="Document Review"
         description="Review applicant documents, verify authenticity, and approve or request changes."
         actions={
-          <div className="relative">
-            {isPending ? (
-              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-brand-primary-600" />
-            ) : (
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-neutral-400" />
-            )}
-            <input
-              type="text"
-              placeholder="Search by applicant name..."
-              aria-label="Search documents"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSearch(searchValue)
-              }}
-              disabled={isPending}
-              className="w-72 pl-9 pr-8 py-2 text-sm rounded-lg border border-brand-neutral-200 bg-white text-brand-neutral-900 placeholder:text-brand-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 disabled:opacity-50 disabled:cursor-wait"
-            />
-            {searchValue && !isPending && (
-              <button
-                onClick={handleClear}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-neutral-400 hover:text-brand-neutral-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <FilterInput
+            label="Search documents"
+            placeholder="Search by applicant name..."
+            defaultValue={search ?? ''}
+            onChange={handleSearch}
+            disabled={isPending}
+            isPending={isPending}
+            debounceMs={400}
+          />
         }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 flex-1 min-h-0">
-        <ReviewQueue
-          docs={docs}
-          stats={stats}
-          selectedId={selectedDoc?.id ?? null}
-          onSelect={handleSelect}
-          sort={sort}
-          onSortChange={handleSortChange}
-        />
+        {isPending ? (
+          <aside className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+            <div className="px-4 py-3 border-b border-brand-neutral-100">
+              <h3 className="text-sm font-semibold text-brand-neutral-900">Review Queue</h3>
+            </div>
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div className="w-7 h-7 rounded-full bg-brand-neutral-100" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3.5 w-28 bg-brand-neutral-100 rounded" />
+                    <div className="h-3 w-16 bg-brand-neutral-50 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        ) : (
+          <ReviewQueue
+            docs={docs}
+            stats={stats}
+            selectedId={selectedDoc?.id ?? null}
+            onSelect={handleSelect}
+            sort={sort}
+            onSortChange={handleSortChange}
+          />
+        )}
 
         {selectedDoc ? (
           <div className="flex flex-col gap-3 min-h-0">

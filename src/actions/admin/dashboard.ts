@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export type DashboardStats = {
@@ -45,7 +46,8 @@ export type DashboardStats = {
   }[]
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export const getDashboardStats = unstable_cache(
+  async (): Promise<DashboardStats> => {
   const supabase = createAdminClient();
 
   const [
@@ -166,7 +168,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     recentApplications,
     pendingDocuments,
   };
-}
+},
+  ["admin-dashboard"],
+  { revalidate: 30, tags: ["admin-dashboard"] },
+)
 
 function aggregateCount(data: Record<string, string>[], key: string): { label: string; count: number }[] {
   const map = new Map<string, number>();

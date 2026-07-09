@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/server'
 
 import {
@@ -8,20 +8,24 @@ import {
   updateServicePlanSchema,
 } from '@/schemas/service'
 
-export async function getServicePlans() {
-  const supabase = createAdminClient()
+export const getServicePlans = unstable_cache(
+  async () => {
+    const supabase = createAdminClient()
 
-  const { data, error } = await supabase
-    .from('service_plans')
-    .select('*')
-    .order('id', { ascending: true })
+    const { data, error } = await supabase
+      .from('service_plans')
+      .select('*')
+      .order('id', { ascending: true })
 
-  if (error) {
-    throw new Error(error.message)
-  }
+    if (error) {
+      throw new Error(error.message)
+    }
 
-  return data
-}
+    return data
+  },
+  ["admin-services"],
+  { revalidate: 300, tags: ["admin-services"] },
+)
 
 export async function createServicePlan(payload: unknown) {
   const supabase = createAdminClient()
@@ -60,6 +64,7 @@ export async function createServicePlan(payload: unknown) {
   }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
@@ -91,6 +96,7 @@ export async function updateServicePlan(
   if (error) return { error: error.message }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
@@ -108,6 +114,7 @@ export async function deleteServicePlan(id: number) {
   }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
@@ -147,6 +154,7 @@ export async function setFeaturedService(id: number) {
   }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
@@ -185,6 +193,7 @@ export async function toggleServicePlanAvailability(
   }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
