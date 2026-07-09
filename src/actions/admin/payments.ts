@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 
@@ -22,7 +23,8 @@ export type PaymentStats = {
   total: number
 }
 
-export async function getPaymentStats(): Promise<PaymentStats> {
+export const getPaymentStats = unstable_cache(
+  async (): Promise<PaymentStats> => {
   const supabase = createAdminClient();
 
   const { data } = await supabase.from("payments").select("status, amount");
@@ -38,7 +40,10 @@ export async function getPaymentStats(): Promise<PaymentStats> {
     refundAmt: refunded.reduce((a, r) => a + Number(r.amount), 0),
     total: all.length,
   };
-}
+},
+  ["admin-payments-stats"],
+  { revalidate: 30, tags: ["admin-payments"] },
+)
 
 function escapeSearch(val: string) {
   return val.replace(/[%_]/g, '\\$&')

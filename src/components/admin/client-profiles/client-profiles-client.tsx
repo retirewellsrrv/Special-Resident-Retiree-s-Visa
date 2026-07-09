@@ -8,10 +8,10 @@ import {
     type ClientStats,
 } from '@/actions/admin/client-profiles'
 import { StatusChip } from '@/components/ui/status-chip'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TableSkeleton } from '@/components/ui/loading'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { StatCard } from '@/components/admin/shared/stat-card'
+import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
 import {
     Users,
     Clock,
@@ -20,7 +20,6 @@ import {
     PauseCircle,
     AlertTriangle,
     Eye,
-    X,
     type LucideIcon,
 } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
@@ -33,10 +32,6 @@ const STATUS_ICON: Record<string, LucideIcon> = {
     paused: PauseCircle,
     pending: Clock,
     rejected: XCircle,
-}
-
-function initials(name: string) {
-    return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
 }
 
 function ClientDirectoryRow({ row }: { row: ClientRow }) {
@@ -116,6 +111,10 @@ export function ClientProfilesClient({
         navigate({ status: status || undefined, page: '1' })
     }
 
+    function handleClear() {
+        navigate({ filter: 'all', service_type: undefined, status: undefined, q: undefined, application_code: undefined, page: '1' })
+    }
+
     return (
         <div className="p-6 space-y-6">
             <PageHeader
@@ -142,74 +141,48 @@ export function ClientProfilesClient({
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-end">
-                <div className="flex flex-col gap-1">
-                    <label className="text-[11px] text-brand-neutral-500 font-semibold uppercase tracking-wide">Application ID</label>
-                    <input
-                        placeholder="APP-00000"
-                        defaultValue={applicationCode ?? ''}
-                        onBlur={(e) => navigate({ application_code: e.target.value || undefined, page: '1' })}
-                        className="h-9 px-2.5 rounded-lg border border-brand-neutral-200 bg-white text-sm text-brand-neutral-900 outline-none focus:border-brand-primary-600 focus:ring-2 focus:ring-brand-primary-600/10 transition-all placeholder:text-brand-neutral-300"
-                    />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                    <label className="text-[11px] text-brand-neutral-500 font-semibold uppercase tracking-wide">Name</label>
-                    <input
-                        placeholder="Client name"
-                        defaultValue={q ?? ''}
-                        onBlur={(e) => navigate({ q: e.target.value || undefined, page: '1' })}
-                        className="h-9 px-2.5 rounded-lg border border-brand-neutral-200 bg-white text-sm text-brand-neutral-900 outline-none focus:border-brand-primary-600 focus:ring-2 focus:ring-brand-primary-600/10 transition-all placeholder:text-brand-neutral-300"
-                    />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                    <label className="text-[11px] text-brand-neutral-500 font-semibold uppercase tracking-wide">Service Type</label>
-                    <Select
-                        value={serviceType ?? ''}
-                        onValueChange={(v) => navigate({ service_type: v || undefined, page: '1' })}
-                    >
-                        <SelectTrigger className="h-9 w-full rounded-lg border-brand-neutral-200 focus:border-brand-primary-600 focus:ring-2 focus:ring-brand-primary-600/10" disabled={isPending}>
-                            <SelectValue placeholder="All Types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            {SERVICE_TYPES.map((v) => (
-                                <SelectItem key={v} value={v} className="capitalize">
-                                    {v}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                    <label className="text-[11px] text-brand-neutral-500 font-semibold uppercase tracking-wide">Status</label>
-                    <Select
-                        value={statusFilter ?? ''}
-                        onValueChange={(v) => navigate({ status: v || undefined, page: '1' })}
-                    >
-                        <SelectTrigger className="h-9 w-full rounded-lg border-brand-neutral-200 focus:border-brand-primary-600 focus:ring-2 focus:ring-brand-primary-600/10" disabled={isPending}>
-                            <SelectValue placeholder="All Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                            <SelectItem value="paused">Paused</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <button
-                    onClick={() => navigate({ filter: 'all', service_type: undefined, status: undefined, q: undefined, application_code: undefined, page: '1' })}
-                    className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg border border-brand-primary-200 bg-brand-primary-50 text-sm text-brand-primary-600 font-medium hover:bg-brand-primary-100 transition-colors whitespace-nowrap"
-                >
-                    <i className="ti ti-x text-sm" aria-hidden="true" />
-                    Clear
-                </button>
-            </div>
+            <FilterBar>
+                <FilterInput
+                    label="Application ID"
+                    placeholder="APP-00000"
+                    defaultValue={applicationCode ?? ''}
+                    onChange={(v) => navigate({ application_code: v || undefined, page: '1' })}
+                    disabled={isPending}
+                    isPending={isPending}
+                    debounceMs={400}
+                />
+                <FilterInput
+                    label="Name"
+                    placeholder="Client name"
+                    defaultValue={q ?? ''}
+                    onChange={(v) => navigate({ q: v || undefined, page: '1' })}
+                    disabled={isPending}
+                    isPending={isPending}
+                    debounceMs={400}
+                />
+                <FilterSelect
+                    label="Service Type"
+                    placeholder="All Types"
+                    value={serviceType}
+                    options={SERVICE_TYPES.map((v) => ({ value: v, label: v }))}
+                    onChange={(v) => navigate({ service_type: v !== 'all' ? v : undefined, page: '1' })}
+                    disabled={isPending}
+                />
+                <FilterSelect
+                    label="Status"
+                    placeholder="All Status"
+                    value={statusFilter}
+                    options={[
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'approved', label: 'Approved' },
+                        { value: 'rejected', label: 'Rejected' },
+                        { value: 'paused', label: 'Paused' },
+                    ]}
+                    onChange={(v) => navigate({ status: v !== 'all' ? v : undefined, page: '1' })}
+                    disabled={isPending}
+                />
+                <FilterClear onClick={handleClear} disabled={isPending} />
+            </FilterBar>
 
             {/* Table */}
             <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">

@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Search, X, FileText, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Loader2, FileText, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import { StatCard } from '@/components/admin/shared/stat-card'
+import { FilterInput } from '@/components/admin/shared/filters'
 import { ApplicationQueue } from './applications-queue'
 import { ApplicationDetail } from './application-detail'
 import { Pagination } from '@/components/ui/pagination'
@@ -83,8 +84,6 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
     [router, userId, search, startTransition],
   )
 
-  const [searchValue, setSearchValue] = useState(search ?? '')
-
   const handleSearch = useCallback(
     (q: string) => {
       startTransition(() => router.push(`/admin/applications?${buildQuery({ status: statusFilter, userId, search: q, page: 1 })}`))
@@ -92,44 +91,21 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
     [router, statusFilter, userId, startTransition],
   )
 
-  const handleClear = useCallback(() => {
-    setSearchValue('')
-    handleSearch('')
-  }, [handleSearch])
-
   return (
     <div className="flex flex-col gap-4 h-full">
       <PageHeader
         title="Applications"
         description="Review and manage visa applications, their details, and submitted documents."
         actions={
-          <div className="relative">
-            {isPending ? (
-              <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-brand-primary-600" />
-            ) : (
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-neutral-400" />
-            )}
-            <input
-              type="text"
-              placeholder="Search by name or application code..."
-              aria-label="Search applications"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSearch(searchValue)
-              }}
-              disabled={isPending}
-              className="w-72 pl-9 pr-8 py-2 text-sm rounded-lg border border-brand-neutral-200 bg-white text-brand-neutral-900 placeholder:text-brand-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 disabled:opacity-50 disabled:cursor-wait"
-            />
-            {searchValue && !isPending && (
-              <button
-                onClick={handleClear}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-neutral-400 hover:text-brand-neutral-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <FilterInput
+            label="Search applications"
+            placeholder="Search by name or application code..."
+            defaultValue={search ?? ''}
+            onChange={handleSearch}
+            disabled={isPending}
+            isPending={isPending}
+            debounceMs={400}
+          />
         }
       />
 
@@ -141,12 +117,31 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-4 flex-1 min-h-0">
-        <ApplicationQueue
-          rows={rows}
-          stats={stats}
-          selectedId={selectedId}
-          onSelect={handleSelect}
-        />
+        {isPending ? (
+          <aside className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+            <div className="px-4 py-3 border-b border-brand-neutral-100">
+              <h3 className="text-sm font-semibold text-brand-neutral-900">Applications</h3>
+            </div>
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div className="w-8 h-8 rounded-full bg-brand-neutral-100" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3.5 w-32 bg-brand-neutral-100 rounded" />
+                    <div className="h-3 w-20 bg-brand-neutral-50 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        ) : (
+          <ApplicationQueue
+            rows={rows}
+            stats={stats}
+            selectedId={selectedId}
+            onSelect={handleSelect}
+          />
+        )}
 
         {loadingDetail ? (
           <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">

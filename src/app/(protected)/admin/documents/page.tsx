@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic'
-
 import { getDocumentsForReview } from '@/actions/admin/documents'
 import { DocumentsReview } from '@/components/admin/documents/documents-review'
 

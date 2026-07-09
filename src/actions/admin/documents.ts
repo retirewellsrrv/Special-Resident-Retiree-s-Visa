@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { DocumentStatusEnum } from "@/schemas/document";
 
@@ -27,12 +27,13 @@ export type ReviewStats = {
   rejected: number
 }
 
-export async function getDocumentsForReview(opts?: {
-  status?: string
-  application_id?: number
-  userId?: string
-  search?: string
-}): Promise<{ rows: DocumentForReview[]; stats: ReviewStats }> {
+export const getDocumentsForReview = unstable_cache(
+  async (opts?: {
+    status?: string
+    application_id?: number
+    userId?: string
+    search?: string
+  }): Promise<{ rows: DocumentForReview[]; stats: ReviewStats }> => {
   const supabase = createAdminClient()
 
   let targetAppIds: number[] | undefined
@@ -133,7 +134,10 @@ export async function getDocumentsForReview(opts?: {
   if (error) throw new Error(error.message)
 
   return formatResults(data ?? [])
-}
+},
+  ["admin-documents"],
+  { revalidate: 30, tags: ["admin-documents"] },
+)
 
 function formatResults(data: any[]): { rows: DocumentForReview[]; stats: ReviewStats } {
   const rows: DocumentForReview[] = data.map((d) => ({
@@ -181,6 +185,7 @@ export async function updateDocumentStatus(
   if (error) return { error: error.message }
 
   revalidatePath("/admin/documents")
+  revalidateTag("admin-documents", 'seconds')
   return { success: true }
 }
 
@@ -203,6 +208,7 @@ export async function bulkUpdateDocumentStatus(
   if (error) return { error: error.message }
 
   revalidatePath("/admin/documents")
+  revalidateTag("admin-documents", 'seconds')
   return { success: true }
 }
 
