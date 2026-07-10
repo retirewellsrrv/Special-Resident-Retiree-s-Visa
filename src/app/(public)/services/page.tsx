@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
-import ConsultationModal from '@/components/faqs/consultation-modal';
 import ServiceCard from '@/components/services/service-card';
 import Hero from '@/components/public/Hero';
 import { createClient } from '@/lib/supabase/client';
@@ -42,8 +41,6 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 export default function Services() {
-    const [isConsultModalOpen, setIsConsultModalOpen] = useState(false);
-
     const [plans, setPlans] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -128,7 +125,7 @@ export default function Services() {
                                     price_note={service.price_note}
                                     tags={service.tags}
                                     icon={<IconComponent className="w-6 h-6 text-[#9E1B32]" />}
-                                    onConsultClick={() => setIsConsultModalOpen(true)}
+                                    onConsultClick={() => router.push('/consult')}
                                 />
                             );
                         })
@@ -151,7 +148,7 @@ export default function Services() {
                             Get Started
                         </button>
                         <button
-                            onClick={() => setIsConsultModalOpen(true)}
+                            onClick={() => router.push('/consult')}
                             className="px-6 py-3 border border-white/40 text-white text-sm font-semibold rounded hover:bg-white/10 transition whitespace-nowrap"
                         >
                             Contact Us
@@ -161,11 +158,6 @@ export default function Services() {
 
             </section>
 
-            {/* Global Interactive Elements */}
-            <ConsultationModal
-                isOpen={isConsultModalOpen}
-                onClose={() => setIsConsultModalOpen(false)}
-            />
             <Footer />
         </div>
     );

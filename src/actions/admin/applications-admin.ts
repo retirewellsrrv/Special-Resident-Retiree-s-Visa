@@ -193,6 +193,8 @@ export type AppDetail = {
     type: string
     format: string
     status: string
+    review_note: string | null
+    path: string
     created_at: string
   }[]
 }
@@ -214,11 +216,15 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
   if (error || !data) return null
 
   const [docs, plans, paymentData] = await Promise.all([
-    supabase
+    // Cast needed: review_note column added via migration — regen types after applying migration
+    (supabase
       .from("documents")
-      .select("id, name, type, format, status, created_at")
+      .select("id, name, type, format, status, review_note, path, created_at")
       .eq("application_id", id)
-      .order("created_at"),
+      .order("created_at") as any) as Promise<{
+      data: { id: number; name: string; type: string; format: string; status: string; review_note: string | null; path: string; created_at: string }[] | null
+      error: any
+    }>,
     supabase
       .from("service_plans")
       .select("name, price")
@@ -270,6 +276,8 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
       type: d.type,
       format: d.format,
       status: d.status,
+      review_note: d.review_note,
+      path: d.path,
       created_at: d.created_at,
     })),
   }

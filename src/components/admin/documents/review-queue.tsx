@@ -36,7 +36,13 @@ interface Props {
 }
 
 export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortChange }: Props) {
-  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(() => new Set())
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(() => {
+    if (selectedId !== null) {
+      const selectedDoc = docs.find((d) => d.id === selectedId)
+      if (selectedDoc) return new Set([selectedDoc.user_id])
+    }
+    return new Set()
+  })
 
   const grouped = useMemo(() => {
     const map = new Map<string, { name: string; docs: DocumentForReview[]; pendingCount: number; latestDate: string }>()

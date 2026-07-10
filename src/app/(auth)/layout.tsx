@@ -19,7 +19,6 @@ export default function AuthLayout({
       <div className="fixed inset-0 -z-10 bg-[#0b1c30]/45" />
       <main
         className="relative flex min-h-screen w-full items-center justify-center px-4 py-8"
-        style={{ backgroundColor: "#1a2e1f" }}
       >
         {children}
       </main>
