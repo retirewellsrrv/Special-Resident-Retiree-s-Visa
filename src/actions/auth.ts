@@ -49,40 +49,40 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     return { success: false, error: error.message }
   }
 
-  let role = data.user.user_metadata?.role as string | undefined
+  const userId = data.user.id
 
-  // Check super_admin_profiles first — overrides metadata role
-  const { data: superAdminProfile } = await supabase
-    .from('super_admin_profiles')
-    .select('user_id')
-    .eq('user_id', data.user.id)
-    .maybeSingle()
+  const adminSupabase = createAdminClient()
+
+  const [{ data: superAdminProfile }, { data: adminProfile }] = await Promise.all([
+    adminSupabase
+      .from('super_admin_profiles')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    adminSupabase
+      .from('admin_profiles')
+      .select('is_active')
+      .eq('user_id', userId)
+      .maybeSingle(),
+  ])
+
+  let role: 'super_admin' | 'admin' | 'applicant' = 'applicant'
 
   if (superAdminProfile) {
     role = 'super_admin'
-  }
-
-  // revalidatePath must run before any redirect()
-  revalidatePath('/', 'layout')
-
-  if (role === 'admin') {
-    const adminSupabase = createAdminClient()
-    const { data: adminProfile } = await adminSupabase
-      .from('admin_profiles')
-      .select('is_active')
-      .eq('user_id', data.user.id)
-      .maybeSingle()
-
-    if (!adminProfile || !adminProfile.is_active) {
+  } else if (adminProfile) {
+    if (!adminProfile.is_active) {
       await supabase.auth.signOut()
       return { success: false, error: 'ACCOUNT_DISABLED' }
     }
+    role = 'admin'
   }
+
+  revalidatePath('/', 'layout')
 
   if (role === 'super_admin') redirect('/super-admin/dashboard')
   if (role === 'admin') redirect('/admin/dashboard')
-  if (role === 'applicant') redirect('/applicant/dashboard')
-  redirect('/')
+  redirect('/applicant/dashboard')
 }
 
 // ─────────────────────────────────────────────
