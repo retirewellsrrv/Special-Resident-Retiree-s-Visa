@@ -109,7 +109,7 @@ export default function ConfirmEmailForm({ email }: Props) {
                 Can't find it? Check your{' '}
                 <span className="font-medium text-foreground">spam or junk folder</span>.
                 The sender is{' '}
-                <span className="font-medium text-foreground">admin@retirewellsrrv.com</span>.
+                <span className="font-medium text-foreground">nonereply@retirewellsrrv.com</span>.
               </p>
             </div>
 
