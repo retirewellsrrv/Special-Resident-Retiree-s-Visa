@@ -10,6 +10,7 @@ interface PaginationProps {
   onChange: (page: number) => void
   maxVisiblePages?: number
   showInfo?: boolean
+  disabled?: boolean
 }
 
 export function Pagination({
@@ -20,6 +21,7 @@ export function Pagination({
   onChange,
   maxVisiblePages = 0,
   showInfo = true,
+  disabled = false,
 }: PaginationProps) {
   const start = (page - 1) * perPage + 1
   const end = Math.min(page * perPage, total)
@@ -43,7 +45,7 @@ export function Pagination({
       <div className="flex items-center gap-1">
         <button
           onClick={() => onChange(page - 1)}
-          disabled={page <= 1}
+          disabled={page <= 1 || disabled}
           className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-input text-muted-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Previous page"
         >
@@ -54,11 +56,12 @@ export function Pagination({
           <button
             key={p}
             onClick={() => onChange(p)}
+            disabled={disabled}
             aria-current={p === page ? 'page' : undefined}
             className={`inline-flex items-center justify-center w-7 h-7 rounded-md text-xs font-medium transition-colors ${
               p === page
-                ? 'bg-primary text-primary-foreground'
-                : 'border border-input text-muted-foreground hover:bg-accent'
+                ? 'bg-primary text-primary-foreground disabled:opacity-50'
+                : 'border border-input text-muted-foreground hover:bg-accent disabled:opacity-30'
             }`}
           >
             {p}
@@ -67,7 +70,7 @@ export function Pagination({
 
         <button
           onClick={() => onChange(page + 1)}
-          disabled={page >= totalPages}
+          disabled={page >= totalPages || disabled}
           className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-input text-muted-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Next page"
         >

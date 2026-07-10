@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/server'
 
 import {
@@ -8,20 +8,24 @@ import {
   updateServicePlanSchema,
 } from '@/schemas/service'
 
-export async function getServicePlans() {
-  const supabase = createAdminClient()
+export const getServicePlans = unstable_cache(
+  async () => {
+    const supabase = createAdminClient()
 
-  const { data, error } = await supabase
-    .from('service_plans')
-    .select('*')
-    .order('id', { ascending: true })
+    const { data, error } = await supabase
+      .from('service_plans')
+      .select('*')
+      .order('id', { ascending: true })
 
-  if (error) {
-    throw new Error(error.message)
-  }
+    if (error) {
+      throw new Error(error.message)
+    }
 
-  return data
-}
+    return data
+  },
+  ["admin-services"],
+  { revalidate: 300, tags: ["admin-services"] },
+)
 
 export async function createServicePlan(payload: unknown) {
   const supabase = createAdminClient()
@@ -31,7 +35,14 @@ export async function createServicePlan(payload: unknown) {
     return { error: validated.error.message }
   }
 
+  let previouslyHighlightedIds: number[] = []
   if (validated.data.highlighted) {
+    const { data: featured } = await supabase
+      .from('service_plans')
+      .select('id')
+      .eq('highlighted', true)
+    previouslyHighlightedIds = (featured ?? []).map(p => p.id)
+
     await supabase
       .from('service_plans')
       .update({ highlighted: false })
@@ -42,9 +53,18 @@ export async function createServicePlan(payload: unknown) {
     .from('service_plans')
     .insert(validated.data)
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (previouslyHighlightedIds.length > 0) {
+      await supabase
+        .from('service_plans')
+        .update({ highlighted: true })
+        .in('id', previouslyHighlightedIds)
+    }
+    return { error: error.message }
+  }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
@@ -76,6 +96,7 @@ export async function updateServicePlan(
   if (error) return { error: error.message }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
@@ -93,6 +114,7 @@ export async function deleteServicePlan(id: number) {
   }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
@@ -132,6 +154,7 @@ export async function setFeaturedService(id: number) {
   }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }
@@ -170,6 +193,7 @@ export async function toggleServicePlanAvailability(
   }
 
   revalidatePath('/admin/services')
+  revalidateTag('admin-services', 'seconds')
 
   return { success: true }
 }

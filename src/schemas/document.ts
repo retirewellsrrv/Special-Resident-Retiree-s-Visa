@@ -49,6 +49,7 @@ export const documentInsertSchema = z.object({
   name: z.string(),
   path: z.string(),
   status: DocumentStatusEnum.optional(),
+  review_note: z.string().optional().nullable(),
   type: DocumentTypeEnum,
   updated_at: z.string().optional().nullable(),
 });

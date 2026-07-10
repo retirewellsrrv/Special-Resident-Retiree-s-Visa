@@ -1,7 +1,12 @@
 'use client'
 
-import { User, FileText } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { User, FileText, Search, X } from 'lucide-react'
 import type { UserWithProfile } from '@/actions/admin/users'
+import { useDebounce } from '@/hooks/use-debounce'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 
 interface Props {
   users: UserWithProfile[]
@@ -15,8 +20,59 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export function UsersTable({ users }: Props) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 300)
+  const [statusFilter, setStatusFilter] = useState('all')
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchesSearch = !debouncedSearch ||
+        user.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        user.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (user.application_code?.toLowerCase().includes(debouncedSearch.toLowerCase()) ?? false)
+      const matchesStatus = statusFilter === 'all' ||
+        user.application_status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [users, debouncedSearch, statusFilter])
+
   return (
     <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-neutral-400" />
+          <input
+            type="text"
+            placeholder="Search by name, email, or application code..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 w-full pl-8 pr-8 rounded-lg border border-brand-neutral-200 bg-white text-sm text-brand-neutral-900 outline-none focus:border-brand-primary-600 focus:ring-2 focus:ring-brand-primary-600/10 transition-all placeholder:text-brand-neutral-300"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-neutral-400 hover:text-brand-neutral-600"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 w-40 rounded-lg border-brand-neutral-200">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="paused">Paused</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
         <table className="w-full border-collapse text-sm">
           <thead>
@@ -30,14 +86,14 @@ export function UsersTable({ users }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-neutral-100">
-            {users.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-12 text-center text-sm text-brand-neutral-400">
-                  No users registered yet.
+                  {searchQuery || statusFilter !== 'all' ? 'No users match your filters.' : 'No users registered yet.'}
                 </td>
               </tr>
             ) : (
-              users.map((user) => (
+              filteredUsers.map((user) => (
                 <tr key={user.user_id} className="hover:bg-brand-neutral-50/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">

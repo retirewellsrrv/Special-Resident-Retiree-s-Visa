@@ -1,11 +1,15 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, Loader2, Ban, CheckCircle, Shield, Mail, MailX } from 'lucide-react'
+import { Plus, Trash2, Loader2, Ban, CheckCircle, Shield, Mail, MailX, Search, X } from 'lucide-react'
 import type { AdminWithUser } from '@/actions/admin/admins'
 import { createAdmin, toggleAdminActive, deleteAdmin } from '@/actions/admin/admins'
 import { Input } from '@/components/ui/input'
+import { useDebounce } from '@/hooks/use-debounce'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription,
@@ -73,8 +77,56 @@ export function AdminTable({ admins }: Props) {
     })
   }
 
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 300)
+  const [statusFilter, setStatusFilter] = useState('all')
+
+  const filteredAdmins = useMemo(() => {
+    return admins.filter((admin) => {
+      const matchesSearch = !debouncedSearch ||
+        admin.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        admin.email.toLowerCase().includes(debouncedSearch.toLowerCase())
+      const matchesStatus = statusFilter === 'all' ||
+        (statusFilter === 'active' && admin.is_active) ||
+        (statusFilter === 'inactive' && !admin.is_active)
+      return matchesSearch && matchesStatus
+    })
+  }, [admins, debouncedSearch, statusFilter])
+
   return (
     <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-neutral-400" />
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 w-full pl-8 pr-8 rounded-lg border border-brand-neutral-200 bg-white text-sm text-brand-neutral-900 outline-none focus:border-brand-primary-600 focus:ring-2 focus:ring-brand-primary-600/10 transition-all placeholder:text-brand-neutral-300"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-neutral-400 hover:text-brand-neutral-600"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 w-36 rounded-lg border-brand-neutral-200">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Create dialog */}
       <div className="flex justify-end">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -156,14 +208,14 @@ export function AdminTable({ admins }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-neutral-100">
-            {admins.length === 0 ? (
+            {filteredAdmins.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-12 text-center text-sm text-brand-neutral-400">
-                  No admin accounts yet. Click &quot;Add Admin&quot; to create one.
+                  {searchQuery || statusFilter !== 'all' ? 'No admins match your filters.' : 'No admin accounts yet. Click "Add Admin" to create one.'}
                 </td>
               </tr>
             ) : (
-              admins.map((admin) => {
+              filteredAdmins.map((admin) => {
                 const isBusy = deletingId === admin.user_id || togglingId === admin.user_id
 
                 return (

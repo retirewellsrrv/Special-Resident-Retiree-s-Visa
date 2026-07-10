@@ -14,7 +14,7 @@ type PaymentWithName = {
   client_name?: string
 }
 
-type SortKey = 'id' | 'client_name' | 'amount' | 'status' | 'payment_method' | 'transaction_code' | 'created_at'
+type SortKey = 'client_name' | 'amount' | 'status' | 'payment_method' | 'transaction_code' | 'created_at'
 
 const fmt = (n: number) =>
   '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -27,7 +27,6 @@ const fmtDate = (ts: string | null) => {
 }
 
 const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
-  { key: 'id', label: 'ID' },
   { key: 'client_name', label: 'Client Name' },
   { key: 'transaction_code', label: 'Transaction Code' },
   { key: 'amount', label: 'Amount' },
@@ -114,7 +113,6 @@ export default function PaymentTable({ rows, total, onView, onEdit }: Props) {
             </TableRow>
           ) : sorted.map((row) => (
             <TableRow key={row.id}>
-              <TableCell className="font-mono text-xs text-brand-neutral-500">{row.id}</TableCell>
               <TableCell className="text-sm text-brand-neutral-900 font-medium">{row.client_name ?? '\u2014'}</TableCell>
               <TableCell className="font-mono text-xs text-brand-neutral-500">{row.transaction_code}</TableCell>
               <TableCell className="font-medium">{fmt(row.amount)}</TableCell>

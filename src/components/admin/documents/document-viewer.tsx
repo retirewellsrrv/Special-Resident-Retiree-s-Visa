@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { ZoomIn, ZoomOut, Printer, Download, FileIcon, Loader2 } from 'lucide-react'
+import { getDocumentSignedUrl } from '@/actions/admin/documents'
 import type { DocumentForReview } from '@/actions/admin/documents'
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -21,16 +22,24 @@ export function DocumentViewer({ doc }: Props) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const urlCache = useRef<Map<string, string>>(new Map())
 
   const fetchUrl = useCallback(async () => {
+    const cached = urlCache.current.get(doc.path)
+    if (cached) {
+      setSignedUrl(cached)
+      setLoading(false)
+      setError(null)
+      return
+    }
     setLoading(true)
     setError(null)
     try {
-      const { getDocumentSignedUrl } = await import('@/actions/admin/documents')
       const result = await getDocumentSignedUrl(doc.path)
       if (result.error) {
         setError(result.error)
       } else if (result.url) {
+        urlCache.current.set(doc.path, result.url)
         setSignedUrl(result.url)
       } else {
         setError('Failed to generate document URL')
@@ -43,7 +52,15 @@ export function DocumentViewer({ doc }: Props) {
   }, [doc.path])
 
   useEffect(() => {
-    fetchUrl()
+    let cancelled = false
+    fetchUrl().then(() => {
+      if (cancelled) {
+        setSignedUrl(null)
+        setLoading(true)
+        setError(null)
+      }
+    })
+    return () => { cancelled = true }
   }, [fetchUrl])
 
   const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'tif'].includes(doc.format)

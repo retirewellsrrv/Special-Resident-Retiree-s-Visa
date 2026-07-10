@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export type DashboardStats = {
@@ -30,6 +31,7 @@ export type DashboardStats = {
   appsByStatus: { label: string; count: number }[]
   recentApplications: {
     id: number
+    user_id: string
     applicant_name: string
     application_code: string
     service_type: string
@@ -44,7 +46,8 @@ export type DashboardStats = {
   }[]
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export const getDashboardStats = unstable_cache(
+  async (): Promise<DashboardStats> => {
   const supabase = createAdminClient();
 
   const [
@@ -73,6 +76,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .from("applications")
       .select(`
         id,
+        user_id,
         application_code,
         service_type,
         status,
@@ -120,6 +124,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   const recentApplications = ((recentApps.data ?? []) as any[]).map((r) => ({
     id: r.id,
+    user_id: r.user_id,
     applicant_name: r.client_profiles?.name ?? "Unknown",
     application_code: r.application_code,
     service_type: r.service_type,
@@ -163,7 +168,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     recentApplications,
     pendingDocuments,
   };
-}
+},
+  ["admin-dashboard"],
+  { revalidate: 30, tags: ["admin-dashboard"] },
+)
 
 function aggregateCount(data: Record<string, string>[], key: string): { label: string; count: number }[] {
   const map = new Map<string, number>();
