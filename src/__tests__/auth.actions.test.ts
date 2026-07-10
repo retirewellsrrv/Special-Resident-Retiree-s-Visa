@@ -213,6 +213,7 @@ describe('registerAction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRedirectThrows()
+    vi.mocked(createAdminClient).mockReturnValue(createAdminClientMock() as any)
   })
 
   const baseInput: RegisterInput = {

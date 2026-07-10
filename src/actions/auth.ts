@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import type { Provider } from '@supabase/supabase-js'
-import { supabaseAdmin } from '@/lib/supabase/client'
 
 import { headers } from 'next/headers'
 
@@ -215,14 +214,15 @@ export async function resendConfirmationAction(email: string): Promise<ActionRes
 export async function handleResetRequest(email: string): Promise<ActionResult> {
   const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
   // check if email exists in the db
-  const user = await supabaseAdmin().auth.admin.listUsers();
+  const adminSupabase = createAdminClient()
+  const user = await adminSupabase.auth.admin.listUsers();
 
   //! only used for debugging, REMOVE WHEN FEATURE IS DONE
   console.log('email exists, proceeding with reset:', email)
-  console.log('user: ', user.data.users.find((u) => u.email === email))
+  console.log('user: ', user.data?.users.find((u) => u.email === email))
   console.log('user from if: ', user)
 
-  if (!user.data.users.find((u) => u.email === email)) {
+  if (!user.data?.users.find((u) => u.email === email)) {
     return { success: false, error: 'No account found with this email.' }
   }
 
