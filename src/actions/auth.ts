@@ -127,12 +127,16 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
         error: 'An account with this email already exists.',
       }
     }
-    return {
-      success: false,
-      error:
-        'This email is already registered but has not been confirmed yet. Please check your inbox.',
-    }
+    // ! needs to resend an confirmation link once the email is taken but not yet verified, the message is useless btw.
+    // return {
+    //   success: false,
+    //   error:
+    //     'This email is already registered but has not been confirmed yet. Please check your inbox.',
+    // }
+    resendConfirmationAction(parsed.data.email)
+    redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
   }
+
 
   // birhtday //? parse it before using 
   const birthday = parsed.data.birthday.split("T")[0]; //? sample output "2026-05-30"
