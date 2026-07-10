@@ -24,7 +24,7 @@ function isPublicOnly(pathname: string) {
   return PUBLIC_ONLY_PATHS.some((p) => pathname.startsWith(p));
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
