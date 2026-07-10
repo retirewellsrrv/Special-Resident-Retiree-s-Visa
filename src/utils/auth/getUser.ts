@@ -1,21 +1,16 @@
 import {redirect} from "next/navigation";
-import {createClient} from "@/lib/supabase/client";
-import { createClient as createServerClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 export type UserRole = 'super_admin' | 'admin' | 'applicant'
 
-export async function getUser(){
-    const supabase = createClient();
-    const { data: { user }, error } = await supabase.auth.getUser()
-    return user
+export async function getUser() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
 }
 
 export async function getUserServer() {
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user ?? null;
+  return getUser()
 }
 
 export async function getUserRole(): Promise<UserRole | null>{
