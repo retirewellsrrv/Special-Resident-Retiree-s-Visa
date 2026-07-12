@@ -3,8 +3,9 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { DocumentStatusEnum } from "@/schemas/document";
+import { withAdmin } from "@/utils/auth/with-admin";
 
-export async function updateDocumentReview(
+export const updateDocumentReview = withAdmin(async function updateDocumentReview(
   documentId: number,
   status: string,
   reviewNote?: string | null,
@@ -30,4 +31,4 @@ export async function updateDocumentReview(
   revalidatePath("/admin/applications");
   revalidateTag("admin-applications", 'seconds');
   return { success: true };
-}
+})
