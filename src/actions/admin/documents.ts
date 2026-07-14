@@ -3,6 +3,7 @@
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { DocumentStatusEnum } from "@/schemas/document";
+import { withAdmin } from "@/utils/auth/with-admin";
 
 export type DocumentForReview = {
   id: number
@@ -166,7 +167,7 @@ function formatResults(data: any[]): { rows: DocumentForReview[]; stats: ReviewS
   return { rows, stats }
 }
 
-export async function updateDocumentStatus(
+export const updateDocumentStatus = withAdmin(async function updateDocumentStatus(
   documentId: number,
   status: string,
 ) {
@@ -187,9 +188,9 @@ export async function updateDocumentStatus(
   revalidatePath("/admin/documents")
   revalidateTag("admin-documents", 'seconds')
   return { success: true }
-}
+})
 
-export async function bulkUpdateDocumentStatus(
+export const bulkUpdateDocumentStatus = withAdmin(async function bulkUpdateDocumentStatus(
   documentIds: number[],
   status: string,
 ) {
@@ -210,9 +211,9 @@ export async function bulkUpdateDocumentStatus(
   revalidatePath("/admin/documents")
   revalidateTag("admin-documents", 'seconds')
   return { success: true }
-}
+})
 
-export async function getDocumentSignedUrl(path: string) {
+export const getDocumentSignedUrl = withAdmin(async function getDocumentSignedUrl(path: string) {
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
@@ -222,4 +223,4 @@ export async function getDocumentSignedUrl(path: string) {
 
   if (error) return { error: error.message }
   return { url: data.signedUrl }
-}
+})
