@@ -217,14 +217,14 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
   if (error || !data) return null
 
   const [docs, plans, paymentData] = await Promise.all([
-    // Cast needed: review_note column added via migration — regen types after applying migration
-    (supabase
+    // review_note was added via migration — re-run `supabase gen types` to remove cast
+    supabase
       .from("documents")
       .select("id, name, type, format, status, review_note, path, created_at")
       .eq("application_id", id)
-      .order("created_at") as any) as Promise<{
+      .order("created_at") as unknown as Promise<{
       data: { id: number; name: string; type: string; format: string; status: string; review_note: string | null; path: string; created_at: string }[] | null
-      error: any
+      error: unknown
     }>,
     supabase
       .from("service_plans")
@@ -250,7 +250,8 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
     status: data.status,
     created_at: data.created_at,
     updated_at: data.updated_at,
-    applicant_name: (data as any).client_profiles?.name ?? "Unknown",
+    // Cast needed because joined relation isn't in generated types
+    applicant_name: (data as { client_profiles?: { name: string } }).client_profiles?.name ?? "Unknown",
     phone_number: data.phone_number,
     city: data.city,
     state: data.state,
