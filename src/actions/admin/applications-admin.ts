@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import { ApplicationStatusEnum } from "@/schemas/client-profiles";
@@ -27,7 +27,8 @@ export type AppStats = {
 
 export type ActionState = { error: string | null; success: boolean };
 
-export async function getApplicationStats(): Promise<AppStats> {
+export const getApplicationStats = unstable_cache(
+  async (): Promise<AppStats> => {
   const supabase = createAdminClient();
 
   const [
@@ -63,6 +64,13 @@ export async function getApplicationStats(): Promise<AppStats> {
     approved: approved ?? 0,
     rejected: rejected ?? 0,
   };
+},
+  ["admin-applications-stats"],
+  { revalidate: 30, tags: ["admin-applications"] },
+)
+
+function escapeSearch(val: string) {
+  return val.replace(/[%_]/g, '\\$&')
 }
 
 export async function getApplications({
@@ -106,17 +114,18 @@ export async function getApplications({
     if (userId) query = query.eq('user_id', userId)
 
     if (search) {
+      const q = escapeSearch(search)
       const { data: matchingUsers } = await supabase
         .from('client_profiles')
         .select('user_id')
-        .ilike('name', `%${search}%`)
+        .ilike('name', `%${q}%`)
       const targetIds = (matchingUsers ?? []).map((u) => u.user_id)
-      const appCodeCond = `application_code.ilike.%${search}%`
+      const appCodeCond = `application_code.ilike.%${q}%`
       if (targetIds.length > 0) {
         const userIdConds = targetIds.map((id) => `user_id.eq.${id}`).join(',')
         query = query.or(`${userIdConds},${appCodeCond}`)
       } else {
-        query = query.ilike('application_code', `%${search}%`)
+        query = query.ilike('application_code', `%${q}%`)
       }
     }
 
@@ -124,11 +133,14 @@ export async function getApplications({
     if (error) throw new Error(error.message)
 
     const serviceTypes = [...new Set((data ?? []).map((r: any) => r.service_type))]
-    const { data: plans } = await supabase
-        .from('service_plans')
-        .select('type, name')
-        .in('type', serviceTypes as any[])
-    const planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+    let planNameMap: Record<string, string> = {}
+    if (serviceTypes.length > 0) {
+      const { data: plans } = await supabase
+          .from('service_plans')
+          .select('type, name')
+          .in('type', serviceTypes)
+      planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+    }
 
     const rows: AppRow[] = (data ?? []).map((row: any) => ({
         id: row.id,
@@ -181,6 +193,8 @@ export type AppDetail = {
     type: string
     format: string
     status: string
+    review_note: string | null
+    path: string
     created_at: string
   }[]
 }
@@ -202,11 +216,15 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
   if (error || !data) return null
 
   const [docs, plans, paymentData] = await Promise.all([
-    supabase
+    // Cast needed: review_note column added via migration — regen types after applying migration
+    (supabase
       .from("documents")
-      .select("id, name, type, format, status, created_at")
+      .select("id, name, type, format, status, review_note, path, created_at")
       .eq("application_id", id)
-      .order("created_at"),
+      .order("created_at") as any) as Promise<{
+      data: { id: number; name: string; type: string; format: string; status: string; review_note: string | null; path: string; created_at: string }[] | null
+      error: any
+    }>,
     supabase
       .from("service_plans")
       .select("name, price")
@@ -258,6 +276,8 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
       type: d.type,
       format: d.format,
       status: d.status,
+      review_note: d.review_note,
+      path: d.path,
       created_at: d.created_at,
     })),
   }
@@ -336,5 +356,6 @@ export async function updateAppStatus(
   if (error) return { error: error.message, success: false };
 
   revalidatePath("/admin/applications");
+  revalidateTag("admin-applications", 'seconds');
   return { error: null, success: true };
 }

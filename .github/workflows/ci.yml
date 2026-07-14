@@ -28,6 +28,11 @@ jobs:
       - name: Test
         run: pnpm test:coverage
 
+      - name: Debug env
+        run: |
+          echo "SUPABASE_URL set: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' }}"
+          echo "SUPABASE_ANON_KEY set: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' }}"
+
       - name: Build
         run: pnpm build
         env:
@@ -35,3 +40,6 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          XENDIT_SECRET_KEY: ${{ secrets.XENDIT_SECRET_KEY }}
+          XENDIT_WEBHOOK_TOKEN: ${{ secrets.XENDIT_WEBHOOK_TOKEN }} # added the env for xendit in env lol
+          

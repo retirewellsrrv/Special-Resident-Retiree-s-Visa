@@ -26,10 +26,9 @@ interface NavbarProps {
 
 const navItems = [
   { title: "Services", href: "/services" },
-  { title: "Pricing/Packages", href: "/pricing" },
-  { title: "About Us", href: "/about" },
-  { title: "FAQs", href: "/faqs" },
   { title: "Contact", href: "/contact" },
+  { title: "FAQs", href: "/faqs" },
+  { title: "About Us", href: "/about" },
 ];
 
 export function Navbar({ className, user }: NavbarProps) {
@@ -50,18 +49,19 @@ export function Navbar({ className, user }: NavbarProps) {
 
         {/* Desktop Navigation */}
         <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList>
+          <NavigationMenuList className='gap-x-8'>
             {navItems.map((item) => (
+              
               <NavigationMenuItem key={item.href}>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href={item.href}
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-[#81001C] focus:bg-accent focus:text-[#81001C] focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                  >
-                    {item.title}
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={item.href}
+                      className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-[#81001C] focus:bg-accent focus:text-[#81001C] focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      {item.title}
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
             ))}
           </NavigationMenuList>
         </NavigationMenu>

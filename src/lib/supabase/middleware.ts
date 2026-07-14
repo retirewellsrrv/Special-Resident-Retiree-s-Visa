@@ -1,9 +1,7 @@
-// middleware.ts
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/supabase";
-import { getSession } from "@/actions/auth";
-import { getUserRole, getUser } from "@/utils/auth/getUser"
+
 
 const PROTECTED_PREFIXES = ["/applicant", "/admin", "/super-admin"];
 const PUBLIC_ONLY_PATHS = [
@@ -14,8 +12,6 @@ const PUBLIC_ONLY_PATHS = [
   "/pricing",
   "/view-services",
 ];
-const ADMIN_ONLY_PREFIXES = ["/admin"];
-const APPLICANT_ONLY_PREFIXES = ["/applicant"];
 
 function isProtected(pathname: string) {
   return PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
@@ -25,7 +21,7 @@ function isPublicOnly(pathname: string) {
   return PUBLIC_ONLY_PATHS.some((p) => pathname.startsWith(p));
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
@@ -47,35 +43,34 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const user = await getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
   console.log("🔵 middleware hit:", pathname);
   console.log("👤 user:", user?.id ?? "null");
-  console.log("👤 role:", user?.role ?? "null");
+  console.log("👤 role:", user?.user_metadata?.role ?? "null");
+
+  let userRole = user?.user_metadata?.role as string | undefined ?? null;
+
+  if (user && userRole !== "super_admin") {
+    const { data: superAdminProfile } = await supabase
+      .from("super_admin_profiles")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (superAdminProfile) {
+      userRole = "super_admin";
+    }
+  }
 
   if (!user && isProtected(pathname)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("redirectTo", pathname); // optional: preserve intent
+    loginUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   if (user && isPublicOnly(pathname)) {
-    let userRole = await getUserRole();
-
-    // Check super_admin_profiles — overrides metadata role
-    if (userRole !== "super_admin") {
-      const { data: superAdminProfile } = await supabase
-        .from("super_admin_profiles")
-        .select("user_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (superAdminProfile) {
-        userRole = "super_admin";
-      }
-    }
-
     const homeUrl = request.nextUrl.clone();
 
     if (userRole === "super_admin") {
@@ -92,17 +87,24 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(applicantUrl);
     }
 
-    // TODO: yet yet working properly, need to update this
-    // if (userRole === 'applicant' && ADMIN_ONLY_PREFIXES.some(p => pathname.startsWith(p))) {
-    //   return NextResponse.redirect(new URL('/unauthorized', request.url))
-    // }
-
-    // if (userRole === 'admin' && APPLICANT_ONLY_PREFIXES.some(p => pathname.startsWith(p))) {
-    //   return NextResponse.redirect(new URL('/unauthorized', request.url))
-    // }
-
-    homeUrl.pathname = "/";
     return NextResponse.redirect(homeUrl);
+  }
+
+  // ── Role-based access enforcement ──
+  if (user) {
+    if (pathname.startsWith("/applicant") && userRole !== "applicant") {
+      const dest = userRole === "super_admin" ? "/super-admin/dashboard" : "/admin/dashboard";
+      return NextResponse.redirect(new URL(dest, request.url));
+    }
+
+    if (pathname.startsWith("/admin") && userRole !== "admin" && userRole !== "super_admin") {
+      return NextResponse.redirect(new URL("/applicant/dashboard", request.url));
+    }
+
+    if (pathname.startsWith("/super-admin") && userRole !== "super_admin") {
+      const dest = userRole === "admin" ? "/admin/dashboard" : "/applicant/dashboard";
+      return NextResponse.redirect(new URL(dest, request.url));
+    }
   }
 
   return supabaseResponse;

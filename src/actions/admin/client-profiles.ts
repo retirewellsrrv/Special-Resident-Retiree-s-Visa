@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/server";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import {
   clientProfileSchema,
@@ -30,7 +30,8 @@ export type ClientStats = {
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
-export async function getClientStats(): Promise<ClientStats> {
+export const getClientStats = unstable_cache(
+  async (): Promise<ClientStats> => {
   const supabase = createAdminClient();
 
   const [
@@ -68,19 +69,29 @@ export async function getClientStats(): Promise<ClientStats> {
     rejected: rejected ?? 0,
     paused: paused ?? 0,
   };
-}
+},
+  ["admin-profiles"],
+  { revalidate: 30, tags: ["admin-profiles"] },
+)
 
-export async function getClientDirectory({
-  page = 1,
-  limit = 10,
-  filter = "all",
-  service_type,
-}: {
-  page?: number;
-  limit?: number;
-  filter?: "all" | "new";
-  service_type?: string;
-} = {}): Promise<{ rows: ClientRow[]; total: number }> {
+export const getClientDirectory = unstable_cache(
+  async ({
+    page = 1,
+    limit = 10,
+    filter = "all",
+    service_type,
+    status,
+    q,
+    application_code,
+  }: {
+    page?: number;
+    limit?: number;
+    filter?: "all" | "new";
+    service_type?: string;
+    status?: string;
+    q?: string;
+    application_code?: string;
+  } = {}): Promise<{ rows: ClientRow[]; total: number }> => {
   const supabase = createAdminClient();
   const from = (page - 1) * limit;
   const to = from + limit - 1;
@@ -114,16 +125,29 @@ export async function getClientDirectory({
     const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
     query = query.gte("created_at", cutoff);
   }
+  if (status) query = query.eq("status", status as any);
+  if (q) {
+    const { data: matching } = await supabase
+      .from("client_profiles")
+      .select("user_id")
+      .ilike("name", `%${q}%`)
+    const ids = (matching ?? []).map((u) => u.user_id)
+    query = query.in("user_id", ids.length > 0 ? ids : [''])
+  }
+  if (application_code) query = query.ilike("application_code", `%${application_code}%`);
 
     const { data, count, error } = await query
     if (error) throw new Error(error.message)
 
     const serviceTypes = [...new Set((data ?? []).map((r: any) => r.service_type))]
-    const { data: plans } = await supabase
-        .from('service_plans')
-        .select('type, name')
-        .in('type', serviceTypes as any[])
-    const planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+    let planNameMap: Record<string, string> = {}
+    if (serviceTypes.length > 0) {
+      const { data: plans } = await supabase
+          .from('service_plans')
+          .select('type, name')
+          .in('type', serviceTypes)
+      planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
+    }
 
     const rows: ClientRow[] = (data ?? []).map((row: any) => ({
         user_id: row.user_id,
@@ -136,7 +160,10 @@ export async function getClientDirectory({
     }))
 
   return { rows, total: count ?? 0 };
-}
+},
+  ["admin-profiles-directory"],
+  { revalidate: 30, tags: ["admin-profiles"] },
+)
 
 export async function getClientProfiles() {
   const supabase = createAdminClient();
@@ -167,7 +194,7 @@ export async function updateClientProfile(
     sex: formData.get("sex"),
     birthday: formData.get("birthday"),
     nationality: formData.get("nationality"),
-    age: formData.get("age") ? Number(formData.get("age")) : undefined,
+    age: ((v) => (v ? Number(v) : undefined))(formData.get("age")),
   };
 
   const parsed = clientProfileSchema.safeParse(raw);
@@ -186,6 +213,7 @@ export async function updateClientProfile(
   if (error) return { error: error.message, success: false };
 
   revalidatePath("/admin/profiles");
+  revalidateTag("admin-profiles", 'seconds');
   return { error: null, success: true };
 }
 
@@ -210,6 +238,7 @@ export async function resolveReview(
   if (error) return { error: error.message, success: false };
 
   revalidatePath("/admin/profiles");
+  revalidateTag("admin-profiles", 'seconds');
   return { error: null, success: true };
 }
 
@@ -217,20 +246,20 @@ export async function createClientProfile(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const supabase = createAdminClient();
-
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await (await createClient()).auth.getUser();
   if (authError || !user) return { error: "Unauthorized", success: false };
+
+  const supabase = createAdminClient();
 
   const raw = {
     name: formData.get("name"),
     sex: formData.get("sex"),
     birthday: formData.get("birthday"),
     nationality: formData.get("nationality"),
-    age: formData.get("age") ? Number(formData.get("age")) : undefined,
+    age: ((v) => (v ? Number(v) : undefined))(formData.get("age")),
   };
 
   const parsed = clientProfileSchema.safeParse(raw);
@@ -250,6 +279,7 @@ export async function createClientProfile(
   if (error) return { error: error.message, success: false };
 
   revalidatePath("/admin/profiles");
+  revalidateTag("admin-profiles", 'seconds');
   return { error: null, success: true };
 }
 
@@ -279,5 +309,6 @@ export async function updateApplicationStatus(
   if (error) return { error: error.message, success: false };
 
   revalidatePath("/admin/profiles");
+  revalidateTag("admin-profiles", 'seconds');
   return { error: null, success: true };
 }

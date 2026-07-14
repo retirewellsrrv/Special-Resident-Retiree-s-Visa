@@ -155,6 +155,7 @@ export type Database = {
           id: number
           name: string
           path: string
+          review_note: string | null
           status: Database["public"]["Enums"]["document_status"]
           type: Database["public"]["Enums"]["document_type"]
           updated_at: string
@@ -166,6 +167,7 @@ export type Database = {
           id?: number
           name: string
           path: string
+          review_note?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           type: Database["public"]["Enums"]["document_type"]
           updated_at?: string
@@ -177,6 +179,7 @@ export type Database = {
           id?: number
           name?: string
           path?: string
+          review_note?: string | null
           status?: Database["public"]["Enums"]["document_status"]
           type?: Database["public"]["Enums"]["document_type"]
           updated_at?: string
@@ -367,7 +370,12 @@ export type Database = {
         | "bank_transfer"
         | "paylater"
         | "cryptocurrency"
-      payment_status: "processing" | "pending" | "cancelled" | "success" | "failed"
+      payment_status:
+        | "processing"
+        | "pending"
+        | "cancelled"
+        | "success"
+        | "failed"
       service_type: "basic" | "premium" | "vip"
       sex: "male" | "female"
     }
@@ -539,7 +547,13 @@ export const Constants = {
         "paylater",
         "cryptocurrency",
       ],
-      payment_status: ["processing", "pending", "cancelled", "success", "failed"],
+      payment_status: [
+        "processing",
+        "pending",
+        "cancelled",
+        "success",
+        "failed",
+      ],
       service_type: ["basic", "premium", "vip"],
       sex: ["male", "female"],
     },
