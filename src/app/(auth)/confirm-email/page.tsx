@@ -16,10 +16,10 @@ export default async function ConfirmEmailPage({ searchParams }: Props) {
 
       <footer className="pointer-events-none absolute bottom-6 w-full px-4 text-center">
         <p className="mx-auto max-w-[600px] text-xs leading-4 text-white/70">
-          © 2024 Retire Well SRRV. Professional Visa Consultation Services.
+          © 2026 Retire Well SRRV. Professional Visa Consultation Services.
           <span className="mx-2">|</span>
           <Link
-            href="#"
+            href="/privacy"
             className="pointer-events-auto transition-colors hover:text-white"
           >
             Privacy Policy

@@ -54,6 +54,7 @@ export function SignupForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       firstName: '',
+      suffix: '',
       surname: '',
       email: '',
       birthday: '',
@@ -221,25 +222,37 @@ const LOGO_SRC =
                     </FieldDescription>
                   )}
                 </Field>
-                <Field>
-                  <FieldLabel htmlFor="surname">Surname</FieldLabel>
-                  <div className="group relative">
-                    <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Field>
+                    <FieldLabel htmlFor="surname">Surname</FieldLabel>
+                    <div className="group relative">
+                      <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                      <Input
+                        id="surname"
+                        type="text"
+                        placeholder="Smith"
+                        autoComplete="family-name"
+                        className="h-11 pl-9"
+                        {...register('surname')}
+                      />
+                    </div>
+                    {errors.surname && (
+                      <FieldDescription className="text-brand-danger-800">
+                        {errors.surname.message}
+                      </FieldDescription>
+                    )}
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="suffix">Suffix</FieldLabel>
                     <Input
-                      id="surname"
+                      id="suffix"
                       type="text"
-                      placeholder="Smith"
-                      autoComplete="family-name"
-                      className="h-11 pl-9"
-                      {...register('surname')}
+                      placeholder="Jr., Sr., III"
+                      className="h-11"
+                      {...register('suffix')}
                     />
-                  </div>
-                  {errors.surname && (
-                    <FieldDescription className="text-brand-danger-800">
-                      {errors.surname.message}
-                    </FieldDescription>
-                  )}
-                </Field>
+                  </Field>
+                </div>
               </Field>
 
               {/* Birthday + Sex //! birthday not using shadcd component due to compatibility issue with tailwind version*/}
