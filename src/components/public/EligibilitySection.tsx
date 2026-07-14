@@ -43,8 +43,7 @@ export function EligibilitySection() {
               life. Our team ensures you meet all criteria before submission.
             </p>
             <blockquote className="border-l-4 border-brand-primary-500 pl-4 text-brand-neutral-600 italic text-ht-body-md bg-brand-primary-50 py-3 pr-3 rounded-r">
-              "We simplify the complex bureaucratic requirements into a clear,
-              manageable checklist."
+              📢 Important Program Update: The minimum age requirement has been lowered to 40 years old. You do not need to be traditionally "retired" to apply; you simply need to meet the age and financial deposit requirements. Retire Well will map out the exact pathway that fits your timeline and financial profile.
             </blockquote>
           </div>
 
