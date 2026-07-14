@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/utils/auth/getUser'
 
 export type UserWithProfile = {
   user_id: string
@@ -17,6 +18,9 @@ export type UserWithProfile = {
 }
 
 export async function getUsers(): Promise<UserWithProfile[]> {
+  const auth = await requireSuperAdmin()
+  if (!auth.authorized) throw new Error(auth.error)
+
   const supabase = createAdminClient()
 
   const { data: profiles } = await supabase

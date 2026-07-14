@@ -7,6 +7,7 @@ import {
   servicePlanSchema,
   updateServicePlanSchema,
 } from '@/schemas/service'
+import { withAdmin } from '@/utils/auth/with-admin'
 
 export const getServicePlans = unstable_cache(
   async () => {
@@ -27,7 +28,7 @@ export const getServicePlans = unstable_cache(
   { revalidate: 300, tags: ["admin-services"] },
 )
 
-export async function createServicePlan(payload: unknown) {
+export const createServicePlan = withAdmin(async function createServicePlan(payload: unknown) {
   const supabase = createAdminClient()
 
   const validated = servicePlanSchema.safeParse(payload)
@@ -67,9 +68,9 @@ export async function createServicePlan(payload: unknown) {
   revalidateTag('admin-services', 'seconds')
 
   return { success: true }
-}
+})
 
-export async function updateServicePlan(
+export const updateServicePlan = withAdmin(async function updateServicePlan(
   id: number,
   payload: unknown
 ) {
@@ -99,9 +100,9 @@ export async function updateServicePlan(
   revalidateTag('admin-services', 'seconds')
 
   return { success: true }
-}
+})
 
-export async function deleteServicePlan(id: number) {
+export const deleteServicePlan = withAdmin(async function deleteServicePlan(id: number) {
   const supabase = createAdminClient()
 
   const { error } = await supabase
@@ -117,9 +118,9 @@ export async function deleteServicePlan(id: number) {
   revalidateTag('admin-services', 'seconds')
 
   return { success: true }
-}
+})
 
-export async function setFeaturedService(id: number) {
+export const setFeaturedService = withAdmin(async function setFeaturedService(id: number) {
   const supabase = createAdminClient()
 
   const { data: previouslyFeatured } = await supabase
@@ -157,9 +158,10 @@ export async function setFeaturedService(id: number) {
   revalidateTag('admin-services', 'seconds')
 
   return { success: true }
-}
+})
 
 export async function getPublicServicePlans() {
+  // This is called from public pages — no admin auth required
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
@@ -175,7 +177,7 @@ export async function getPublicServicePlans() {
   return data
 }
 
-export async function toggleServicePlanAvailability(
+export const toggleServicePlanAvailability = withAdmin(async function toggleServicePlanAvailability(
   id: number,
   isAvailable: boolean
 ) {
@@ -196,4 +198,4 @@ export async function toggleServicePlanAvailability(
   revalidateTag('admin-services', 'seconds')
 
   return { success: true }
-}
+})

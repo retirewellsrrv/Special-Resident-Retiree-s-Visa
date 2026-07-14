@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import {
   clientProfileSchema,
   ApplicationStatusEnum,
 } from "@/schemas/client-profiles";
+import { withAdmin } from "@/utils/auth/with-admin";
+import { getUser } from "@/utils/auth/getUser";
 
 export type ActionState = { error: string | null; success: boolean };
 
@@ -179,7 +181,7 @@ export async function getClientProfiles() {
 
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
-export async function updateClientProfile(
+export const updateClientProfile = withAdmin(async function updateClientProfile(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -215,9 +217,9 @@ export async function updateClientProfile(
   revalidatePath("/admin/profiles");
   revalidateTag("admin-profiles", 'seconds');
   return { error: null, success: true };
-}
+})
 
-export async function resolveReview(
+export const resolveReview = withAdmin(async function resolveReview(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -240,18 +242,12 @@ export async function resolveReview(
   revalidatePath("/admin/profiles");
   revalidateTag("admin-profiles", 'seconds');
   return { error: null, success: true };
-}
+})
 
-export async function createClientProfile(
+export const createClientProfile = withAdmin(async function createClientProfile(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const {
-    data: { user },
-    error: authError,
-  } = await (await createClient()).auth.getUser();
-  if (authError || !user) return { error: "Unauthorized", success: false };
-
   const supabase = createAdminClient();
 
   const raw = {
@@ -270,10 +266,11 @@ export async function createClientProfile(
     };
   }
 
+  const currentUser = await getUser()
   const { error } = await supabase.from("client_profiles").insert({
     ...parsed.data,
     age: parsed.data.age ?? 0,
-    user_id: user.id,
+    user_id: currentUser?.id ?? 'unknown',
   });
 
   if (error) return { error: error.message, success: false };
@@ -281,9 +278,9 @@ export async function createClientProfile(
   revalidatePath("/admin/profiles");
   revalidateTag("admin-profiles", 'seconds');
   return { error: null, success: true };
-}
+})
 
-export async function updateApplicationStatus(
+export const updateApplicationStatus = withAdmin(async function updateApplicationStatus(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -311,4 +308,4 @@ export async function updateApplicationStatus(
   revalidatePath("/admin/profiles");
   revalidateTag("admin-profiles", 'seconds');
   return { error: null, success: true };
-}
+})

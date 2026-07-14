@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import { ApplicationStatusEnum } from "@/schemas/client-profiles";
+import { withAdmin } from "@/utils/auth/with-admin";
 
 export type AppRow = {
     id: number
@@ -287,7 +288,7 @@ function labelize(s: string) {
   return s.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 }
 
-export async function updateAppStatus(
+export const updateAppStatus = withAdmin(async function updateAppStatus(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -358,4 +359,4 @@ export async function updateAppStatus(
   revalidatePath("/admin/applications");
   revalidateTag("admin-applications", 'seconds');
   return { error: null, success: true };
-}
+});
