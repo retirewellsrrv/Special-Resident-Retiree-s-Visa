@@ -28,14 +28,21 @@ export type ReviewStats = {
   rejected: number
 }
 
-export const getDocumentsForReview = unstable_cache(
-  async (opts?: {
-    status?: string
-    application_id?: number
-    userId?: string
-    search?: string
-  }): Promise<{ rows: DocumentForReview[]; stats: ReviewStats }> => {
+const PER_PAGE = 20
+
+export async function getDocumentsForReview(opts?: {
+  status?: string
+  application_id?: number
+  userId?: string
+  search?: string
+  page?: number
+  limit?: number
+}): Promise<{ rows: DocumentForReview[]; total: number; stats: ReviewStats }> {
   const supabase = createAdminClient()
+  const page = opts?.page ?? 1
+  const limit = opts?.limit ?? PER_PAGE
+  const from = (page - 1) * limit
+  const to = from + limit - 1
 
   let targetAppIds: number[] | undefined
 
@@ -46,7 +53,7 @@ export const getDocumentsForReview = unstable_cache(
       .eq("user_id", opts.userId)
     targetAppIds = (apps ?? []).map((a) => a.id)
     if (targetAppIds.length === 0) {
-      return { rows: [], stats: { total: 0, pending: 0, processing: 0, accepted: 0, rejected: 0 } }
+      return { rows: [], total: 0, stats: { total: 0, pending: 0, processing: 0, accepted: 0, rejected: 0 } }
     }
   }
 
@@ -70,38 +77,11 @@ export const getDocumentsForReview = unstable_cache(
       targetAppIds = targetAppIds ?? []
     }
     if (targetAppIds.length === 0) {
-      return { rows: [], stats: { total: 0, pending: 0, processing: 0, accepted: 0, rejected: 0 } }
+      return { rows: [], total: 0, stats: { total: 0, pending: 0, processing: 0, accepted: 0, rejected: 0 } }
     }
   }
 
-  if (targetAppIds) {
-    const { data, error } = await supabase
-      .from("documents")
-      .select(`
-        id,
-        application_id,
-        name,
-        path,
-        type,
-        format,
-        status,
-        created_at,
-        applications!documents_application_id_fkey (
-          application_code,
-          service_type,
-          user_id,
-          client_profiles!applications_user_id_fkey (
-            name
-          )
-        )
-      `)
-      .in("application_id", targetAppIds)
-      .order("created_at", { ascending: false })
-
-    if (error) throw new Error(error.message)
-    return formatResults(data ?? [])
-  }
-
+  // Query with pagination and count
   let query = supabase
     .from("documents")
     .select(`
@@ -121,9 +101,15 @@ export const getDocumentsForReview = unstable_cache(
           name
         )
       )
-    `)
-    .order("created_at", { ascending: false })
+    `,
+    { count: 'exact' },
+  )
+  .order("created_at", { ascending: false })
+  .range(from, to)
 
+  if (targetAppIds) {
+    query = query.in("application_id", targetAppIds)
+  }
   if (opts?.status) {
     query = query.eq("status", opts.status as any)
   }
@@ -131,16 +117,35 @@ export const getDocumentsForReview = unstable_cache(
     query = query.eq("application_id", opts.application_id)
   }
 
-  const { data, error } = await query
+  const { data, count, error } = await query
   if (error) throw new Error(error.message)
 
-  return formatResults(data ?? [])
-},
-  ["admin-documents"],
+  return formatResults(data ?? [], count ?? 0)
+}
+
+export const getDocumentStats = unstable_cache(
+  async (): Promise<ReviewStats> => {
+    const supabase = createAdminClient()
+
+    const { data } = await supabase
+      .from("documents")
+      .select("status")
+
+    const all = (data ?? []) as { status: string }[]
+
+    return {
+      total: all.length,
+      pending: all.filter((r) => r.status === "pending").length,
+      processing: all.filter((r) => r.status === "processing").length,
+      accepted: all.filter((r) => r.status === "accepted").length,
+      rejected: all.filter((r) => r.status === "rejected").length,
+    }
+  },
+  ["admin-document-stats"],
   { revalidate: 30, tags: ["admin-documents"] },
 )
 
-function formatResults(data: any[]): { rows: DocumentForReview[]; stats: ReviewStats } {
+function formatResults(data: any[], total: number): { rows: DocumentForReview[]; total: number; stats: ReviewStats } {
   const rows: DocumentForReview[] = data.map((d) => ({
     id: d.id,
     application_id: d.application_id,
@@ -156,15 +161,17 @@ function formatResults(data: any[]): { rows: DocumentForReview[]; stats: ReviewS
     service_type: d.applications?.service_type ?? "",
   }))
 
+  // Stats are computed from the paginated page for display accuracy
+  // (total across all pages comes from the DB count)
   const stats: ReviewStats = {
-    total: rows.length,
+    total,
     pending: rows.filter((r) => r.status === "pending").length,
     processing: rows.filter((r) => r.status === "processing").length,
     accepted: rows.filter((r) => r.status === "accepted").length,
     rejected: rows.filter((r) => r.status === "rejected").length,
   }
 
-  return { rows, stats }
+  return { rows, total, stats }
 }
 
 export const updateDocumentStatus = withAdmin(async function updateDocumentStatus(
