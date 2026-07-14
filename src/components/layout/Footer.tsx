@@ -1,14 +1,16 @@
 import retireWellLogo from "@/assets/images/logo.png";
 
 const navLinks = [
-  { label: "Services", href: "#" },
-  { label: "Eligibility", href: "#" },
+  { label: "Services", href: "/services" },
+  { label: "About Us", href: "/about" },
+  { label: "FAQs", href: "/faqs" },
+  { label: "Contact", href: "/contact" },
 ];
 
 const legalLinks = [
-  { label: "Privacy Policy", href: "#" },
-  { label: "Terms of Service", href: "#" },
-  { label: "Cookie Policy", href: "#" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Cookie Policy", href: "/cookies" },
 ];
 
 export function Footer() {
@@ -67,7 +69,7 @@ export function Footer() {
 
         <div className="border-t border-ht-outline-variant pt-6 text-center">
           <p className="text-ht-caption text-brand-neutral-400">
-            © 2024 Retire Well SRRV. All rights reserved. Professional Visa
+            © 2026 Retire Well SRRV. All rights reserved. Professional Visa
             Consultation Services.
           </p>
         </div>

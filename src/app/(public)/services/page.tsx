@@ -158,6 +158,104 @@ export default function Services() {
 
             </section>
 
+            {/* Section 2: The Visa Deposit Framework */}
+            <section className="max-w-6xl mx-auto w-full px-6 py-16">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl font-serif text-[#0F172A] mb-4">The Visa Deposit Framework</h2>
+                    <p className="text-gray-600 max-w-2xl mx-auto">
+                        The deposit requirement depends entirely on your age and whether you have a guaranteed lifetime pension.
+                    </p>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="bg-[#0F172A] text-white">
+                                <th className="px-5 py-4 text-left font-semibold">Category</th>
+                                <th className="px-5 py-4 text-left font-semibold">Age Bracket</th>
+                                <th className="px-5 py-4 text-left font-semibold">With Qualifying Pension*</th>
+                                <th className="px-5 py-4 text-left font-semibold">Without Pension</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                            {[
+                                ['SRRV Classic', '50+ years old', '$15,000', '$30,000'],
+                                ['SRRV Classic', '40–49 years old', '$25,000', '$50,000'],
+                                ['SRRV Courtesy (Former Filipinos)', '40+ years old', '$1,500 to $3,000', '$1,500 to $3,000'],
+                                ['SRRV Courtesy (Foreign Diplomats/Military)', '40+ years old', '$1,500 to $3,000', '$1,500 to $6,000'],
+                            ].map((row, i) => (
+                                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                                    {row.map((cell, j) => (
+                                        <td key={j} className="px-5 py-4 text-gray-700 whitespace-nowrap">
+                                            {cell}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <p className="mt-4 text-xs text-gray-500 italic">
+                    *Qualifying Pension: Must be a lifetime monthly benefit of at least $800 for single applicants, or $1,000 for couples.
+                </p>
+            </section>
+
+            {/* Section 3: Mandatory Government & Processing Fees */}
+            <section className="max-w-6xl mx-auto w-full px-6 py-16 border-t border-gray-200">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl font-serif text-[#0F172A] mb-4">Mandatory Government &amp; Processing Fees</h2>
+                    <p className="text-gray-600 max-w-2xl mx-auto">
+                        The following fees are required by the Philippine Retirement Authority (PRA) for processing your SRRV application.
+                    </p>
+                </div>
+
+                <div className="max-w-3xl mx-auto space-y-8">
+                    {/* PRA Processing Fee */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h3 className="text-xl font-serif text-[#0F172A] mb-4">PRA Processing Fee (One-Time Payment)</h3>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-gray-700">Principal Applicant</span>
+                                <span className="font-semibold text-[#0F172A]">$1,500</span>
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-gray-700">Dependent (Spouse or Child)</span>
+                                <span className="font-semibold text-[#0F172A]">$300 per person</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* PRA Annual Fee */}
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h3 className="text-xl font-serif text-[#0F172A] mb-4">PRA Annual Fee</h3>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-gray-700">Principal + up to 2 dependents</span>
+                                <span className="font-semibold text-[#0F172A]">$360 per year</span>
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-gray-700">Additional dependents (beyond first two)</span>
+                                <span className="font-semibold text-[#0F172A]">$100 per year</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Advisory Callout */}
+                <div className="max-w-3xl mx-auto mt-10 bg-amber-50 border border-amber-200 rounded-xl p-6 flex items-start gap-4">
+                    <span className="text-2xl shrink-0 mt-0.5">🛠️</span>
+                    <div>
+                        <h4 className="font-bold text-[#0F172A] mb-1">Let Retire Well Review Your Case</h4>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                            Before you wire a single dollar, the team at Retire Well pre-vets your financial and pension documents
+                            to ensure they meet strict Philippine Retirement Authority (PRA) standards, protecting you from costly
+                            processing delays.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
             <Footer />
         </div>
     );

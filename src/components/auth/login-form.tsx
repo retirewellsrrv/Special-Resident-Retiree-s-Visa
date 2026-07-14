@@ -114,14 +114,16 @@ export function LoginForm({
                 <CardContent className="p-8 md:p-12">
                     {/* Logo + heading */}
                     <div className="mb-10 flex flex-col items-center">
-                        <Image
-                            src={LOGO_SRC}
-                            alt="Retire Well SRRV Logo"
-                            width={160}
-                            height={80}
-                            unoptimized
-                            className="mb-4 h-16 w-auto object-contain md:h-20"
-                        />
+                        <Link href="/">
+                            <Image
+                                src={LOGO_SRC}
+                                alt="Retire Well SRRV Logo"
+                                width={160}
+                                height={80}
+                                unoptimized
+                                className="mb-4 h-16 w-auto object-contain md:h-20"
+                            />
+                        </Link>
                         <h1 className="text-2xl font-bold tracking-tight text-brand-primary-700">
                             Welcome Back
                         </h1>

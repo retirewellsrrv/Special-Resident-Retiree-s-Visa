@@ -98,7 +98,8 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
 
   const firstName = capitalize(parsed.data?.firstName);
   const surname = capitalize(parsed.data?.surname);
-  const fullName = `${firstName} ${surname}`; //? parse and capitize 
+  const suffix = parsed.data?.suffix || '';
+  const fullName = suffix ? `${firstName} ${surname}, ${suffix}` : `${firstName} ${surname}`; 
 
   console.log(fullName)
   console.log(parsed.data.email)
@@ -165,6 +166,7 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
         birthday: parsed.data.birthday,
         nationality: capitalize(parsed.data.nationality),
         age: userAge,
+        suffix: parsed.data.suffix || null,
       },
     },
   })
