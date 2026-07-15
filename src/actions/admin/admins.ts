@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { withSuperAdmin } from '@/utils/auth/with-admin'
 import { requireSuperAdmin } from '@/utils/auth/getUser'
 
@@ -62,29 +62,58 @@ export const createAdmin = withSuperAdmin(async function createAdmin(formData: F
 
   const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
 
-  const { data, error: signUpError } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${origin}/api/auth/callback?roleType=admin`,
-      data: {
+  const { data: { users } } = await supabase.auth.admin.listUsers()
+  const existingUser = users?.find((u) => u.email === email)
+
+  let userId: string
+
+  if (existingUser) {
+    if (existingUser.email_confirmed_at) {
+      return { error: 'A user with this email already exists.' }
+    }
+
+    userId = existingUser.id
+
+    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+      password,
+      user_metadata: { role: 'admin', name },
+    })
+
+    if (updateError) {
+      return { error: updateError.message }
+    }
+
+    const anonClient = await createClient()
+    await anonClient.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${origin}/api/auth/callback` },
+    })
+  } else {
+    const { data, error: createError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: false,
+      user_metadata: {
         role: 'admin',
         name,
       },
-    },
-  })
+    })
 
-  if (signUpError || !data.user) {
-    return { error: signUpError?.message ?? 'Failed to create user.' }
+    if (createError || !data.user) {
+      return { error: createError?.message ?? 'Failed to create user.' }
+    }
+
+    userId = data.user.id
   }
 
   const { error: profileError } = await supabase
     .from('admin_profiles')
-    .insert({
-      user_id: data.user.id,
+    .upsert({
+      user_id: userId,
       name,
       is_active: true,
-    })
+    }, { onConflict: 'user_id' })
 
   if (profileError) {
     return { error: profileError.message }

@@ -42,6 +42,10 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     password: parsed.data.password,
   })
 
+  if (!data?.user?.email_confirmed_at) {
+    resendConfirmationAction(parsed.data.email)
+    redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
+  }
   if (error) {
     return { success: false, error: error.message }
   }
@@ -99,7 +103,7 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
   const firstName = capitalize(parsed.data?.firstName);
   const surname = capitalize(parsed.data?.surname);
   const suffix = parsed.data?.suffix || '';
-  const fullName = suffix ? `${firstName} ${surname}, ${suffix}` : `${firstName} ${surname}`; 
+  const fullName = suffix ? `${firstName} ${surname}, ${suffix}` : `${firstName} ${surname}`;
 
   console.log(fullName)
   console.log(parsed.data.email)
