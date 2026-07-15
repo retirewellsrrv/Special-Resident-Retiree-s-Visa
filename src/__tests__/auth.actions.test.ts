@@ -62,11 +62,13 @@ function mockAuth(authOverrides: Partial<{
   signInWithPassword: ReturnType<typeof vi.fn>
   signUp: ReturnType<typeof vi.fn>
   signOut: ReturnType<typeof vi.fn>
+  resend: ReturnType<typeof vi.fn>
 }> = {}) {
   const auth = {
     signInWithPassword: vi.fn(),
     signUp: vi.fn(),
     signOut: vi.fn(),
+    resend: vi.fn().mockResolvedValue({ data: {}, error: null }),
     ...authOverrides,
   }
   const fromChain = {
@@ -125,6 +127,7 @@ describe('loginAction', () => {
             id: 'user-123',
             email: 'admin@example.com',
             user_metadata: { role: 'admin' },
+            email_confirmed_at: '2024-01-01T00:00:00Z',
           },
         },
         error: null,
@@ -149,6 +152,7 @@ describe('loginAction', () => {
             id: 'user-456',
             email: 'applicant@example.com',
             user_metadata: { role: 'applicant' },
+            email_confirmed_at: '2024-01-01T00:00:00Z',
           },
         },
         error: null,
@@ -166,7 +170,12 @@ describe('loginAction', () => {
     mockAuth({
       signInWithPassword: vi.fn().mockResolvedValue({
         data: {
-          user: { id: 'user-789', email: 'user@example.com', user_metadata: {} },
+          user: {
+            id: 'user-789',
+            email: 'user@example.com',
+            user_metadata: {},
+            email_confirmed_at: '2024-01-01T00:00:00Z',
+          },
         },
         error: null,
       }),

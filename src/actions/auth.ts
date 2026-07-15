@@ -42,12 +42,13 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     password: parsed.data.password,
   })
 
-  if (!data?.user?.email_confirmed_at) {
-    resendConfirmationAction(parsed.data.email)
-    redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
-  }
   if (error) {
     return { success: false, error: error.message }
+  }
+
+  if (!data.user?.email_confirmed_at) {
+    resendConfirmationAction(parsed.data.email)
+    redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
   }
 
   const userId = data.user.id
