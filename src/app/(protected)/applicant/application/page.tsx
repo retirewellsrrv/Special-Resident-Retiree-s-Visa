@@ -61,7 +61,7 @@ export default function SRRVApplicationPage() {
         {/* ── Main Form Card ── */}
         <div className="lg:col-span-3">
           <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
-            <CardContent className="p-10">
+            <CardContent className="p-6 md:p-10">
               {/* Step Indicator */}
               <div className="relative mb-6">
                 <div className="absolute top-4 left-0 right-0 h-px bg-neutral-200" />
@@ -73,11 +73,11 @@ export default function SRRVApplicationPage() {
                   {steps.map((step) => (
                     <div
                       key={step.id}
-                      className="flex flex-col items-center gap-1.5 bg-white px-1"
+                      className="flex flex-col items-center gap-1.5 bg-white px-0.5 md:px-1"
                     >
                       <div
                         className={cn(
-                          "w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
+                          "w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-xs md:text-sm font-semibold transition-colors",
                           step.id === currentStep
                             ? "bg-[#8B1A2B] text-white"
                             : step.id < currentStep
@@ -86,14 +86,14 @@ export default function SRRVApplicationPage() {
                         )}
                       >
                         {step.id < currentStep ? (
-                          <CheckCircle2 className="w-4 h-4" />
+                          <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         ) : (
                           step.id
                         )}
                       </div>
                       <span
                         className={cn(
-                          "text-xs font-medium whitespace-nowrap",
+                          "hidden md:inline text-xs font-medium",
                           step.id === currentStep
                             ? "text-[#8B1A2B]"
                             : "text-neutral-400",
