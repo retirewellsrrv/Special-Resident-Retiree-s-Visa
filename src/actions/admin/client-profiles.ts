@@ -267,10 +267,13 @@ export const createClientProfile = withAdmin(async function createClientProfile(
   }
 
   const currentUser = await getUser()
+  if (!currentUser) {
+    return { error: "Authentication required", success: false };
+  }
   const { error } = await supabase.from("client_profiles").insert({
     ...parsed.data,
     age: parsed.data.age ?? 0,
-    user_id: currentUser?.id ?? 'unknown',
+    user_id: currentUser.id,
   });
 
   if (error) return { error: error.message, success: false };

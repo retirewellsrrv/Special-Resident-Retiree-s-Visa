@@ -7,38 +7,53 @@ import { FilterInput } from '@/components/admin/shared/filters'
 import { ReviewQueue } from './review-queue'
 import { DocumentViewer } from './document-viewer'
 import { ReviewActions } from './review-actions'
+import { Pagination } from '@/components/ui/pagination'
 import type { DocumentForReview, ReviewStats } from '@/actions/admin/documents'
+
+const PER_PAGE = 20
 
 interface Props {
   docs: DocumentForReview[]
   stats: ReviewStats
+  total: number
+  page: number
   search?: string
   sort: 'latest' | 'oldest' | 'most-pending' | 'alphabetical'
 }
 
-export function DocumentsReview({ docs, stats, search, sort }: Props) {
+function buildQuery(params: { q?: string; sort?: string; page: number }) {
+  const sp = new URLSearchParams()
+  if (params.q) sp.set('q', params.q)
+  if (params.sort) sp.set('sort', params.sort)
+  sp.set('page', String(params.page))
+  return sp.toString()
+}
+
+export function DocumentsReview({ docs, stats, total, page, search, sort }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [selectedDoc, setSelectedDoc] = useState<DocumentForReview | null>(docs[0] ?? null)
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
 
   const handleSearch = useCallback(
     (q: string) => {
-      const params = new URLSearchParams()
-      if (q) params.set('q', q)
-      params.set('sort', sort)
-      startTransition(() => router.push(`/admin/documents?${params.toString()}`))
+      startTransition(() => router.push(`/admin/documents?${buildQuery({ q, sort, page: 1 })}`))
     },
     [router, startTransition, sort],
   )
 
   const handleSortChange = useCallback(
     (newSort: 'latest' | 'oldest' | 'most-pending' | 'alphabetical') => {
-      const params = new URLSearchParams()
-      if (search?.trim()) params.set('q', search)
-      params.set('sort', newSort)
-      startTransition(() => router.push(`/admin/documents?${params.toString()}`))
+      startTransition(() => router.push(`/admin/documents?${buildQuery({ q: search, sort: newSort, page: 1 })}`))
     },
     [router, startTransition, search],
+  )
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      startTransition(() => router.push(`/admin/documents?${buildQuery({ q: search, sort, page: newPage })}`))
+    },
+    [router, search, sort, startTransition],
   )
 
   const handleSelect = useCallback((doc: DocumentForReview) => {
@@ -111,6 +126,15 @@ export function DocumentsReview({ docs, stats, search, sort }: Props) {
           </div>
         )}
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        perPage={PER_PAGE}
+        onChange={handlePageChange}
+        disabled={isPending}
+      />
     </div>
   )
 }

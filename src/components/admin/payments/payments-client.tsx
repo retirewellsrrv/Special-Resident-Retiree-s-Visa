@@ -71,7 +71,10 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
               <Download className="h-4 w-4" />
               Export CSV
             </button>
-            <button className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors">
+            <button
+              onClick={() => router.push('/admin/applications')}
+              className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+            >
               <Plus className="h-4 w-4" />
               Create New Case
             </button>

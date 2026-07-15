@@ -1,18 +1,22 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useCallback, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
     type ClientRow,
     type ClientStats,
+    getClientDirectory,
 } from '@/actions/admin/client-profiles'
 import { StatusChip } from '@/components/ui/status-chip'
 import { TableSkeleton } from '@/components/ui/loading'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { StatCard } from '@/components/admin/shared/stat-card'
 import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
+import { downloadCsv } from '@/lib/utils'
 import {
+    Download,
+    Plus,
     Users,
     Clock,
     CheckCircle2,
@@ -111,6 +115,12 @@ export function ClientProfilesClient({
         navigate({ status: status || undefined, page: '1' })
     }
 
+    const handleExport = useCallback(async () => {
+        const { rows: all } = await getClientDirectory({ limit: 10000 })
+        const headers = ['user_id', 'name', 'application_code', 'service_type', 'service_plan_name', 'status', 'updated_at']
+        downloadCsv(all, headers, `client-profiles-${new Date().toISOString().slice(0, 10)}.csv`)
+    }, [])
+
     function handleClear() {
         navigate({ filter: 'all', service_type: undefined, status: undefined, q: undefined, application_code: undefined, page: '1' })
     }
@@ -122,11 +132,19 @@ export function ClientProfilesClient({
                 description="Manage and review existing clients, track application history, and coordinate with the visa processing department for ongoing cases."
                 actions={
                     <>
-                        <button className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors">
+                        <button
+                            onClick={handleExport}
+                            className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+                        >
+                            <Download className="h-4 w-4" />
                             Export CSV
                         </button>
-                        <button className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors">
-                            + Add New Client
+                        <button
+                            onClick={() => router.push('/admin/applications')}
+                            className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Add New Client
                         </button>
                     </>
                 }
