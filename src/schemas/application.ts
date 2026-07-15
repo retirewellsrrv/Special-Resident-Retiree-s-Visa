@@ -48,7 +48,10 @@ export const applicationUpdateSchema = applicationInsertSchema
 // ─────────────────────────────────────────────
 
 export const applicationFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .regex(/^[^\d]*$/, "Name must not contain numbers"),
   birthday: z
     .string()
     .min(1, "Birthday is required")
@@ -61,7 +64,10 @@ export const applicationFormSchema = z.object({
   sex: z.enum(["male", "female"], {
     error: "Please select a valid sex",
   }),
-  nationality: z.string().min(1, "Nationality is required"),
+  nationality: z
+    .string()
+    .min(1, "Nationality is required")
+    .regex(/^[^\d]*$/, "Nationality must not contain numbers"),
   marital_status: z.string().min(1, "Marital status is required"),
   email: z
     .string()
@@ -73,13 +79,34 @@ export const applicationFormSchema = z.object({
     .min(1, "Phone number is required")
     .regex(/^\+?[1-9]\d{6,14}$/, { message: "Invalid phone number format" }),
   street: z.string().min(1, "Street address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State/Province is required"),
+  city: z
+    .string()
+    .min(1, "City is required")
+    .regex(/^[^\d]*$/, "City must not contain numbers"),
+  state: z
+    .string()
+    .min(1, "State/Province is required")
+    .regex(/^[^\d]*$/, "State must not contain numbers"),
   zip: z.string().min(1, "ZIP/Postal code is required"),
-  country: z.string().min(1, "Country is required"),
+  country: z
+    .string()
+    .min(1, "Country is required")
+    .regex(/^[^\d]*$/, "Country must not contain numbers"),
   ph_address: z.string().nullable(),
-  emergency_name: z.string().nullable(),
-  emergency_relationship: z.string().nullable(),
+  emergency_name: z
+    .string()
+    .nullable()
+    .refine(
+      (val) => val === null || val === "" || /^[^\d]*$/.test(val),
+      "Emergency contact name must not contain numbers",
+    ),
+  emergency_relationship: z
+    .string()
+    .nullable()
+    .refine(
+      (val) => val === null || val === "" || /^[^\d]*$/.test(val),
+      "Relationship must not contain numbers",
+    ),
   emergency_phone: z.string().nullable(),
   service_type: ServiceTypeEnum,
 });

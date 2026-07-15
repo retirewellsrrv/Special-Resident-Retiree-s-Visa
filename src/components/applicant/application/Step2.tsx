@@ -164,7 +164,7 @@ export function Step2({
             id="city"
             placeholder="City"
             value={data.city}
-            onChange={(e) => onChange("city", e.target.value)}
+            onChange={(e) => onChange("city", e.target.value.replace(/[0-9]/g, ""))}
             className={cn(INPUT_CLASS, errors.city && "border-red-500")}
           />
           {errors.city && (
@@ -179,7 +179,7 @@ export function Step2({
             id="state"
             placeholder="State / Province"
             value={data.state}
-            onChange={(e) => onChange("state", e.target.value)}
+            onChange={(e) => onChange("state", e.target.value.replace(/[0-9]/g, ""))}
             className={cn(INPUT_CLASS, errors.state && "border-red-500")}
           />
           {errors.state && (
@@ -216,7 +216,7 @@ export function Step2({
             id="country"
             placeholder="Country"
             value={data.country}
-            onChange={(e) => onChange("country", e.target.value)}
+            onChange={(e) => onChange("country", e.target.value.replace(/[0-9]/g, ""))}
             className={cn(INPUT_CLASS, errors.country && "border-red-500")}
           />
           {errors.country && (
@@ -256,7 +256,7 @@ export function Step2({
               id="emergency_name"
               placeholder="Full legal name"
               value={data.emergency_name}
-              onChange={(e) => onChange("emergency_name", e.target.value)}
+              onChange={(e) => onChange("emergency_name", e.target.value.replace(/[0-9]/g, ""))}
               className={cn(
                 INPUT_CLASS,
                 errors.emergency_name && "border-red-500",
@@ -277,7 +277,7 @@ export function Step2({
               placeholder="e.g. Spouse, Son, Lawyer"
               value={data.emergency_relationship}
               onChange={(e) =>
-                onChange("emergency_relationship", e.target.value)
+                onChange("emergency_relationship", e.target.value.replace(/[0-9]/g, ""))
               }
               className={cn(
                 INPUT_CLASS,
