@@ -1,4 +1,4 @@
-import retireWellLogo from "@/assets/images/logo.png";
+import retireWellLogo from "@/assets/images/logo.jpg";
 
 const navLinks = [
   { label: "Services", href: "/services" },
@@ -22,7 +22,7 @@ export function Footer() {
             <img
               src={retireWellLogo.src}
               alt="RetireWell"
-              className="h-12 mb-3"
+              className="h-16 mb-3"
             />
             <p className="text-ht-caption text-brand-neutral-500 max-w-xs">
               Expert visa consulting services for foreign retirees and

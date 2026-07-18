@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import Image from "next/image";
-import logo from "@/assets/images/logo.png";
+import logo from "@/assets/images/logo.jpg";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -43,24 +43,23 @@ export function Navbar({ className, user }: NavbarProps) {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="mr-6 flex items-center space-x-2">
-          <Image src={logo} alt="SRRV" className="h-12 w-auto" />
+          <Image src={logo} alt="SRRV" className="h-14 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}
         <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList className='gap-x-8 pr-4'>
+          <NavigationMenuList className="gap-x-8 pr-4">
             {navItems.map((item) => (
-              
               <NavigationMenuItem key={item.href}>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href={item.href}
-                      className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-[#81001C] focus:bg-accent focus:text-[#81001C] focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      {item.title}
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    href={item.href}
+                    className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-[#81001C] focus:bg-accent focus:text-[#81001C] focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    {item.title}
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
             ))}
           </NavigationMenuList>
         </NavigationMenu>
@@ -95,7 +94,7 @@ export function Navbar({ className, user }: NavbarProps) {
               {/* Brand header */}
               <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Image src={logo} alt="SRRV" className="h-10 w-auto" />
+                  <Image src={logo} alt="SRRV" className="h-12 w-auto" />
                 </Link>
               </div>
 

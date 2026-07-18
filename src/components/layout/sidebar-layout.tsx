@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Plus, Bell, HelpCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
-import logo from '@/assets/images/logo.png'
+import logo from '@/assets/images/logo.jpg'
 
 interface SidebarLayoutProps {
   children: ReactNode
@@ -71,8 +71,8 @@ export function SidebarLayout({
                   <Image
                     src={logo}
                     alt="Retire Well SRRV"
-                    width={160}
-                    height={52}
+                    width={200}
+                    height={64}
                     className="object-contain w-full h-auto max-h-12"
                     priority
                   />
