@@ -17,6 +17,7 @@ export async function GET(request: Request) {
       let role = data.user.user_metadata?.role as string | undefined
 
       if (!role) {
+        role = 'applicant'
         await supabase.auth.updateUser({
           data: { role: 'applicant' },
         })
@@ -44,7 +45,31 @@ export async function GET(request: Request) {
         role = 'super_admin'
       }
 
-      const destination = role === 'super_admin' ? '/super-admin/dashboard' : role === 'admin' ? '/admin/dashboard' : '/applicant/dashboard'
+      // Applicants who signed up via OAuth start with placeholder profile
+      // fields (nationality/birthday empty). Send them to complete it first.
+      if (role === 'applicant') {
+        const { data: profile } = await supabase
+          .from('client_profiles')
+          .select('nationality, birthday')
+          .eq('user_id', data.user.id)
+          .maybeSingle()
+
+        const profileIncomplete =
+          !profile ||
+          !profile.nationality?.trim() ||
+          !profile.birthday?.trim()
+
+        if (profileIncomplete) {
+          return NextResponse.redirect(`${origin}/applicant/profile?setup=1`)
+        }
+      }
+
+      const destination =
+        role === 'super_admin'
+          ? '/super-admin/dashboard'
+          : role === 'admin'
+            ? '/admin/dashboard'
+            : '/applicant/dashboard'
       return NextResponse.redirect(`${origin}${destination}`)
     }
 
