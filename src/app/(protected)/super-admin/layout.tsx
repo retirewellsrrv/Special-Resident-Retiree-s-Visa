@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { SidebarLayout } from '@/components/layout/sidebar-layout'
 import { LayoutDashboard, Shield, Users } from 'lucide-react'
@@ -17,6 +18,7 @@ export default function SuperAdminLayout({
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => setUser(data.user ?? null))
@@ -29,6 +31,7 @@ export default function SuperAdminLayout({
       navItems={NAV_ITEMS}
       title="Super Admin"
       ctaLabel="New Admin"
+      onCta={() => router.push('/super-admin/manage-admins')}
       user={{ name: userName || 'Super Admin', role: 'Super Admin' }}
     >
       {children}

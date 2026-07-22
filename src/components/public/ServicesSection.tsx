@@ -11,21 +11,15 @@ interface Service {
 const services: Service[] = [
   {
     icon: FileText,
-    title: "SRRV Application Support",
+    title: "The Retire Well Advantage",
     description:
-      "Expert guidance through the entire visa process, ensuring all documentation meets PRA standards for a hassle-free experience.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Marketing Consulting",
-    description:
-      "Strategic growth solutions for retirement-focused businesses looking to reach the expat and retiree demographic effectively.",
+      "We eliminate administrative guesswork. We pre-vet your paperwork, manage your bank remittances, and track your application directly through the pipeline.",
   },
   {
     icon: MapPin,
-    title: "Relocation Concierge",
+    title: "VIP On-the-Ground Concierge",
     description:
-      "Personalized assistance in finding your perfect home and community, navigating local real estate, and setting up utilities.",
+      "Absolute peace of mind. We physically guide you through your medical clearance, handle your local ID processing, and stand by your side at the official PRA induction ceremony.",
   },
 ];
 
@@ -38,8 +32,7 @@ export function ServicesSection() {
             Our Specialized Services
           </h2>
           <p className="text-ht-body-md text-brand-neutral-500 max-w-md mx-auto">
-            Providing the expertise and support you need for every step of your
-            retirement journey in the Philippines.
+            Indefinite Free Stay: Live, travel, and invest in the Philippines permanently with zero visa renewal hassle.
           </p>
         </div>
 

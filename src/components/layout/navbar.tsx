@@ -14,7 +14,6 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { LogoutBtn } from "@/components/auth/logout-btn";
@@ -49,7 +48,7 @@ export function Navbar({ className, user }: NavbarProps) {
 
         {/* Desktop Navigation */}
         <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList className='gap-x-8'>
+          <NavigationMenuList className='gap-x-8 pr-4'>
             {navItems.map((item) => (
               
               <NavigationMenuItem key={item.href}>
@@ -86,37 +85,53 @@ export function Navbar({ className, user }: NavbarProps) {
         {/* Mobile Menu Trigger */}
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="shrink-0">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-            <nav className="flex flex-col space-y-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-sm font-medium transition-colors hover:text-[#81001C] py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.title}
+          <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
+            <div className="flex h-full flex-col">
+              {/* Brand header */}
+              <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Image src={logo} alt="SRRV" className="h-10 w-auto" />
                 </Link>
-              ))}
-              <Separator className="my-4" />
-              <div className="flex flex-col space-y-2">
+              </div>
+
+              {/* Navigation links */}
+              <nav className="flex-1 overflow-y-auto px-3 pt-3">
+                <div className="space-y-0.5">
+                  <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+                    Menu
+                  </p>
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-brand-primary-50 hover:text-brand-primary-600"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </div>
+              </nav>
+
+              {/* Footer actions */}
+              <div className="border-t border-gray-100 px-5 py-4">
                 {user ? (
                   <LogoutBtn
-                    className="w-full justify-start"
+                    className="w-full justify-center"
                     onClick={() => setIsMobileMenuOpen(false)}
                   />
                 ) : (
-                  <>
+                  <div className="flex flex-col gap-2">
                     <Button
                       variant="outline"
                       size="lg"
                       asChild
-                      className="w-full justify-start"
+                      className="w-full"
                     >
                       <Link
                         href="/login"
@@ -125,7 +140,7 @@ export function Navbar({ className, user }: NavbarProps) {
                         Log In
                       </Link>
                     </Button>
-                    <Button size="lg" asChild className="w-full justify-start">
+                    <Button size="lg" asChild className="w-full">
                       <Link
                         href="/register"
                         onClick={() => setIsMobileMenuOpen(false)}
@@ -133,10 +148,10 @@ export function Navbar({ className, user }: NavbarProps) {
                         Get Started
                       </Link>
                     </Button>
-                  </>
+                  </div>
                 )}
               </div>
-            </nav>
+            </div>
           </SheetContent>
         </Sheet>
       </div>

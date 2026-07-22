@@ -94,23 +94,25 @@ export function SidebarLayout({
             {/* ── Footer ── */}
             <SidebarFooter className="px-3 pb-4 pt-2 gap-2 border-t border-brand-neutral-200">
               <SidebarLogout />
-              <Button
-                onClick={onCta}
-                size="sm"
-                className="
-                  w-full justify-start gap-2
-                  bg-brand-primary-600 hover:bg-brand-primary-800 active:bg-brand-primary-800
-                  text-white font-semibold text-xs tracking-wide
-                  rounded-md shadow-sm transition-colors
-                  group-data-[collapsible=icon]:justify-center
-                  group-data-[collapsible=icon]:px-0
-                "
-              >
-                <Plus className="size-4 shrink-0" />
-                <span className="group-data-[collapsible=icon]:hidden">
-                  {ctaLabel}
-                </span>
-              </Button>
+              {onCta && (
+                <Button
+                  onClick={onCta}
+                  size="sm"
+                  className="
+                    w-full justify-start gap-2
+                    bg-brand-primary-600 hover:bg-brand-primary-800 active:bg-brand-primary-800
+                    text-white font-semibold text-xs tracking-wide
+                    rounded-md shadow-sm transition-colors
+                    group-data-[collapsible=icon]:justify-center
+                    group-data-[collapsible=icon]:px-0
+                  "
+                >
+                  <Plus className="size-4 shrink-0" />
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    {ctaLabel}
+                  </span>
+                </Button>
+              )}
             </SidebarFooter>
 
             <SidebarRail />

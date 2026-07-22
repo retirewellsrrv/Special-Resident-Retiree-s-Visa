@@ -7,21 +7,17 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
+    <main className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden px-4 py-8">
       <Image
         src={bgImage}
         alt=""
         fill
         priority
         sizes="100vw"
-        className="fixed inset-0 -z-10 object-cover"
+        className="absolute inset-0 -z-10 object-cover"
       />
-      <div className="fixed inset-0 -z-10 bg-[#0b1c30]/45" />
-      <main
-        className="relative flex min-h-screen w-full items-center justify-center px-4 py-8"
-      >
-        {children}
-      </main>
-    </>
+      <div className="absolute inset-0 -z-10 bg-[#0b1c30]/45" />
+      {children}
+    </main>
   )
 }
