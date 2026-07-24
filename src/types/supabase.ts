@@ -357,7 +357,17 @@ export type Database = {
         | "rejected"
         | "action need"
         | "pending"
-      document_type: "passport" | "visa" | "nbi" | "pension" | "medical"
+      document_type:
+        | "passport"
+        | "photo_2x2"
+        | "pra_application"
+        | "police"
+        | "medical"
+        | "bicc"
+        | "bank_cert"
+        | "proof_payment"
+        | "proof_pension"
+        | "proof_relationship"
       marital_status: "single" | "married" | "widowed" | "divorced"
       payment_methods:
         | "pool"
@@ -534,7 +544,18 @@ export const Constants = {
         "action need",
         "pending",
       ],
-      document_type: ["passport", "visa", "nbi", "pension", "medical"],
+      document_type: [
+        "passport",
+        "photo_2x2",
+        "pra_application",
+        "police",
+        "medical",
+        "bicc",
+        "bank_cert",
+        "proof_payment",
+        "proof_pension",
+        "proof_relationship",
+      ],
       marital_status: ["single", "married", "widowed", "divorced"],
       payment_methods: [
         "pool",

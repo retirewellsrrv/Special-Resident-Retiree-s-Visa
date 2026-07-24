@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useActionState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/status-chip";
@@ -17,12 +17,14 @@ import {
   AlertTriangle,
   Clock,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Check, PenLine, Flag, Phone, Mail, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getApplicantDashboard } from "@/actions/applicant/application";
-import type { DashboardData } from "@/actions/applicant/application";
+import { getApplicantDashboard, retryPaymentAction } from "@/actions/applicant/application";
+import type { DashboardData, RetryPaymentState } from "@/actions/applicant/application";
+import { Button } from "@/components/ui/button";
 
 const APPLICATION_STEPS = [
   { id: 1, label: "Initiation" },
@@ -72,6 +74,10 @@ function documentToStatus(docStatus: string): string {
 export default function ApplicantDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryState, retryAction, retryPending] = useActionState<
+    RetryPaymentState,
+    FormData
+  >(retryPaymentAction, { error: null, success: false });
 
   useEffect(() => {
     getApplicantDashboard().then((result) => {
@@ -79,6 +85,12 @@ export default function ApplicantDashboardPage() {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (retryState.success && retryState.invoiceUrl) {
+      window.location.href = retryState.invoiceUrl;
+    }
+  }, [retryState]);
 
   if (loading) {
     return (
@@ -185,6 +197,7 @@ export default function ApplicantDashboardPage() {
   const application = data?.application ?? null;
   const documents = data?.documents ?? [];
   const payment = data?.payment ?? null;
+  const canRetry = data?.canRetry ?? false;
   const hasPayment = !!payment;
   const currentStepIndex = application
     ? application.status === "pending" && hasPayment
@@ -408,58 +421,84 @@ export default function ApplicantDashboardPage() {
           {!payment ? (
             <p className="text-sm text-brand-neutral-400">No payment information available.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <CreditCard className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                    Amount Paid
-                  </p>
-                  <p className="text-lg font-bold text-brand-neutral-800 mt-0.5">
-                    ₱{Number(payment.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                  </p>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                  <CreditCard className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                      Amount Paid
+                    </p>
+                    <p className="text-lg font-bold text-brand-neutral-800 mt-0.5">
+                      ₱{Number(payment.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                  <Package className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                      Service Type
+                    </p>
+                    <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
+                      {application?.service_type === "basic"
+                        ? "Basic"
+                        : application?.service_type === "premium"
+                          ? "Premium"
+                          : application?.service_type === "vip"
+                            ? "VIP"
+                            : application?.service_type ?? "---"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                  <Building2 className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                      Payment Method
+                    </p>
+                    <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
+                      {payment.payment_method.replace(/_/g, " ")}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                  <FileText className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                      Transaction Code
+                    </p>
+                    <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 font-mono">
+                      {payment.transaction_code}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <Package className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                    Service Type
-                  </p>
-                  <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
-                    {application?.service_type === "basic"
-                      ? "Basic"
-                      : application?.service_type === "premium"
-                        ? "Premium"
-                        : application?.service_type === "vip"
-                          ? "VIP"
-                          : application?.service_type ?? "---"}
-                  </p>
+
+              {canRetry && (
+                <div className="mt-4 space-y-2">
+                  {retryState.error && (
+                    <p className="text-sm text-red-600">{retryState.error}</p>
+                  )}
+                  <form action={retryAction}>
+                    <Button
+                      type="submit"
+                      disabled={retryPending}
+                      className="w-full"
+                    >
+                      {retryPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Redirecting to payment...
+                        </>
+                      ) : (
+                        "Retry Payment"
+                      )}
+                    </Button>
+                  </form>
                 </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <Building2 className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                    Payment Method
-                  </p>
-                  <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
-                    {payment.payment_method.replace(/_/g, " ")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <FileText className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                    Transaction Code
-                  </p>
-                  <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 font-mono">
-                    {payment.transaction_code}
-                  </p>
-                </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

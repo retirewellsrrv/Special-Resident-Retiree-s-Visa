@@ -18,16 +18,12 @@ const ACCEPTED_IMAGE_TYPES = [
 ];
 const ACCEPTED_DOC_TYPES = [
   "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 const ALL_ACCEPTED_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_DOC_TYPES];
 
 // Also support file extensions for fallback
 const ACCEPTED_EXTENSIONS = [
   ".pdf",
-  ".doc",
-  ".docx",
   ".jpg",
   ".jpeg",
   ".png",
@@ -60,12 +56,12 @@ export function UploadRow({
   title: string;
   description: string;
   required: boolean;
-  file: DocumentFile;
+  file?: DocumentFile;
   externalError?: string;       // ← new
   onUpload: (f: File) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const hasFile = !!file.file;
+  const hasFile = !!file?.file;
   const [internalError, setInternalError] = useState<string | null>(null);
 
   // Internal type-error takes priority; fall back to external (missing file) error
@@ -79,7 +75,7 @@ export function UploadRow({
 
     if (!isValidFileType(f)) {
       setInternalError(
-        "Invalid file type. Please upload a PDF, DOC, DOCX, or image file (JPG, PNG, GIF, BMP, WEBP, TIFF).",
+        "Invalid file type. Please upload a PDF or image file (JPG, PNG, GIF, BMP, WEBP, TIFF).",
       );
       e.target.value = "";
       return;
@@ -100,12 +96,19 @@ export function UploadRow({
           <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">
             {title}
           </span>
-          {required && (
+          {required ? (
             <Badge
               variant="outline"
               className="text-[10px] px-1.5 py-0 border-[#8B1A2B]/40 text-[#8B1A2B] font-semibold tracking-wide"
             >
               REQUIRED
+            </Badge>
+          ) : (
+            <Badge
+              variant="outline"
+              className="text-[10px] px-1.5 py-0 border-neutral-300 text-neutral-500 font-semibold tracking-wide"
+            >
+              OPTIONAL
             </Badge>
           )}
         </div>
@@ -123,7 +126,7 @@ export function UploadRow({
         {hasFile && !displayError && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            {file.file!.name}
+            {file?.file?.name}
           </p>
         )}
       </div>
@@ -133,7 +136,7 @@ export function UploadRow({
           ref={inputRef}
           type="file"
           className="hidden"
-          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
           onChange={handleFileChange}
         />
         <Button

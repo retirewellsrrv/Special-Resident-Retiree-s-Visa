@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { ApplicationFormInput, ServiceType } from "@/schemas/application";
 import { applicationFormSchema } from "@/schemas/application";
 import type { DocumentType } from "@/schemas/document";
 import { step4FormSchema } from "@/schemas/document";
 import { submitApplication, getApplicantProfile, getExistingApplication } from "@/actions/applicant/application";
 import type { ExistingApplicationData } from "@/actions/applicant/application";
+import { saveFile, loadFile, clearAllFiles } from "@/lib/file-store";
 
 type Step1Data = {
   [K in keyof Pick<
@@ -31,6 +32,43 @@ type Step4Data = Record<DocumentType, DocumentFile>;
 
 const EMPTY_DOC = { file: null, name: "" };
 
+type PersistedState = {
+  currentStep: number;
+  step1Data: Step1Data;
+  step2Data: Step2Data;
+  selectedService: ServiceType | "";
+  paymentMethod: string;
+  step4Names: Record<DocumentType, string>;
+  submittedSteps: number[];
+};
+
+const STORAGE_KEY = "srrv-application-form";
+
+function loadPersistedState(): PersistedState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as PersistedState;
+  } catch {
+    return null;
+  }
+}
+
+function savePersistedState(state: PersistedState) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch { /* quota exceeded — silently ignore */ }
+}
+
+function clearPersistedState() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch { /* ignore */ }
+}
+
 /** Parse an E.164 phone (e.g. "+639123456789") into dial code + national number. */
 function parseAuthPhone(
   phone: string,
@@ -48,7 +86,6 @@ function parseAuthPhone(
 
 export function useSRRVApplicationForm() {
   const [currentStep, setCurrentStep] = useState(1);
-
   const [step1Data, setStep1Data] = useState<Step1Data>({
     name: "",
     birthday: "",
@@ -56,7 +93,6 @@ export function useSRRVApplicationForm() {
     nationality: "",
     marital_status: "",
   });
-
   const [step2Data, setStep2Data] = useState<Step2Data>({
     email: "",
     phone_number: "",
@@ -71,16 +107,21 @@ export function useSRRVApplicationForm() {
     emergency_relationship: "",
     emergency_phone: "",
   });
-
   const [selectedService, setSelectedService] = useState<ServiceType | "">("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("CREDIT_CARD");
 
   // Keys aligned to DocumentTypeEnum
   const [step4Data, setStep4Data] = useState<Step4Data>({
     passport: EMPTY_DOC,
-    visa: EMPTY_DOC,
-    nbi: EMPTY_DOC,
-    pension: EMPTY_DOC,
+    photo_2x2: EMPTY_DOC,
+    pra_application: EMPTY_DOC,
     medical: EMPTY_DOC,
+    police: EMPTY_DOC,
+    bicc: EMPTY_DOC,
+    bank_cert: EMPTY_DOC,
+    proof_payment: EMPTY_DOC,
+    proof_pension: EMPTY_DOC,
+    proof_relationship: EMPTY_DOC,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -90,15 +131,66 @@ export function useSRRVApplicationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [existingApplication, setExistingApplication] = useState<ExistingApplicationData | null>(null);
+  const restored = useRef(false);
 
-  // ── Pre-fill from existing profile and check for existing app on mount ──
+  // ── Restore persisted state or pre-fill from profile ──────────────────────
   useEffect(() => {
     setIsLoadingProfile(true);
+
+    const saved = loadPersistedState();
+
     Promise.all([getApplicantProfile(), getExistingApplication()])
       .then(([profile, existing]) => {
         if (existing) {
+          clearPersistedState();
           setExistingApplication(existing);
           setCurrentStep(6);
+          return;
+        }
+
+        if (saved && !restored.current) {
+          restored.current = true;
+          setCurrentStep(saved.currentStep);
+          setStep1Data(saved.step1Data);
+          setStep2Data(saved.step2Data);
+          setSelectedService(saved.selectedService);
+          setPaymentMethod(saved.paymentMethod);
+          setSubmittedSteps(new Set(saved.submittedSteps));
+
+          setStep4Data((prev) => {
+            const restored_docs = { ...prev };
+            for (const [key, name] of Object.entries(saved.step4Names)) {
+              restored_docs[key as DocumentType] = { file: null, name };
+            }
+            return restored_docs;
+          });
+
+          // Restore file blobs from IndexedDB
+          void Promise.all(
+            Object.entries(saved.step4Names).map(async ([key, name]) => {
+              if (!name) return;
+              const stored = await loadFile(key);
+              if (!stored) return;
+              const file = new File([stored.data], stored.name, { type: stored.type });
+              setStep4Data((prev) => ({ ...prev, [key as DocumentType]: { file, name: stored.name } }));
+            }),
+          );
+
+          // Merge profile data into empty fields (auto-fill)
+          if (profile) {
+            setStep1Data((prev) => ({
+              name: prev.name || profile.name,
+              birthday: prev.birthday || profile.birthday,
+              sex: prev.sex || profile.sex,
+              nationality: prev.nationality || profile.nationality,
+              marital_status: prev.marital_status || profile.marital_status,
+            }));
+            setStep2Data((prev) => ({
+              ...prev,
+              email: prev.email || profile.email,
+              ...(profile.phone && !prev.phone_number ? parseAuthPhone(profile.phone) : {}),
+            }));
+          }
           return;
         }
 
@@ -120,6 +212,23 @@ export function useSRRVApplicationForm() {
       })
       .finally(() => setIsLoadingProfile(false));
   }, []);
+
+  // ── Persist state to sessionStorage on every change ───────────────────────
+  useEffect(() => {
+    if (existingApplication || isSubmitting) return;
+    const persisted: PersistedState = {
+      currentStep,
+      step1Data,
+      step2Data,
+      selectedService,
+      paymentMethod,
+      step4Names: Object.fromEntries(
+        Object.entries(step4Data).map(([k, v]) => [k, v.name]),
+      ) as Record<DocumentType, string>,
+      submittedSteps: Array.from(submittedSteps),
+    };
+    savePersistedState(persisted);
+  }, [currentStep, step1Data, step2Data, selectedService, paymentMethod, step4Data, submittedSteps, existingApplication, isSubmitting]);
 
   // ── Zod validation for steps 1–3 ──────────────────────────────────────────
   const validateForm = useCallback((): Record<string, string> => {
@@ -197,7 +306,7 @@ export function useSRRVApplicationForm() {
           "emergency_phone",
         ],
         3: ["service_type"],
-        4: ["passport", "visa", "nbi", "pension", "medical"],
+        4: ["passport", "photo_2x2", "medical", "police", "bicc", "bank_cert", "proof_payment"],
       };
 
       return Object.fromEntries(
@@ -229,7 +338,7 @@ export function useSRRVApplicationForm() {
 
   const handleDocUpload = (key: keyof Step4Data, file: File) => {
     setStep4Data((prev) => ({ ...prev, [key]: { file, name: file.name } }));
-    // Clear error for this field on upload
+    saveFile(key, file);
     setErrors((prev) => {
       const next = { ...prev };
       delete next[key];
@@ -305,6 +414,7 @@ export function useSRRVApplicationForm() {
     fd.append("emergency_relationship", step2Data.emergency_relationship);
     fd.append("emergency_phone", step2Data.emergency_phone);
     fd.append("service_type", selectedService);
+    fd.append("payment_method", paymentMethod);
 
     for (const [key, doc] of Object.entries(step4Data)) {
       if (doc.file) {
@@ -324,11 +434,15 @@ export function useSRRVApplicationForm() {
     }
 
     if (result.invoiceUrl) {
+      clearPersistedState();
+      clearAllFiles();
       window.location.href = result.invoiceUrl;
       return;
     }
 
     // Reset form on success (fallback if no invoiceUrl)
+    clearPersistedState();
+    clearAllFiles();
     setCurrentStep(1);
     setStep1Data({
       name: "",
@@ -354,10 +468,15 @@ export function useSRRVApplicationForm() {
     setSelectedService("");
     setStep4Data({
       passport: EMPTY_DOC,
-      visa: EMPTY_DOC,
-      nbi: EMPTY_DOC,
-      pension: EMPTY_DOC,
+      photo_2x2: EMPTY_DOC,
+      pra_application: EMPTY_DOC,
       medical: EMPTY_DOC,
+      police: EMPTY_DOC,
+      bicc: EMPTY_DOC,
+      bank_cert: EMPTY_DOC,
+      proof_payment: EMPTY_DOC,
+      proof_pension: EMPTY_DOC,
+      proof_relationship: EMPTY_DOC,
     });
     setErrors({});
     setSubmitError(null);
@@ -379,6 +498,8 @@ export function useSRRVApplicationForm() {
     step2Change: handleStep2Change,
     selectedService,
     setSelectedService,
+    paymentMethod,
+    setPaymentMethod,
     step4Data,
     docUpload: handleDocUpload,
     next: handleNext,
