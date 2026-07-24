@@ -241,6 +241,7 @@ export default function SRRVApplicationPage() {
               able to modify your application after submission.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter className="border-t-0 bg-white py-2 justify-items-center items-center">
             <AlertDialogCancel onClick={cancelSubmit}>
               Review Again

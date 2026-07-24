@@ -30,7 +30,7 @@ export type SubmitState = {
   invoiceUrl?: string;
 };
 
-const DOC_TYPES = ["passport", "visa", "nbi", "pension", "medical"] as const;
+const DOC_TYPES = DocumentTypeEnum.options;
 
 export async function getApplicantProfile(): Promise<ApplicantProfile | null> {
   const user = await getUserServer();
@@ -311,6 +311,8 @@ export async function submitApplication(
     return { error: "Please select a service plan", success: false };
   }
 
+  const paymentMethod = (formData.get("payment_method") as string) || "CREDIT_CARD";
+
   const formRaw = {
     name: formData.get("name"),
     birthday: formData.get("birthday"),
@@ -472,7 +474,7 @@ export async function submitApplication(
       user_id: user.id,
       amount: plan.price,
       status: "pending",
-      payment_method: "ewallet",
+      payment_method: paymentMethod.toLowerCase() as Database["public"]["Enums"]["payment_methods"],
       transaction_code: externalId,
       created_at: new Date().toISOString(),
     })
@@ -511,7 +513,6 @@ export async function submitApplication(
         successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
         currency: "PHP",
-        paymentMethods: ["CREDIT_CARD", "BANK_TRANSFER", "EWALLET"],
         metadata: {
           application_id: String(app.id),
           service_type: serviceType,
@@ -520,6 +521,7 @@ export async function submitApplication(
     });
     invoiceUrl = invoice.invoiceUrl!;
   } catch (xenditError) {
+    console.error("Xendit createInvoice error:", JSON.stringify(xenditError, Object.getOwnPropertyNames(xenditError)));
     const message =
       xenditError instanceof Error
         ? xenditError.message

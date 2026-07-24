@@ -55,7 +55,7 @@ export default function ReuploadDocumentPage({
   const [submitting, setSubmitting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
-  const validTypes: DocumentType[] = ["passport", "visa", "nbi", "pension", "medical"];
+  const validTypes: DocumentType[] = ["passport", "photo_2x2", "pra_application", "medical", "police", "bicc", "bank_cert", "proof_payment", "proof_pension", "proof_relationship"];
   const isValidType = validTypes.includes(type as DocumentType);
 
   useEffect(() => {
