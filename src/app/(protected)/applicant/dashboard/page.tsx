@@ -262,21 +262,21 @@ export default function ApplicantDashboardPage() {
                     return (
                       <div
                         key={step.id}
-                        className="flex flex-col items-center gap-2 bg-white px-1"
+                        className="flex flex-col items-center gap-2 bg-white px-0.5 sm:px-1"
                       >
                         <div
                           className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                            "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors",
                             isDone || isCurrent
                               ? "bg-[#8B1A2B] text-white"
                               : "bg-white border border-brand-neutral-200 text-brand-neutral-300",
                           )}
                         >
-                          <StepIcon className="w-4 h-4" />
+                          <StepIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </div>
                         <span
                           className={cn(
-                            "text-xs font-medium whitespace-nowrap",
+                            "hidden sm:inline text-xs font-medium",
                             isCurrent
                               ? "text-[#8B1A2B] font-semibold"
                               : isDone

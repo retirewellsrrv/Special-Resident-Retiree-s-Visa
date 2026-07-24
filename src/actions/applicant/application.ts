@@ -511,6 +511,7 @@ export async function submitApplication(
         successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
         currency: "PHP",
+        paymentMethods: ["CREDIT_CARD", "BANK_TRANSFER", "EWALLET"],
         metadata: {
           application_id: String(app.id),
           service_type: serviceType,

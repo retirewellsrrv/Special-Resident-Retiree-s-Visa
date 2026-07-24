@@ -49,7 +49,7 @@ export function Step1({
           id="name"
           placeholder="Enter your full legal name"
           value={data.name}
-          onChange={(e) => onChange("name", e.target.value)}
+          onChange={(e) => onChange("name", e.target.value.replace(/[0-9]/g, ""))}
           className={cn(INPUT_CLASS, errors.name && "border-red-500")}
         />
         {errors.name && (
@@ -109,7 +109,7 @@ export function Step1({
             id="nationality"
             placeholder="e.g. United Kingdom"
             value={data.nationality}
-            onChange={(e) => onChange("nationality", e.target.value)}
+            onChange={(e) => onChange("nationality", e.target.value.replace(/[0-9]/g, ""))}
             className={cn(INPUT_CLASS, errors.nationality && "border-red-500")}
           />
           {errors.nationality && (
