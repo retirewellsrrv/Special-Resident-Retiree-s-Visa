@@ -179,6 +179,7 @@ export type DashboardData = {
     payment_method: string;
     transaction_code: string;
   } | null;
+  canRetry: boolean;
 };
 
 export async function getApplicantDashboard(): Promise<DashboardData | null> {
@@ -201,21 +202,25 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
     .eq("application_id", app.id)
     .order("created_at");
 
+  const { data: allPayments } = await supabase
+    .from("payments")
+    .select("amount, status, payment_method, transaction_code, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
   let payment: DashboardData["payment"] = null;
-  if (app.payment_id) {
-    const { data: pmt } = await supabase
-      .from("payments")
-      .select("amount, status, payment_method, transaction_code")
-      .eq("id", app.payment_id)
-      .single();
-    if (pmt) {
-      payment = {
-        amount: pmt.amount,
-        status: pmt.status,
-        payment_method: pmt.payment_method,
-        transaction_code: pmt.transaction_code,
-      };
-    }
+  let canRetry = false;
+
+  if (allPayments && allPayments.length > 0) {
+    const successPayment = allPayments.find((p) => p.status === "success");
+    const displayPayment = successPayment ?? allPayments[0];
+    payment = {
+      amount: displayPayment.amount,
+      status: displayPayment.status,
+      payment_method: displayPayment.payment_method,
+      transaction_code: displayPayment.transaction_code,
+    };
+    canRetry = !allPayments.some((p) => p.status === "success");
   }
 
   return {
@@ -227,6 +232,7 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
     },
     documents: documents ?? [],
     payment,
+    canRetry,
   };
 }
 
@@ -280,6 +286,116 @@ export async function getPaymentReceipt(
     clientName: profile?.name ?? "",
     clientEmail: payment.user_id,
   };
+}
+
+export type RetryPaymentState = {
+  error: string | null;
+  success: boolean;
+  invoiceUrl?: string;
+};
+
+export async function retryPaymentAction(
+  _prev: RetryPaymentState,
+  _formData: FormData,
+): Promise<RetryPaymentState> {
+  const user = await getUserServer();
+  if (!user) return { error: "Unauthorized", success: false };
+
+  const supabase = await createClient();
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("id, service_type")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!app) return { error: "No application found", success: false };
+
+  const { data: plan } = await supabase
+    .from("service_plans")
+    .select("price")
+    .eq("type", app.service_type as Database["public"]["Enums"]["service_type"])
+    .single();
+
+  if (!plan) return { error: "Service plan not found", success: false };
+
+  const { data: existingSuccess } = await supabase
+    .from("payments")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("status", "success")
+    .maybeSingle();
+
+  if (existingSuccess) {
+    return { error: "Payment has already been completed", success: false };
+  }
+
+  const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
+  const paymentMethod = "ewallet" as Database["public"]["Enums"]["payment_methods"];
+
+  const { data: payment, error: paymentError } = await supabase
+    .from("payments")
+    .insert({
+      user_id: user.id,
+      amount: plan.price,
+      status: "pending",
+      payment_method: paymentMethod,
+      transaction_code: externalId,
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (paymentError || !payment) {
+    return {
+      error: paymentError?.message ?? "Failed to create payment",
+      success: false,
+    };
+  }
+
+  const { error: linkError } = await supabase
+    .from("applications")
+    .update({ payment_id: payment.id })
+    .eq("id", app.id);
+
+  if (linkError) {
+    return { error: linkError.message, success: false };
+  }
+
+  const headersList = await headers();
+  const origin = headersList.get("origin") ?? "http://localhost:3000";
+
+  try {
+    const invoice = await xenditClient.Invoice.createInvoice({
+      data: {
+        externalId,
+        amount: plan.price,
+        description: `SRRV ${app.service_type} application fee`,
+        payerEmail: user.email ?? undefined,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
+        failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
+        currency: "PHP",
+        metadata: {
+          application_id: String(app.id),
+          service_type: app.service_type,
+          retry: "true",
+        },
+      },
+    });
+
+    revalidatePath("/applicant/dashboard");
+    return { error: null, success: true, invoiceUrl: invoice.invoiceUrl! };
+  } catch (xenditError) {
+    console.error(
+      "Xendit retry error:",
+      JSON.stringify(xenditError, Object.getOwnPropertyNames(xenditError)),
+    );
+    const message =
+      xenditError instanceof Error
+        ? xenditError.message
+        : "Failed to create payment invoice";
+    return { error: message, success: false };
+  }
 }
 
 export async function submitApplication(
