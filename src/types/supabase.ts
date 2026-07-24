@@ -338,6 +338,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "pending"
+        | "payment_failed"
       document_format:
         | "pdf"
         | "doc"
@@ -511,6 +512,7 @@ export const Constants = {
         "approved",
         "rejected",
         "pending",
+        "payment_failed",
       ],
       document_format: [
         "pdf",
