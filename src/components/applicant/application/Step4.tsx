@@ -24,7 +24,7 @@ export function Step4({
         <p className="text-sm text-neutral-500 leading-relaxed">
           Please prepare and upload clear digital copies of the following
           required documents to finalize your SRRV application. Accepted
-          formats: PDF, DOC, DOCX, JPG, PNG, GIF, BMP, WEBP, TIFF.
+          formats: PDF, JPG, PNG, GIF, BMP, WEBP, TIFF.
         </p>
       </div>
 

@@ -18,16 +18,12 @@ const ACCEPTED_IMAGE_TYPES = [
 ];
 const ACCEPTED_DOC_TYPES = [
   "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 const ALL_ACCEPTED_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_DOC_TYPES];
 
 // Also support file extensions for fallback
 const ACCEPTED_EXTENSIONS = [
   ".pdf",
-  ".doc",
-  ".docx",
   ".jpg",
   ".jpeg",
   ".png",
@@ -79,7 +75,7 @@ export function UploadRow({
 
     if (!isValidFileType(f)) {
       setInternalError(
-        "Invalid file type. Please upload a PDF, DOC, DOCX, or image file (JPG, PNG, GIF, BMP, WEBP, TIFF).",
+        "Invalid file type. Please upload a PDF or image file (JPG, PNG, GIF, BMP, WEBP, TIFF).",
       );
       e.target.value = "";
       return;
@@ -133,7 +129,7 @@ export function UploadRow({
           ref={inputRef}
           type="file"
           className="hidden"
-          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
           onChange={handleFileChange}
         />
         <Button
