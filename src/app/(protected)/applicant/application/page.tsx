@@ -1,11 +1,9 @@
 "use client";
 
-import Image from "next/image";
-import markerImage from "@/assets/images/marker.png";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Mail, Phone, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +15,7 @@ import { Step3 } from "@/components/applicant/application/Step3";
 import { Step4 } from "@/components/applicant/application/Step4";
 import { Step5 } from "@/components/applicant/application/Step5";
 import { Step6 } from "@/components/applicant/application/Step6";
+import { ApplicationSidebar } from "@/components/applicant/application/application-sidebar";
 import { useSRRVApplicationForm } from "@/hooks/applicant/application/useApplicationForm";
 
 import {
@@ -230,62 +229,7 @@ export default function SRRVApplicationPage() {
           </Card>
         </div>
 
-        {/* ── Right Sidebar ── */}
-        <div className="flex flex-col gap-5">
-          <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
-            <CardContent className="p-4">
-              <h2 className="text-lg font-semibold text-[#8B1A2B] mb-1">
-                Application Support
-              </h2>
-              <p className="text-sm text-neutral-500 mb-3 leading-relaxed">
-                Need assistance with your SRRV application? Our consultants are
-                available for real-time guidance.
-              </p>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start gap-3">
-                  <Mail className="w-4 h-4 mt-0.5 text-neutral-500 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-neutral-800">
-                      Email Assistance
-                    </p>
-                    <p className="text-sm text-neutral-500">
-                      support@heritagetrust.ph
-                    </p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-start gap-3">
-                  <Phone className="w-4 h-4 mt-0.5 text-neutral-500 shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-neutral-800">
-                      Phone Hotline
-                    </p>
-                    <p className="text-sm text-neutral-500">+63 2 8812 3456</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white overflow-hidden">
-            <CardContent className="p-4 flex flex-col gap-3">
-              <div className="relative w-full h-56 rounded-xl overflow-hidden">
-                <Image
-                  src={markerImage}
-                  alt="Authorized PRB Marketer seal"
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-neutral-200/60 to-transparent" />
-              </div>
-              <p className="text-xs font-semibold tracking-widest text-neutral-500 text-center uppercase">
-                Authorized PRB Marketer
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <ApplicationSidebar />
       </div>
 
       <AlertDialog open={showConfirm} onOpenChange={(open) => !open && cancelSubmit()}>
