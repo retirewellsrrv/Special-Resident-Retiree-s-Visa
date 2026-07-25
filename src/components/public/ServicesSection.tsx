@@ -1,5 +1,5 @@
 import { FileText, TrendingUp, MapPin } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import type { LucideIcon } from "lucide-react";
 
 interface Service {
@@ -11,15 +11,21 @@ interface Service {
 const services: Service[] = [
   {
     icon: FileText,
-    title: "The Retire Well Advantage",
+    title: "SRRV Visa Application Support",
     description:
-      "We eliminate administrative guesswork. We pre-vet your paperwork, manage your bank remittances, and track your application directly through the pipeline.",
+"Expert guidance through the entire visa process, ensuring all documentation meets PRA standards for a hassle-free experience."
   },
   {
-    icon: MapPin,
+    icon: TrendingUp,
     title: "VIP On-the-Ground Concierge",
     description:
-      "Absolute peace of mind. We physically guide you through your medical clearance, handle your local ID processing, and stand by your side at the official PRA induction ceremony.",
+"Strategic marketing solutions designed to help retirement-focused businesses connect with expats, retirees, and international clients through targeted campaigns and effective growth strategies."
+  },
+    {
+    icon: MapPin,
+    title: "Relocation Concierge",
+    description:
+"Personalized assistance in finding your ideal home, exploring retirement-friendly communities, navigating local services, and settling into your new life in the Philippines."
   },
 ];
 
