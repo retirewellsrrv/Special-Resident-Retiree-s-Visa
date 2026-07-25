@@ -32,66 +32,89 @@ export type Database = {
         }
         Relationships: []
       }
+      applicant_profiles: {
+        Row: {
+          application_id: number | null
+          civil_status: Database["public"]["Enums"]["marital_status"]
+          date_of_birth: string
+          gender: Database["public"]["Enums"]["sex"]
+          height: number
+          id: number
+          name: string
+          nationality: string
+          place_of_birth: string
+          religion: string
+          weight: number
+        }
+        Insert: {
+          application_id?: number | null
+          civil_status: Database["public"]["Enums"]["marital_status"]
+          date_of_birth: string
+          gender: Database["public"]["Enums"]["sex"]
+          height: number
+          id: number
+          name: string
+          nationality: string
+          place_of_birth: string
+          religion: string
+          weight: number
+        }
+        Update: {
+          application_id?: number | null
+          civil_status?: Database["public"]["Enums"]["marital_status"]
+          date_of_birth?: string
+          gender?: Database["public"]["Enums"]["sex"]
+          height?: number
+          id?: number
+          name?: string
+          nationality?: string
+          place_of_birth?: string
+          religion?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_profiles_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_code: string
-          city: string
-          country: string
           created_at: string
-          emergency_name: string | null
-          emergency_phone: string | null
-          emergency_relationship: string | null
+          future_plans: Database["public"]["Enums"]["future_plan"] | null
           id: number
           payment_id: number | null
-          ph_address: string | null
-          phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
-          state: string
           status: Database["public"]["Enums"]["application_status"]
-          street: string
           updated_at: string
           user_id: string
-          zip: string
         }
         Insert: {
           application_code: string
-          city: string
-          country: string
           created_at?: string
-          emergency_name?: string | null
-          emergency_phone?: string | null
-          emergency_relationship?: string | null
-          id?: number
+          future_plans?: Database["public"]["Enums"]["future_plan"] | null
+          id: number
           payment_id?: number | null
-          ph_address?: string | null
-          phone_number: string
           service_type: Database["public"]["Enums"]["service_type"]
-          state: string
           status?: Database["public"]["Enums"]["application_status"]
-          street: string
           updated_at?: string
           user_id: string
-          zip: string
         }
         Update: {
           application_code?: string
-          city?: string
-          country?: string
           created_at?: string
-          emergency_name?: string | null
-          emergency_phone?: string | null
-          emergency_relationship?: string | null
+          future_plans?: Database["public"]["Enums"]["future_plan"] | null
           id?: number
           payment_id?: number | null
-          ph_address?: string | null
-          phone_number?: string
           service_type?: Database["public"]["Enums"]["service_type"]
-          state?: string
           status?: Database["public"]["Enums"]["application_status"]
-          street?: string
           updated_at?: string
           user_id?: string
-          zip?: string
         }
         Relationships: [
           {
@@ -100,13 +123,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "payments"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "applications_service_type_fkey"
-            columns: ["service_type"]
-            isOneToOne: false
-            referencedRelation: "service_plans"
-            referencedColumns: ["type"]
           },
           {
             foreignKeyName: "applications_user_id_fkey"
@@ -146,6 +162,88 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      contacts: {
+        Row: {
+          application_id: number | null
+          email: string
+          fax_no: string | null
+          home_country_address: string
+          id: number
+          mobile_no: string
+          primary_address_ph: string | null
+          secondary_address_ph: string | null
+          tel_no: string | null
+        }
+        Insert: {
+          application_id?: number | null
+          email: string
+          fax_no?: string | null
+          home_country_address: string
+          id: number
+          mobile_no: string
+          primary_address_ph?: string | null
+          secondary_address_ph?: string | null
+          tel_no?: string | null
+        }
+        Update: {
+          application_id?: number | null
+          email?: string
+          fax_no?: string | null
+          home_country_address?: string
+          id?: number
+          mobile_no?: string
+          primary_address_ph?: string | null
+          secondary_address_ph?: string | null
+          tel_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dependents: {
+        Row: {
+          age: number
+          application_id: number | null
+          id: number
+          is_included: boolean
+          name: string
+          passport_no: string
+          relationship: string
+        }
+        Insert: {
+          age: number
+          application_id?: number | null
+          id: number
+          is_included?: boolean
+          name: string
+          passport_no: string
+          relationship: string
+        }
+        Update: {
+          age?: number
+          application_id?: number | null
+          id?: number
+          is_included?: boolean
+          name?: string
+          passport_no?: string
+          relationship?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dependents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -194,6 +292,152 @@ export type Database = {
           },
         ]
       }
+      educations: {
+        Row: {
+          application_id: number | null
+          end_date: string
+          id: number
+          location: string
+          school: string
+          start_date: string
+        }
+        Insert: {
+          application_id?: number | null
+          end_date: string
+          id: number
+          location: string
+          school: string
+          start_date: string
+        }
+        Update: {
+          application_id?: number | null
+          end_date?: string
+          id?: number
+          location?: string
+          school?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "educations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_contacts: {
+        Row: {
+          application_id: number | null
+          id: number
+          name: string
+          phone_no: string
+          relationship: string
+        }
+        Insert: {
+          application_id?: number | null
+          id: number
+          name: string
+          phone_no: string
+          relationship: string
+        }
+        Update: {
+          application_id?: number | null
+          id?: number
+          name?: string
+          phone_no?: string
+          relationship?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employments: {
+        Row: {
+          application_id: number | null
+          company_address: string | null
+          company_name: string | null
+          contact_no: string | null
+          end_date: string | null
+          id: number
+          is_current: boolean | null
+          job_title: string | null
+          start_date: string | null
+        }
+        Insert: {
+          application_id?: number | null
+          company_address?: string | null
+          company_name?: string | null
+          contact_no?: string | null
+          end_date?: string | null
+          id: number
+          is_current?: boolean | null
+          job_title?: string | null
+          start_date?: string | null
+        }
+        Update: {
+          application_id?: number | null
+          company_address?: string | null
+          company_name?: string | null
+          contact_no?: string | null
+          end_date?: string | null
+          id?: number
+          is_current?: boolean | null
+          job_title?: string | null
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employments_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_backgrounds: {
+        Row: {
+          application_id: number | null
+          father_age: number | null
+          father_name: string
+          id: number
+          mother_age: number | null
+          mother_name: string
+        }
+        Insert: {
+          application_id?: number | null
+          father_age?: number | null
+          father_name: string
+          id: number
+          mother_age?: number | null
+          mother_name: string
+        }
+        Update: {
+          application_id?: number | null
+          father_age?: number | null
+          father_name?: string
+          id?: number
+          mother_age?: number | null
+          mother_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_backgrounds_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           id: number
@@ -220,6 +464,41 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "client_profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      passports: {
+        Row: {
+          application_id: number | null
+          date_of_issue: string
+          expiration: string
+          id: number
+          passport_number: string
+          place_of_issue: string
+        }
+        Insert: {
+          application_id?: number | null
+          date_of_issue: string
+          expiration: string
+          id: number
+          passport_number: string
+          place_of_issue: string
+        }
+        Update: {
+          application_id?: number | null
+          date_of_issue?: string
+          expiration?: string
+          id?: number
+          passport_number?: string
+          place_of_issue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passports_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -324,6 +603,38 @@ export type Database = {
         }
         Relationships: []
       }
+      visa_details: {
+        Row: {
+          application_id: number | null
+          date_of_arrival: string | null
+          entry_visa_type: Database["public"]["Enums"]["visa_type"] | null
+          exp_date_tourist_visa: string | null
+          id: number
+        }
+        Insert: {
+          application_id?: number | null
+          date_of_arrival?: string | null
+          entry_visa_type?: Database["public"]["Enums"]["visa_type"] | null
+          exp_date_tourist_visa?: string | null
+          id: number
+        }
+        Update: {
+          application_id?: number | null
+          date_of_arrival?: string | null
+          entry_visa_type?: Database["public"]["Enums"]["visa_type"] | null
+          exp_date_tourist_visa?: string | null
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_details_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -368,6 +679,7 @@ export type Database = {
         | "proof_payment"
         | "proof_pension"
         | "proof_relationship"
+      future_plan: "tourism" | "investment" | "employment" | "others"
       marital_status: "single" | "married" | "widowed" | "divorced"
       payment_methods:
         | "pool"
@@ -389,6 +701,13 @@ export type Database = {
         | "failed"
       service_type: "basic" | "premium" | "vip"
       sex: "male" | "female"
+      visa_type:
+        | "tourist"
+        | "working"
+        | "investment"
+        | "missionary"
+        | "student"
+        | "others"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -556,6 +875,7 @@ export const Constants = {
         "proof_pension",
         "proof_relationship",
       ],
+      future_plan: ["tourism", "investment", "employment", "others"],
       marital_status: ["single", "married", "widowed", "divorced"],
       payment_methods: [
         "pool",
@@ -579,6 +899,14 @@ export const Constants = {
       ],
       service_type: ["basic", "premium", "vip"],
       sex: ["male", "female"],
+      visa_type: [
+        "tourist",
+        "working",
+        "investment",
+        "missionary",
+        "student",
+        "others",
+      ],
     },
   },
 } as const
