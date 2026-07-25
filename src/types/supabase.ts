@@ -37,12 +37,10 @@ export type Database = {
           application_id: number | null
           civil_status: Database["public"]["Enums"]["marital_status"]
           date_of_birth: string
-          first_name: string
           gender: Database["public"]["Enums"]["sex"]
           height: number
           id: number
-          last_name: string
-          middle_name: string
+          name: string
           nationality: string
           place_of_birth: string
           religion: string
@@ -52,12 +50,10 @@ export type Database = {
           application_id?: number | null
           civil_status: Database["public"]["Enums"]["marital_status"]
           date_of_birth: string
-          first_name: string
           gender: Database["public"]["Enums"]["sex"]
           height: number
-          id?: number
-          last_name: string
-          middle_name: string
+          id: number
+          name: string
           nationality: string
           place_of_birth: string
           religion: string
@@ -67,12 +63,10 @@ export type Database = {
           application_id?: number | null
           civil_status?: Database["public"]["Enums"]["marital_status"]
           date_of_birth?: string
-          first_name?: string
           gender?: Database["public"]["Enums"]["sex"]
           height?: number
           id?: number
-          last_name?: string
-          middle_name?: string
+          name?: string
           nationality?: string
           place_of_birth?: string
           religion?: string
@@ -92,9 +86,10 @@ export type Database = {
         Row: {
           application_code: string
           created_at: string
-          future_plans: string | null
+          future_plans: Database["public"]["Enums"]["future_plan"] | null
           id: number
           payment_id: number | null
+          service_type: Database["public"]["Enums"]["service_type"]
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
           user_id: string
@@ -102,9 +97,10 @@ export type Database = {
         Insert: {
           application_code: string
           created_at?: string
-          future_plans?: string | null
-          id?: number
+          future_plans?: Database["public"]["Enums"]["future_plan"] | null
+          id: number
           payment_id?: number | null
+          service_type: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           user_id: string
@@ -112,9 +108,10 @@ export type Database = {
         Update: {
           application_code?: string
           created_at?: string
-          future_plans?: string | null
+          future_plans?: Database["public"]["Enums"]["future_plan"] | null
           id?: number
           payment_id?: number | null
+          service_type?: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           user_id?: string
@@ -183,7 +180,7 @@ export type Database = {
           email: string
           fax_no?: string | null
           home_country_address: string
-          id?: number
+          id: number
           mobile_no: string
           primary_address_ph?: string | null
           secondary_address_ph?: string | null
@@ -223,7 +220,7 @@ export type Database = {
         Insert: {
           age: number
           application_id?: number | null
-          id?: number
+          id: number
           is_included?: boolean
           name: string
           passport_no: string
@@ -307,7 +304,7 @@ export type Database = {
         Insert: {
           application_id?: number | null
           end_date: string
-          id?: number
+          id: number
           location: string
           school: string
           start_date: string
@@ -340,7 +337,7 @@ export type Database = {
         }
         Insert: {
           application_id?: number | null
-          id?: number
+          id: number
           name: string
           phone_no: string
           relationship: string
@@ -380,7 +377,7 @@ export type Database = {
           company_name?: string | null
           contact_no?: string | null
           end_date?: string | null
-          id?: number
+          id: number
           is_current?: boolean | null
           job_title?: string | null
           start_date?: string | null
@@ -419,7 +416,7 @@ export type Database = {
           application_id?: number | null
           father_age?: number | null
           father_name: string
-          id?: number
+          id: number
           mother_age?: number | null
           mother_name: string
         }
@@ -483,7 +480,7 @@ export type Database = {
           application_id?: number | null
           date_of_issue: string
           expiration: string
-          id?: number
+          id: number
           passport_number: string
           place_of_issue: string
         }
@@ -607,21 +604,21 @@ export type Database = {
         Row: {
           application_id: number | null
           date_of_arrival: string | null
-          entry_visa_type: string | null
+          entry_visa_type: Database["public"]["Enums"]["visa_type"] | null
           exp_date_tourist_visa: string | null
           id: number
         }
         Insert: {
           application_id?: number | null
           date_of_arrival?: string | null
-          entry_visa_type?: string | null
+          entry_visa_type?: Database["public"]["Enums"]["visa_type"] | null
           exp_date_tourist_visa?: string | null
-          id?: number
+          id: number
         }
         Update: {
           application_id?: number | null
           date_of_arrival?: string | null
-          entry_visa_type?: string | null
+          entry_visa_type?: Database["public"]["Enums"]["visa_type"] | null
           exp_date_tourist_visa?: string | null
           id?: number
         }
@@ -679,6 +676,7 @@ export type Database = {
         | "proof_payment"
         | "proof_pension"
         | "proof_relationship"
+      future_plan: "tourism" | "investment" | "employment" | "others"
       marital_status: "single" | "married" | "widowed" | "divorced"
       payment_methods:
         | "pool"
@@ -699,6 +697,13 @@ export type Database = {
         | "success"
         | "failed"
       sex: "male" | "female"
+      visa_type:
+        | "tourist"
+        | "working"
+        | "investment"
+        | "missionary"
+        | "student"
+        | "others"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -866,6 +871,7 @@ export const Constants = {
         "proof_pension",
         "proof_relationship",
       ],
+      future_plan: ["tourism", "investment", "employment", "others"],
       marital_status: ["single", "married", "widowed", "divorced"],
       payment_methods: [
         "pool",
@@ -888,6 +894,14 @@ export const Constants = {
         "failed",
       ],
       sex: ["male", "female"],
+      visa_type: [
+        "tourist",
+        "working",
+        "investment",
+        "missionary",
+        "student",
+        "others",
+      ],
     },
   },
 } as const
