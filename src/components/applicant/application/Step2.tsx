@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,6 +82,20 @@ export function Step2({
     );
   };
 
+  useEffect(() => {
+    if (data.family_members.length === 0) {
+      const next: FamilyMember = {
+        id: crypto.randomUUID(),
+        full_name: "",
+        relationship: "",
+        age: "",
+        passport_no: "",
+        include: true,
+      };
+      onChange("family_members", [next]);
+    }
+  }, []);
+
   return (
     <>
       <div className="mb-6">
@@ -100,7 +114,7 @@ export function Step2({
       <div className="border-t border-red-200 mb-6" />
       <div className="mb-6">
         <Label htmlFor="home_country_address" className={LABEL_CLASS}>
-          Home Country Address (Please specify)
+          Home Country Address (Please specify) <span className="text-red-500">*</span>
         </Label>
         <Textarea
           id="home_country_address"
@@ -166,9 +180,14 @@ export function Step2({
           <Input
             id="telephone_number"
             type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="Include country and area code"
             value={data.telephone_number}
-            onChange={(e) => onChange("telephone_number", e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              onChange("telephone_number", value);
+            }}
             className={cn(
               INPUT_CLASS,
               errors.telephone_number && "border-red-500",
@@ -187,9 +206,14 @@ export function Step2({
           <Input
             id="fax_number"
             type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="Include country and area code"
             value={data.fax_number}
-            onChange={(e) => onChange("fax_number", e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              onChange("fax_number", value);
+            }}
             className={INPUT_CLASS}
           />
         </div>
@@ -198,14 +222,19 @@ export function Step2({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
         <div>
           <Label htmlFor="mobile_number" className={LABEL_CLASS}>
-            Mobile Number
+            Mobile Number <span className="text-red-500">*</span>
           </Label>
           <Input
             id="mobile_number"
             type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="Include country code"
             value={data.mobile_number}
-            onChange={(e) => onChange("mobile_number", e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              onChange("mobile_number", value);
+            }}
             className={cn(
               INPUT_CLASS,
               errors.mobile_number && "border-red-500",
@@ -219,7 +248,7 @@ export function Step2({
         </div>
         <div>
           <Label htmlFor="email" className={LABEL_CLASS}>
-            E-mail
+            E-mail <span className="text-red-500">*</span>
           </Label>
           <Input
             id="email"
@@ -322,7 +351,7 @@ export function Step2({
                     placeholder="Enter name"
                     value={member.full_name}
                     onChange={(e) =>
-                      updateFamilyMember(member.id, "full_name", e.target.value)
+                      updateFamilyMember(member.id, "full_name", e.target.value.replace(/[0-9]/g, ""))
                     }
                     className={INPUT_CLASS}
                   />
@@ -335,7 +364,7 @@ export function Step2({
                       updateFamilyMember(
                         member.id,
                         "relationship",
-                        e.target.value,
+                        e.target.value.replace(/[0-9]/g, ""),
                       )
                     }
                     className={INPUT_CLASS}

@@ -208,7 +208,7 @@ export function Step1({
             id="middle_name"
             placeholder="Middle name or alias"
             value={data.middle_name}
-            onChange={(e) => onChange("middle_name", e.target.value)}
+            onChange={(e) => onChange("middle_name", e.target.value.replace(/[0-9]/g, ""))}
             className={cn(INPUT_CLASS, errors.middle_name && "border-red-500")}
           />
           {errors.middle_name && (
@@ -246,7 +246,7 @@ export function Step1({
             id="place_of_birth"
             placeholder="e.g. Manila, Philippines"
             value={data.place_of_birth}
-            onChange={(e) => onChange("place_of_birth", e.target.value)}
+            onChange={(e) => onChange("place_of_birth", e.target.value.replace(/[0-9]/g, ""))}
             className={cn(INPUT_CLASS, errors.place_of_birth && "border-red-500")}
           />
           {errors.place_of_birth && (
@@ -286,7 +286,7 @@ export function Step1({
             id="religion"
             placeholder="e.g. Roman Catholic"
             value={data.religion}
-            onChange={(e) => onChange("religion", e.target.value)}
+            onChange={(e) => onChange("religion", e.target.value.replace(/[0-9]/g, ""))}
             className={cn(INPUT_CLASS, errors.religion && "border-red-500")}
           />
           {errors.religion && (
