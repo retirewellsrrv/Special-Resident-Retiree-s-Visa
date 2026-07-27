@@ -274,7 +274,6 @@ export function DashboardClient({ stats }: Props) {
                     <p className="text-sm font-medium text-brand-neutral-900 truncate">{app.applicant_name}</p>
                     <p className="text-xs text-brand-neutral-400 truncate mt-0.5">{app.application_code}</p>
                   </div>
-                  <span className="text-xs text-brand-neutral-400 capitalize">{app.service_type}</span>
                   <StatusChip status={app.status} />
                   <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-300 shrink-0" />
                 </button>

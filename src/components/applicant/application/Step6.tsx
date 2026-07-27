@@ -19,12 +19,6 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "text-yellow-600 bg-yellow-50",
 };
 
-const SERVICE_LABELS: Record<string, string> = {
-  basic: "Basic",
-  premium: "Premium",
-  vip: "VIP",
-};
-
 function Field({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
@@ -111,13 +105,6 @@ export function Step6({ data }: { data: ExistingApplicationData }) {
           <Field label="Contact Name" value={application.emergency_name ?? ""} />
           <Field label="Relationship" value={application.emergency_relationship ?? ""} />
           <Field label="Phone Number" value={application.emergency_phone ?? ""} />
-        </Section>
-
-        <Section title="Service Selection">
-          <Field
-            label="Selected Plan"
-            value={SERVICE_LABELS[application.service_type] ?? application.service_type}
-          />
         </Section>
 
         <div>

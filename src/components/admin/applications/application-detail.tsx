@@ -78,8 +78,7 @@ export function ApplicationDetail({ detail, onStatusChange }: Props) {
           <div>
             <h3 className="text-lg font-semibold text-brand-neutral-900">{detail.applicant_name}</h3>
             <p className="text-xs text-brand-neutral-400 mt-0.5">
-              {detail.application_code} &middot;{' '}
-              <span className="capitalize">{detail.service_type}</span>
+              {detail.application_code}
             </p>
           </div>
           <StatusChip status={detail.status} />
@@ -109,16 +108,6 @@ export function ApplicationDetail({ detail, onStatusChange }: Props) {
               </div>
             </section>
           )}
-
-          <section className="px-5 py-4 space-y-3">
-            <h4 className="text-xs font-semibold text-brand-neutral-400 uppercase tracking-wider">Service Plan</h4>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-              <InfoRow label="Plan" value={detail.service_plan_name ?? detail.service_type} className="capitalize" />
-              {detail.service_plan_price !== null && (
-                <InfoRow label="Price" value={`$${Number(detail.service_plan_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} />
-              )}
-            </div>
-          </section>
 
           {detail.payment && (
             <section className="px-5 py-4 space-y-3">

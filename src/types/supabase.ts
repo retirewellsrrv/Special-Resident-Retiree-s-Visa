@@ -86,10 +86,9 @@ export type Database = {
         Row: {
           application_code: string
           created_at: string
-          future_plans: Database["public"]["Enums"]["future_plan"] | null
+          future_plans: string | null
           id: number
           payment_id: number | null
-          service_type: Database["public"]["Enums"]["service_type"]
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
           user_id: string
@@ -97,10 +96,9 @@ export type Database = {
         Insert: {
           application_code: string
           created_at?: string
-          future_plans?: Database["public"]["Enums"]["future_plan"] | null
+          future_plans?: string | null
           id: number
           payment_id?: number | null
-          service_type: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           user_id: string
@@ -108,10 +106,9 @@ export type Database = {
         Update: {
           application_code?: string
           created_at?: string
-          future_plans?: Database["public"]["Enums"]["future_plan"] | null
+          future_plans?: string | null
           id?: number
           payment_id?: number | null
-          service_type?: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           user_id?: string
@@ -555,7 +552,6 @@ export type Database = {
           price_note: string | null
           subtitle: string
           tags: string[]
-          type: Database["public"]["Enums"]["service_type"]
           updated_at: string
         }
         Insert: {
@@ -569,7 +565,6 @@ export type Database = {
           price_note?: string | null
           subtitle: string
           tags?: string[]
-          type: Database["public"]["Enums"]["service_type"]
           updated_at?: string
         }
         Update: {
@@ -583,7 +578,6 @@ export type Database = {
           price_note?: string | null
           subtitle?: string
           tags?: string[]
-          type?: Database["public"]["Enums"]["service_type"]
           updated_at?: string
         }
         Relationships: []
@@ -607,21 +601,21 @@ export type Database = {
         Row: {
           application_id: number | null
           date_of_arrival: string | null
-          entry_visa_type: Database["public"]["Enums"]["visa_type"] | null
+          entry_visa_type: string | null
           exp_date_tourist_visa: string | null
           id: number
         }
         Insert: {
           application_id?: number | null
           date_of_arrival?: string | null
-          entry_visa_type?: Database["public"]["Enums"]["visa_type"] | null
+          entry_visa_type?: string | null
           exp_date_tourist_visa?: string | null
           id: number
         }
         Update: {
           application_id?: number | null
           date_of_arrival?: string | null
-          entry_visa_type?: Database["public"]["Enums"]["visa_type"] | null
+          entry_visa_type?: string | null
           exp_date_tourist_visa?: string | null
           id?: number
         }
@@ -679,7 +673,6 @@ export type Database = {
         | "proof_payment"
         | "proof_pension"
         | "proof_relationship"
-      future_plan: "tourism" | "investment" | "employment" | "others"
       marital_status: "single" | "married" | "widowed" | "divorced"
       payment_methods:
         | "pool"
@@ -699,15 +692,7 @@ export type Database = {
         | "cancelled"
         | "success"
         | "failed"
-      service_type: "basic" | "premium" | "vip"
       sex: "male" | "female"
-      visa_type:
-        | "tourist"
-        | "working"
-        | "investment"
-        | "missionary"
-        | "student"
-        | "others"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -875,7 +860,6 @@ export const Constants = {
         "proof_pension",
         "proof_relationship",
       ],
-      future_plan: ["tourism", "investment", "employment", "others"],
       marital_status: ["single", "married", "widowed", "divorced"],
       payment_methods: [
         "pool",
@@ -897,16 +881,7 @@ export const Constants = {
         "success",
         "failed",
       ],
-      service_type: ["basic", "premium", "vip"],
       sex: ["male", "female"],
-      visa_type: [
-        "tourist",
-        "working",
-        "investment",
-        "missionary",
-        "student",
-        "others",
-      ],
     },
   },
 } as const

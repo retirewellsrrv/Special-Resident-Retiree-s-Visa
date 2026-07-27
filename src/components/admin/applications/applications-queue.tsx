@@ -57,9 +57,6 @@ export function ApplicationQueue({ rows, stats, selectedId, onSelect }: Props) {
                     <p className="text-xs text-brand-neutral-400 truncate mt-0.5">
                       {row.application_code}
                     </p>
-                    <p className="text-[11px] text-brand-neutral-300 truncate mt-0.5 capitalize">
-                      {row.service_plan_name ?? row.service_type}
-                    </p>
                   </div>
                   <StatusChip status={row.status} className="shrink-0" />
                 </div>

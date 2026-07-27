@@ -21,18 +21,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 
-type ServiceType = 'basic' | 'premium' | 'vip'
-
-function TypeBadge({ type }: { type: string }) {
-  const base = 'inline-block rounded-md px-2.5 py-0.5 text-xs font-medium capitalize'
-  if (type === 'vip' || type === 'premium') {
-    return <span className={`${base} bg-brand-primary-50 text-brand-primary-800 border border-brand-primary-100`}>{type}</span>
-  }
-  return <span className={`${base} bg-brand-neutral-100 text-brand-neutral-500 border border-brand-neutral-200`}>{type}</span>
-}
-
 interface EditState {
-  type: ServiceType
   name: string
   subtitle: string
   price: string
@@ -47,22 +36,18 @@ interface Props {
   services: ServicePlan[]
 }
 
-type SortKey = 'type' | 'name' | 'price' | 'highlighted' | 'is_available'
-
-const TYPE_ORDER: Record<string, number> = { basic: 0, premium: 1, vip: 2 }
+type SortKey = 'name' | 'price' | 'highlighted' | 'is_available'
 
 export function ServiceTable({ services }: Props) {
   const [, startTransition] = useTransition()
-  const [sortKey, setSortKey] = useState<SortKey>('type')
+  const [sortKey, setSortKey] = useState<SortKey>('name')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
   const sorted = useMemo(() => {
     if (!sortKey) return services
     const sorted = [...services].sort((a, b) => {
       let cmp = 0
-      if (sortKey === 'type') {
-        cmp = (TYPE_ORDER[a.type] ?? 0) - (TYPE_ORDER[b.type] ?? 0)
-      } else if (sortKey === 'highlighted' || sortKey === 'is_available') {
+      if (sortKey === 'highlighted' || sortKey === 'is_available') {
         cmp = Number(a[sortKey]) - Number(b[sortKey])
       } else {
         const va = a[sortKey]
@@ -117,7 +102,6 @@ export function ServiceTable({ services }: Props) {
   function startEdit(service: ServicePlan) {
     setEditingId(service.id)
     setEditState({
-      type: service.type as ServiceType,
       name: service.name,
       subtitle: service.subtitle,
       price: String(service.price),
@@ -161,7 +145,6 @@ export function ServiceTable({ services }: Props) {
     setSavingIds((prev) => new Set(prev).add(id))
     startTransition(async () => {
       const result = await updateServicePlan(id, {
-        type: editState.type,
         name: editState.name.trim(),
         subtitle: editState.subtitle.trim(),
         price: parsedPrice,
@@ -205,7 +188,6 @@ export function ServiceTable({ services }: Props) {
       <table className="w-full border-collapse text-sm" style={{ tableLayout: 'fixed' }}>
         <thead>
           <tr className="bg-brand-neutral-50 border-b border-brand-neutral-200">
-            <SortHeader label="Type" column="type" />
             <SortHeader label="Name" column="name" className="w-28" />
             <th className="px-3 py-2.5 text-left text-xs font-medium text-brand-neutral-400">Subtitle</th>
             <SortHeader label="Price" column="price" className="w-32" />
@@ -218,7 +200,7 @@ export function ServiceTable({ services }: Props) {
         <tbody className="divide-y divide-brand-neutral-100">
           {services.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-3 py-12 text-center text-sm text-brand-neutral-400">
+              <td colSpan={6} className="px-3 py-12 text-center text-sm text-brand-neutral-400">
                 No service plans yet. Click "Add service plan" to create one.
               </td>
             </tr>
@@ -233,21 +215,6 @@ export function ServiceTable({ services }: Props) {
 
               return (
                 <tr key={service.id} className={`${isDeleting ? 'opacity-40' : ''} hover:bg-brand-neutral-50/50 transition-colors`}>
-                  <td className="px-3 py-3">
-                    {isEditing ? (
-                      <Select value={editState!.type} onValueChange={(v) => setEditState((p) => ({ ...p!, type: v as ServiceType }))}>
-                        <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {(['basic', 'premium', 'vip'] as ServiceType[]).map((t) => (
-                            <SelectItem key={t} value={t} className="capitalize text-xs">{t}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <TypeBadge type={service.type} />
-                    )}
-                  </td>
-
                   <td className="px-3 py-3 font-medium text-brand-neutral-900 text-sm">
                     {isEditing ? (
                       <Input className="h-7 text-xs" value={editState!.name} onChange={(e) => setEditState((p) => ({ ...p!, name: e.target.value }))} />

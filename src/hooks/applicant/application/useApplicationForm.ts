@@ -1,28 +1,52 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { ApplicationFormInput, ServiceType } from "@/schemas/application";
+import type { ApplicationFormInput } from "@/schemas/application";
 import { applicationFormSchema } from "@/schemas/application";
 import type { DocumentType } from "@/schemas/document";
 import { step4FormSchema } from "@/schemas/document";
-import { submitApplication, getApplicantProfile, getExistingApplication } from "@/actions/applicant/application";
+import { submitApplication, getExistingApplication } from "@/actions/applicant/application";
 import type { ExistingApplicationData } from "@/actions/applicant/application";
 import { saveFile, loadFile, clearAllFiles } from "@/lib/file-store";
+import type { FamilyMember } from "@/components/applicant/application/Step2";
+import type { EducationEntry, EmploymentEntry } from "@/components/applicant/application/Step1";
 
 type Step1Data = {
-  [K in keyof Pick<
-    ApplicationFormInput,
-    "name" | "birthday" | "sex" | "nationality" | "marital_status"
-  >]: string;
+  last_name: string;
+  first_name: string;
+  middle_name: string;
+  birthday: string;
+  place_of_birth: string;
+  sex: string;
+  religion: string;
+  nationality: string;
+  marital_status: string;
+  height: string;
+  weight: string;
+  passport_number: string;
+  passport_place_of_issue: string;
+  passport_date_of_issue: string;
+  passport_valid_until: string;
+  future_plan: string;
+  future_plan_other: string;
+  date_of_arrival: string;
+  exp_date_tourist_visa: string;
+  entry_visa_type: string;
+  entry_visa_other: string;
+  educations: EducationEntry[];
+  employments: EmploymentEntry[];
 };
 type Step2Data = {
+  home_country_address: string;
+  ph_primary_address: string;
+  ph_secondary_address: string;
+  telephone_number: string;
+  fax_number: string;
+  mobile_number: string;
   email: string;
-  phone_number: string;
-  phone_dial_code: string;
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
-  country: string;
-  ph_address: string;
+  father_name: string;
+  father_age: string;
+  mother_name: string;
+  mother_age: string;
+  family_members: FamilyMember[];
   emergency_name: string;
   emergency_relationship: string;
   emergency_phone: string;
@@ -36,7 +60,6 @@ type PersistedState = {
   currentStep: number;
   step1Data: Step1Data;
   step2Data: Step2Data;
-  selectedService: ServiceType | "";
   paymentMethod: string;
   step4Names: Record<DocumentType, string>;
   submittedSteps: number[];
@@ -69,45 +92,54 @@ function clearPersistedState() {
   } catch { /* ignore */ }
 }
 
-/** Parse an E.164 phone (e.g. "+639123456789") into dial code + national number. */
-function parseAuthPhone(
-  phone: string,
-): { phone_dial_code: string; phone_number: string } | Record<string, never> {
-  if (!phone.startsWith("+")) return {};
-  for (let len = 1; len <= 3; len++) {
-    const code = phone.slice(0, len + 1);
-    const num = phone.slice(len + 1);
-    if (num.length >= 4 && /^\d+$/.test(num)) {
-      return { phone_dial_code: code, phone_number: num };
-    }
-  }
-  return {};
-}
+const STEP1_INIT: Step1Data = {
+  last_name: "",
+  first_name: "",
+  middle_name: "",
+  birthday: "",
+  place_of_birth: "",
+  sex: "",
+  religion: "",
+  nationality: "",
+  marital_status: "",
+  height: "",
+  weight: "",
+  passport_number: "",
+  passport_place_of_issue: "",
+  passport_date_of_issue: "",
+  passport_valid_until: "",
+  future_plan: "",
+  future_plan_other: "",
+  date_of_arrival: "",
+  exp_date_tourist_visa: "",
+  entry_visa_type: "",
+  entry_visa_other: "",
+  educations: [],
+  employments: [],
+};
+
+const STEP2_INIT: Step2Data = {
+  home_country_address: "",
+  ph_primary_address: "",
+  ph_secondary_address: "",
+  telephone_number: "",
+  fax_number: "",
+  mobile_number: "",
+  email: "",
+  father_name: "",
+  father_age: "",
+  mother_name: "",
+  mother_age: "",
+  family_members: [],
+  emergency_name: "",
+  emergency_relationship: "",
+  emergency_phone: "",
+};
 
 export function useSRRVApplicationForm() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [step1Data, setStep1Data] = useState<Step1Data>({
-    name: "",
-    birthday: "",
-    sex: "",
-    nationality: "",
-    marital_status: "",
-  });
-  const [step2Data, setStep2Data] = useState<Step2Data>({
-    email: "",
-    phone_number: "",
-    phone_dial_code: "+63",
-    street: "",
-    city: "",
-    state: "",
-    zip: "",
-    country: "",
-    ph_address: "",
-    emergency_name: "",
-    emergency_relationship: "",
-    emergency_phone: "",
-  });
-  const [selectedService, setSelectedService] = useState<ServiceType | "">("");
+  const [step1Data, setStep1Data] = useState<Step1Data>(STEP1_INIT);
+  const [step2Data, setStep2Data] = useState<Step2Data>(STEP2_INIT);
   const [paymentMethod, setPaymentMethod] = useState<string>("CREDIT_CARD");
 
   // Keys aligned to DocumentTypeEnum
@@ -133,18 +165,18 @@ export function useSRRVApplicationForm() {
   const [existingApplication, setExistingApplication] = useState<ExistingApplicationData | null>(null);
   const restored = useRef(false);
 
-  // ── Restore persisted state or pre-fill from profile ──────────────────────
+  // ── Restore persisted state ───────────────────────────────────────────
   useEffect(() => {
     setIsLoadingProfile(true);
 
     const saved = loadPersistedState();
 
-    Promise.all([getApplicantProfile(), getExistingApplication()])
-      .then(([profile, existing]) => {
+    getExistingApplication()
+      .then((existing) => {
         if (existing) {
           clearPersistedState();
           setExistingApplication(existing);
-          setCurrentStep(6);
+          setCurrentStep(5);
           return;
         }
 
@@ -153,7 +185,6 @@ export function useSRRVApplicationForm() {
           setCurrentStep(saved.currentStep);
           setStep1Data(saved.step1Data);
           setStep2Data(saved.step2Data);
-          setSelectedService(saved.selectedService);
           setPaymentMethod(saved.paymentMethod);
           setSubmittedSteps(new Set(saved.submittedSteps));
 
@@ -176,39 +207,8 @@ export function useSRRVApplicationForm() {
             }),
           );
 
-          // Merge profile data into empty fields (auto-fill)
-          if (profile) {
-            setStep1Data((prev) => ({
-              name: prev.name || profile.name,
-              birthday: prev.birthday || profile.birthday,
-              sex: prev.sex || profile.sex,
-              nationality: prev.nationality || profile.nationality,
-              marital_status: prev.marital_status || profile.marital_status,
-            }));
-            setStep2Data((prev) => ({
-              ...prev,
-              email: prev.email || profile.email,
-              ...(profile.phone && !prev.phone_number ? parseAuthPhone(profile.phone) : {}),
-            }));
-          }
           return;
         }
-
-        if (!profile) return;
-
-        setStep1Data({
-          name: profile.name,
-          birthday: profile.birthday,
-          sex: profile.sex,
-          nationality: profile.nationality,
-          marital_status: profile.marital_status,
-        });
-
-        setStep2Data((prev) => ({
-          ...prev,
-          email: profile.email,
-          ...(profile.phone ? parseAuthPhone(profile.phone) : {}),
-        }));
       })
       .finally(() => setIsLoadingProfile(false));
   }, []);
@@ -220,7 +220,6 @@ export function useSRRVApplicationForm() {
       currentStep,
       step1Data,
       step2Data,
-      selectedService,
       paymentMethod,
       step4Names: Object.fromEntries(
         Object.entries(step4Data).map(([k, v]) => [k, v.name]),
@@ -228,28 +227,44 @@ export function useSRRVApplicationForm() {
       submittedSteps: Array.from(submittedSteps),
     };
     savePersistedState(persisted);
-  }, [currentStep, step1Data, step2Data, selectedService, paymentMethod, step4Data, submittedSteps, existingApplication, isSubmitting]);
+  }, [currentStep, step1Data, step2Data, paymentMethod, step4Data, submittedSteps, existingApplication, isSubmitting]);
 
   // ── Zod validation for steps 1–3 ──────────────────────────────────────────
   const validateForm = useCallback((): Record<string, string> => {
     const formData = {
-      name: step1Data.name,
+      last_name: step1Data.last_name,
+      first_name: step1Data.first_name,
+      middle_name: step1Data.middle_name,
       birthday: step1Data.birthday,
+      place_of_birth: step1Data.place_of_birth,
       sex: step1Data.sex as "male" | "female" | "",
+      religion: step1Data.religion,
       nationality: step1Data.nationality,
       marital_status: step1Data.marital_status,
+      height: step1Data.height,
+      weight: step1Data.weight,
+      passport_number: step1Data.passport_number,
+      passport_place_of_issue: step1Data.passport_place_of_issue,
+      passport_date_of_issue: step1Data.passport_date_of_issue,
+      passport_valid_until: step1Data.passport_valid_until,
       email: step2Data.email,
-      phone_number: step2Data.phone_dial_code + step2Data.phone_number,
-      street: step2Data.street,
-      city: step2Data.city,
-      state: step2Data.state,
-      zip: step2Data.zip,
-      country: step2Data.country,
-      ph_address: step2Data.ph_address || null,
-      emergency_name: step2Data.emergency_name,
-      emergency_relationship: step2Data.emergency_relationship,
-      emergency_phone: step2Data.emergency_phone,
-      service_type: selectedService,
+      mobile_number: step2Data.mobile_number,
+      telephone_number: step2Data.telephone_number || null,
+      fax_number: step2Data.fax_number || null,
+      home_country_address: step2Data.home_country_address,
+      ph_primary_address: step2Data.ph_primary_address || null,
+      ph_secondary_address: step2Data.ph_secondary_address || null,
+      father_name: step2Data.father_name || null,
+      father_age: step2Data.father_age || null,
+      mother_name: step2Data.mother_name || null,
+      mother_age: step2Data.mother_age || null,
+      family_members: step2Data.family_members,
+      emergency_name: step2Data.emergency_name || null,
+      emergency_relationship: step2Data.emergency_relationship || null,
+      emergency_phone: step2Data.emergency_phone || null,
+      future_plan: step1Data.future_plan,
+      future_plan_other: step1Data.future_plan_other,
+
     };
 
     const result = applicationFormSchema.safeParse(formData);
@@ -266,7 +281,7 @@ export function useSRRVApplicationForm() {
     }
 
     return {};
-  }, [step1Data, step2Data, selectedService]);
+  }, [step1Data, step2Data]);
 
   // ── File validation for step 4 ─────────────────────────────────────────────
   const validateStep4 = useCallback((): Record<string, string> => {
@@ -291,22 +306,24 @@ export function useSRRVApplicationForm() {
       if (!submittedSteps.has(step)) return {};
 
       const stepFields: Record<number, string[]> = {
-        1: ["name", "birthday", "sex", "nationality", "marital_status"],
+        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until"],
         2: [
+          "home_country_address",
+          "ph_primary_address",
+          "ph_secondary_address",
+          "telephone_number",
+          "fax_number",
+          "mobile_number",
           "email",
-          "phone_number",
-          "street",
-          "city",
-          "state",
-          "zip",
-          "country",
-          "ph_address",
+          "father_name",
+          "father_age",
+          "mother_name",
+          "mother_age",
+          "family_members",
           "emergency_name",
           "emergency_relationship",
           "emergency_phone",
         ],
-        3: ["service_type"],
-        4: ["passport", "photo_2x2", "medical", "police", "bicc", "bank_cert", "proof_payment"],
       };
 
       return Object.fromEntries(
@@ -318,7 +335,7 @@ export function useSRRVApplicationForm() {
     [errors, submittedSteps],
   );
 
-  const handleStep1Change = (field: keyof Step1Data, value: string) => {
+  const handleStep1Change = <F extends keyof Step1Data>(field: F, value: Step1Data[F]) => {
     setStep1Data((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -327,7 +344,7 @@ export function useSRRVApplicationForm() {
     });
   };
 
-  const handleStep2Change = (field: keyof Step2Data, value: string) => {
+  const handleStep2Change = (field: keyof Step2Data, value: Step2Data[keyof Step2Data]) => {
     setStep2Data((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -352,26 +369,29 @@ export function useSRRVApplicationForm() {
 
     let stepErrors: Record<string, string> = {};
 
-    if (currentStep === 4) {
+    if (currentStep === 3) {
       stepErrors = validateStep4();
     } else {
       const allErrors = validateForm();
       const stepFields: Record<number, string[]> = {
-        1: ["name", "birthday", "sex", "nationality", "marital_status"],
+        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until"],
         2: [
+          "home_country_address",
+          "ph_primary_address",
+          "ph_secondary_address",
+          "telephone_number",
+          "fax_number",
+          "mobile_number",
           "email",
-          "phone_number",
-          "street",
-          "city",
-          "state",
-          "zip",
-          "country",
-          "ph_address",
+          "father_name",
+          "father_age",
+          "mother_name",
+          "mother_age",
+          "family_members",
           "emergency_name",
           "emergency_relationship",
           "emergency_phone",
         ],
-        3: ["service_type"],
       };
       stepFields[currentStep]?.forEach((field) => {
         if (allErrors[field]) stepErrors[field] = allErrors[field];
@@ -380,7 +400,7 @@ export function useSRRVApplicationForm() {
 
     if (Object.keys(stepErrors).length > 0) return;
 
-    if (currentStep < 5) {
+    if (currentStep < 4) {
       setCurrentStep((s) => s + 1);
       return;
     }
@@ -397,24 +417,64 @@ export function useSRRVApplicationForm() {
 
     // Final submit — build FormData matching server action expectations
     const fd = new FormData();
-    fd.append("name", step1Data.name);
+    fd.append("last_name", step1Data.last_name);
+    fd.append("first_name", step1Data.first_name);
+    fd.append("middle_name", step1Data.middle_name);
     fd.append("birthday", step1Data.birthday);
+    fd.append("place_of_birth", step1Data.place_of_birth);
     fd.append("sex", step1Data.sex);
+    fd.append("religion", step1Data.religion);
     fd.append("nationality", step1Data.nationality);
     fd.append("marital_status", step1Data.marital_status);
+    fd.append("height", step1Data.height);
+    fd.append("weight", step1Data.weight);
+    fd.append("passport_number", step1Data.passport_number);
+    fd.append("passport_place_of_issue", step1Data.passport_place_of_issue);
+    fd.append("passport_date_of_issue", step1Data.passport_date_of_issue);
+    fd.append("passport_valid_until", step1Data.passport_valid_until);
+    fd.append("home_country_address", step2Data.home_country_address);
+    fd.append("ph_primary_address", step2Data.ph_primary_address);
+    fd.append("ph_secondary_address", step2Data.ph_secondary_address);
+    fd.append("telephone_number", step2Data.telephone_number);
+    fd.append("fax_number", step2Data.fax_number);
+    fd.append("mobile_number", step2Data.mobile_number);
     fd.append("email", step2Data.email);
-    fd.append("phone_number", step2Data.phone_dial_code + step2Data.phone_number);
-    fd.append("street", step2Data.street);
-    fd.append("city", step2Data.city);
-    fd.append("state", step2Data.state);
-    fd.append("zip", step2Data.zip);
-    fd.append("country", step2Data.country);
-    fd.append("ph_address", step2Data.ph_address);
+    fd.append("father_name", step2Data.father_name);
+    fd.append("father_age", step2Data.father_age);
+    fd.append("mother_name", step2Data.mother_name);
+    fd.append("mother_age", step2Data.mother_age);
     fd.append("emergency_name", step2Data.emergency_name);
     fd.append("emergency_relationship", step2Data.emergency_relationship);
     fd.append("emergency_phone", step2Data.emergency_phone);
-    fd.append("service_type", selectedService);
     fd.append("payment_method", paymentMethod);
+    fd.append("future_plan", step1Data.future_plan);
+    fd.append("future_plan_other", step1Data.future_plan_other);
+    fd.append("date_of_arrival", step1Data.date_of_arrival);
+    fd.append("exp_date_tourist_visa", step1Data.exp_date_tourist_visa);
+    fd.append("entry_visa_type", step1Data.entry_visa_type);
+    fd.append("entry_visa_other", step1Data.entry_visa_other);
+
+    step2Data.family_members.forEach((member, index) => {
+      fd.append(`family_members[${index}].full_name`, member.full_name);
+      fd.append(`family_members[${index}].relationship`, member.relationship);
+      fd.append(`family_members[${index}].age`, member.age);
+      fd.append(`family_members[${index}].passport_no`, member.passport_no);
+      fd.append(`family_members[${index}].include`, String(member.include));
+    });
+
+    step1Data.educations.forEach((entry, index) => {
+      fd.append(`educations[${index}].school`, entry.school);
+      fd.append(`educations[${index}].location`, entry.location);
+      fd.append(`educations[${index}].start_date`, entry.start_date);
+      fd.append(`educations[${index}].end_date`, entry.end_date);
+    });
+
+    step1Data.employments.forEach((entry, index) => {
+      fd.append(`employments[${index}].company_name`, entry.company_name);
+      fd.append(`employments[${index}].job_title`, entry.job_title);
+      fd.append(`employments[${index}].start_date`, entry.start_date);
+      fd.append(`employments[${index}].end_date`, entry.end_date);
+    });
 
     for (const [key, doc] of Object.entries(step4Data)) {
       if (doc.file) {
@@ -444,28 +504,8 @@ export function useSRRVApplicationForm() {
     clearPersistedState();
     clearAllFiles();
     setCurrentStep(1);
-    setStep1Data({
-      name: "",
-      birthday: "",
-      sex: "",
-      nationality: "",
-      marital_status: "",
-    });
-    setStep2Data({
-      email: "",
-      phone_number: "",
-      phone_dial_code: "+63",
-      street: "",
-      city: "",
-      state: "",
-      zip: "",
-      country: "",
-      ph_address: "",
-      emergency_name: "",
-      emergency_relationship: "",
-      emergency_phone: "",
-    });
-    setSelectedService("");
+    setStep1Data(STEP1_INIT);
+    setStep2Data(STEP2_INIT);
     setStep4Data({
       passport: EMPTY_DOC,
       photo_2x2: EMPTY_DOC,
@@ -496,15 +536,13 @@ export function useSRRVApplicationForm() {
     step1Change: handleStep1Change,
     step2Data,
     step2Change: handleStep2Change,
-    selectedService,
-    setSelectedService,
     paymentMethod,
     setPaymentMethod,
     step4Data,
     docUpload: handleDocUpload,
     next: handleNext,
     back: handleBack,
-    isLastStep: currentStep === 5,
+    isLastStep: currentStep === 4,
     errors: stepErrors,
     submitError,
     hasStepErrors: Object.keys(stepErrors).length > 0,
