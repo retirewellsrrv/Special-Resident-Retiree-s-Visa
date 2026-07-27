@@ -120,7 +120,7 @@ export const applicationFormSchema = z.object({
     ),
   mother_age: z.string().nullable(),
   family_members: z.array(z.object({
-    id: z.string(),
+    id: z.string().optional(),
     full_name: z.string(),
     relationship: z.string(),
     age: z.string(),

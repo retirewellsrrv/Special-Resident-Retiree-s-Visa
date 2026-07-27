@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { applicationFormSchema } from "@/schemas/application";
 import {
   DocumentTypeEnum,
@@ -407,29 +407,41 @@ export type PaymentReceiptData = {
 export async function getPaymentReceipt(
   transactionCode: string,
 ): Promise<PaymentReceiptData | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
-  const { data: payment } = await supabase
+  const { data: payment, error: payErr } = await supabase
     .from("payments")
     .select("*")
     .eq("transaction_code", transactionCode)
-    .single();
+    .maybeSingle();
 
-  if (!payment) return null;
+  if (payErr) {
+    console.error("getPaymentReceipt: payments query error", payErr);
+  }
+  if (!payment) {
+    console.error("getPaymentReceipt: no payment found for", transactionCode);
+    return null;
+  }
 
-  const { data: app } = await supabase
+  const { data: app, error: appErr } = await supabase
     .from("applications")
     .select("application_code, user_id")
     .eq("payment_id", payment.id)
-    .single();
+    .maybeSingle();
 
-  if (!app) return null;
+  if (appErr) {
+    console.error("getPaymentReceipt: applications query error", appErr);
+  }
+  if (!app) {
+    console.error("getPaymentReceipt: no application for payment_id", payment.id);
+    return null;
+  }
 
   const { data: profile } = await supabase
     .from("client_profiles")
     .select("name")
     .eq("user_id", app.user_id)
-    .single();
+    .maybeSingle();
 
   return {
     transactionCode: payment.transaction_code,
@@ -466,13 +478,7 @@ export async function retryPaymentAction(
 
   if (!app) return { error: "No application found", success: false };
 
-  const { data: plan } = await supabase
-    .from("service_plans")
-    .select("price")
-    .eq("name", "basic")
-    .single();
-
-  if (!plan) return { error: "Service plan not found", success: false };
+  const DEFAULT_FEE = 350;
 
   const { data: existingSuccess } = await supabase
     .from("payments")
@@ -492,7 +498,7 @@ export async function retryPaymentAction(
     .from("payments")
     .insert({
       user_id: user.id,
-      amount: plan.price,
+      amount: DEFAULT_FEE,
       status: "pending",
       payment_method: paymentMethod,
       transaction_code: externalId,
@@ -524,10 +530,10 @@ export async function retryPaymentAction(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: plan.price,
+        amount: DEFAULT_FEE,
         description: `SRRV application fee`,
         payerEmail: user.email ?? undefined,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=PHP`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
         currency: "PHP",
         metadata: {
@@ -787,6 +793,8 @@ export async function submitApplication(
         application_id: app.id,
         company_name: formData.get(`employments[${empIdx}].company_name`) as string,
         job_title: (formData.get(`employments[${empIdx}].job_title`) as string) ?? null,
+        contact_no: (formData.get(`employments[${empIdx}].contact_no`) as string) ?? null,
+        company_address: (formData.get(`employments[${empIdx}].company_address`) as string) ?? null,
         start_date: (formData.get(`employments[${empIdx}].start_date`) as string) ?? null,
         end_date: (formData.get(`employments[${empIdx}].end_date`) as string) ?? null,
       } as never);
@@ -892,16 +900,7 @@ export async function submitApplication(
     return { error: docErrors.join("; "), success: false };
   }
 
-  // ── Get price from service_plans ─────────────────────────────────────────
-  const { data: plan } = await supabase
-    .from("service_plans")
-    .select("price")
-    .eq("name", "basic")
-    .single();
-
-  if (!plan) {
-    return { error: "Service plan not found", success: false };
-  }
+  const DEFAULT_FEE = 350;
 
   // ── Create payment record ────────────────────────────────────────────────
   const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
@@ -909,7 +908,7 @@ export async function submitApplication(
     .from("payments")
     .insert({
       user_id: user.id,
-      amount: plan.price,
+      amount: DEFAULT_FEE,
       status: "pending",
       payment_method: paymentMethod.toLowerCase() as Database["public"]["Enums"]["payment_methods"],
       transaction_code: externalId,
@@ -944,10 +943,10 @@ export async function submitApplication(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: plan.price,
+        amount: DEFAULT_FEE,
         description: `SRRV application fee`,
         payerEmail: parsed.data.email,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=PHP`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
         currency: "PHP",
         metadata: {

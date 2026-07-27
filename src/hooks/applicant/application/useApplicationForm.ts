@@ -324,6 +324,18 @@ export function useSRRVApplicationForm() {
           "emergency_relationship",
           "emergency_phone",
         ],
+        3: [
+          "passport",
+          "photo_2x2",
+          "pra_application",
+          "medical",
+          "police",
+          "bicc",
+          "bank_cert",
+          "proof_payment",
+          "proof_pension",
+          "proof_relationship",
+        ],
       };
 
       return Object.fromEntries(
@@ -372,6 +384,13 @@ export function useSRRVApplicationForm() {
     if (currentStep === 3) {
       stepErrors = validateStep4();
     } else {
+      if (currentStep === 4) {
+        const docErrors = validateStep4();
+        if (Object.keys(docErrors).length > 0) {
+          setCurrentStep(3);
+          return;
+        }
+      }
       const allErrors = validateForm();
       const stepFields: Record<number, string[]> = {
         1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until"],
@@ -472,6 +491,8 @@ export function useSRRVApplicationForm() {
     step1Data.employments.forEach((entry, index) => {
       fd.append(`employments[${index}].company_name`, entry.company_name);
       fd.append(`employments[${index}].job_title`, entry.job_title);
+      fd.append(`employments[${index}].contact_no`, entry.contact_no);
+      fd.append(`employments[${index}].company_address`, entry.company_address);
       fd.append(`employments[${index}].start_date`, entry.start_date);
       fd.append(`employments[${index}].end_date`, entry.end_date);
     });

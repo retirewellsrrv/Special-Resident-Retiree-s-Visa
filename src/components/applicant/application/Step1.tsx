@@ -32,6 +32,8 @@ export type EmploymentEntry = {
   job_title: string;
   start_date: string;
   end_date: string;
+  contact_no: string;
+  company_address: string;
 };
 
 type Step1Data = {
@@ -105,6 +107,8 @@ export function Step1({
       job_title: "",
       start_date: "",
       end_date: "",
+      contact_no: "",
+      company_address: "",
     };
     onChange("employments", [...data.employments, next]);
   };
@@ -146,6 +150,8 @@ export function Step1({
         job_title: "",
         start_date: "",
         end_date: "",
+        contact_no: "",
+        company_address: "",
       }]);
     }
   }, []);
@@ -557,6 +563,8 @@ export function Step1({
             <tr className="text-left text-neutral-500 border-b border-neutral-200">
               <th className="font-medium py-2 pr-3">Company Name</th>
               <th className="font-medium py-2 pr-3">Job Title</th>
+              <th className="font-medium py-2 pr-3">Contact No.</th>
+              <th className="font-medium py-2 pr-3">Company Address</th>
               <th className="font-medium py-2 pr-3">Start Date</th>
               <th className="font-medium py-2 pr-3">End Date</th>
               <th className="w-8" />
@@ -581,6 +589,26 @@ export function Step1({
                     value={entry.job_title}
                     onChange={(e) =>
                       updateEmployment(entry.id, "job_title", e.target.value)
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </td>
+                <td className="py-2 pr-3">
+                  <Input
+                    placeholder="Contact number"
+                    value={entry.contact_no}
+                    onChange={(e) =>
+                      updateEmployment(entry.id, "contact_no", e.target.value.replace(/\D/g, ""))
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </td>
+                <td className="py-2 pr-3">
+                  <Input
+                    placeholder="Company address"
+                    value={entry.company_address}
+                    onChange={(e) =>
+                      updateEmployment(entry.id, "company_address", e.target.value)
                     }
                     className={INPUT_CLASS}
                   />
