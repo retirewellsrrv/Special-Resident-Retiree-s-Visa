@@ -29,14 +29,13 @@ async function getStats() {
 
   const { data: recentApps } = await supabase
     .from('applications')
-    .select('application_code, service_type, status, updated_at, user_id, client_profiles!inner(name)')
+    .select('application_code, status, updated_at, user_id, client_profiles!inner(name)')
     .order('updated_at', { ascending: false })
     .limit(5)
 
   const mapped = (recentApps ?? []).map((a: Record<string, unknown>) => ({
     name: (a.client_profiles as Record<string, string> | null)?.name ?? 'Unknown',
     code: a.application_code as string,
-    type: a.service_type as string,
     status: a.status as string,
     updatedAt: a.updated_at as string,
   }))
@@ -151,7 +150,6 @@ export default async function SuperAdminDashboardPage() {
               <tr className="bg-brand-neutral-50 border-b border-brand-neutral-200">
                 <th className="px-4 py-3 text-left text-ht-caption font-medium text-brand-neutral-400 uppercase tracking-wider">Applicant</th>
                 <th className="px-4 py-3 text-left text-ht-caption font-medium text-brand-neutral-400 uppercase tracking-wider">Code</th>
-                <th className="px-4 py-3 text-left text-ht-caption font-medium text-brand-neutral-400 uppercase tracking-wider">Plan</th>
                 <th className="px-4 py-3 text-left text-ht-caption font-medium text-brand-neutral-400 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-left text-ht-caption font-medium text-brand-neutral-400 uppercase tracking-wider">Updated</th>
               </tr>
@@ -159,7 +157,7 @@ export default async function SuperAdminDashboardPage() {
             <tbody className="divide-y divide-brand-neutral-100">
               {stats.recentApps.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-ht-body-md text-brand-neutral-400">
+                  <td colSpan={4} className="px-4 py-12 text-center text-ht-body-md text-brand-neutral-400">
                     No applications yet.
                   </td>
                 </tr>
@@ -168,7 +166,6 @@ export default async function SuperAdminDashboardPage() {
                   <tr key={`${app.code}-${i}`} className="hover:bg-brand-neutral-50/50 transition-colors">
                     <td className="px-4 py-3 font-medium text-brand-neutral-900">{app.name}</td>
                     <td className="px-4 py-3 text-brand-neutral-500">{app.code}</td>
-                    <td className="px-4 py-3 text-brand-neutral-500 capitalize">{app.type}</td>
                     <td className="px-4 py-3">
                       <StatusChip status={app.status} />
                     </td>

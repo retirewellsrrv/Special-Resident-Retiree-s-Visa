@@ -434,23 +434,7 @@ export default function ApplicantDashboardPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                  <Package className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                      Service Type
-                    </p>
-                    <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
-                      {application?.service_type === "basic"
-                        ? "Basic"
-                        : application?.service_type === "premium"
-                          ? "Premium"
-                          : application?.service_type === "vip"
-                            ? "VIP"
-                            : application?.service_type ?? "---"}
-                    </p>
-                  </div>
-                </div>
+
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
                   <Building2 className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
                   <div>

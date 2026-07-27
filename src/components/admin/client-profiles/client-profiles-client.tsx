@@ -29,8 +29,6 @@ import {
 import { PageHeader } from '@/components/admin/shared/page-header'
 import { Pagination } from '@/components/ui/pagination'
 
-const SERVICE_TYPES = ['basic', 'premium', 'vip'] as const
-
 const STATUS_ICON: Record<string, LucideIcon> = {
     approved: CheckCircle2,
     paused: PauseCircle,
@@ -49,7 +47,6 @@ function ClientDirectoryRow({ row }: { row: ClientRow }) {
                     <p className="text-xs text-brand-neutral-500">{row.application_code}</p>
                 </div>
             </TableCell>
-            <TableCell className="text-sm capitalize text-brand-neutral-700">{row.service_plan_name ?? row.service_type}</TableCell>
             <TableCell>
                 <StatusChip status={row.status} icon={StatusIcon} />
             </TableCell>
@@ -81,7 +78,6 @@ export function ClientProfilesClient({
     total,
     page,
     filter,
-    serviceType,
     statusFilter,
     q,
     applicationCode,
@@ -91,7 +87,6 @@ export function ClientProfilesClient({
     total: number
     page: number
     filter: 'all' | 'new'
-    serviceType?: string
     statusFilter?: string
     q?: string
     applicationCode?: string
@@ -117,12 +112,12 @@ export function ClientProfilesClient({
 
     const handleExport = useCallback(async () => {
         const { rows: all } = await getClientDirectory({ limit: 10000 })
-        const headers = ['user_id', 'name', 'application_code', 'service_type', 'service_plan_name', 'status', 'updated_at']
+        const headers = ['user_id', 'name', 'application_code', 'status', 'updated_at']
         downloadCsv(all, headers, `client-profiles-${new Date().toISOString().slice(0, 10)}.csv`)
     }, [])
 
     function handleClear() {
-        navigate({ filter: 'all', service_type: undefined, status: undefined, q: undefined, application_code: undefined, page: '1' })
+        navigate({ filter: 'all', status: undefined, q: undefined, application_code: undefined, page: '1' })
     }
 
     return (
@@ -179,14 +174,6 @@ export function ClientProfilesClient({
                     debounceMs={400}
                 />
                 <FilterSelect
-                    label="Service Type"
-                    placeholder="All Types"
-                    value={serviceType}
-                    options={SERVICE_TYPES.map((v) => ({ value: v, label: v }))}
-                    onChange={(v) => navigate({ service_type: v !== 'all' ? v : undefined, page: '1' })}
-                    disabled={isPending}
-                />
-                <FilterSelect
                     label="Status"
                     placeholder="All Status"
                     value={statusFilter}
@@ -212,7 +199,6 @@ export function ClientProfilesClient({
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
-                            <TableHead>Service Type</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Last Updated</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
@@ -220,10 +206,10 @@ export function ClientProfilesClient({
                     </TableHeader>
                     <TableBody>
                         {isPending ? (
-                            <TableSkeleton rows={Math.min(rows.length || limit, limit)} columns={5} />
+                            <TableSkeleton rows={Math.min(rows.length || limit, limit)} columns={4} />
                         ) : rows.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center text-brand-neutral-400 py-12">
+                                <TableCell colSpan={4} className="text-center text-brand-neutral-400 py-12">
                                     No clients found.
                                 </TableCell>
                             </TableRow>

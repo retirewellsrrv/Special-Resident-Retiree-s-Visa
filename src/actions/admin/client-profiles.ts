@@ -16,8 +16,6 @@ export type ClientRow = {
     user_id: string
     name: string
     application_code: string
-    service_type: string
-    service_plan_name: string | null
     status: string
     updated_at: string
 }
@@ -81,7 +79,6 @@ export const getClientDirectory = unstable_cache(
     page = 1,
     limit = 10,
     filter = "all",
-    service_type,
     status,
     q,
     application_code,
@@ -89,7 +86,6 @@ export const getClientDirectory = unstable_cache(
     page?: number;
     limit?: number;
     filter?: "all" | "new";
-    service_type?: string;
     status?: string;
     q?: string;
     application_code?: string;
@@ -104,7 +100,6 @@ export const getClientDirectory = unstable_cache(
       `
             id,
             user_id,
-            service_type,
             application_code,
             status,
             updated_at,
@@ -118,11 +113,6 @@ export const getClientDirectory = unstable_cache(
     .order("updated_at", { ascending: false })
     .range(from, to);
 
-  if (service_type)
-    query = query.eq(
-      "service_type",
-      service_type as Database["public"]["Enums"]["service_type"],
-    );
   if (filter === "new") {
     const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
     query = query.gte("created_at", cutoff);
@@ -141,22 +131,10 @@ export const getClientDirectory = unstable_cache(
     const { data, count, error } = await query
     if (error) throw new Error(error.message)
 
-    const serviceTypes = [...new Set((data ?? []).map((r: any) => r.service_type))]
-    let planNameMap: Record<string, string> = {}
-    if (serviceTypes.length > 0) {
-      const { data: plans } = await supabase
-          .from('service_plans')
-          .select('type, name')
-          .in('type', serviceTypes)
-      planNameMap = Object.fromEntries((plans ?? []).map((p) => [p.type, p.name]))
-    }
-
     const rows: ClientRow[] = (data ?? []).map((row: any) => ({
         user_id: row.user_id,
         name: row.client_profiles?.name ?? 'Unknown',
         application_code: row.application_code,
-        service_type: row.service_type,
-        service_plan_name: planNameMap[row.service_type] ?? null,
         status: row.status,
         updated_at: row.updated_at,
     }))

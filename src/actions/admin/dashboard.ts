@@ -34,7 +34,6 @@ export type DashboardStats = {
     user_id: string
     applicant_name: string
     application_code: string
-    service_type: string
     status: string
     created_at: string
   }[]
@@ -65,9 +64,6 @@ export const getDashboardStats = unstable_cache(
     { count: docPending },
     { count: docProcessing },
     { count: usersTotal },
-    { count: basicCount },
-    { count: premiumCount },
-    { count: vipCount },
   ] = await Promise.all([
     supabase.from("applications").select("*", { count: "exact", head: true }),
     supabase.from("applications").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -82,9 +78,6 @@ export const getDashboardStats = unstable_cache(
     supabase.from("documents").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("documents").select("*", { count: "exact", head: true }).eq("status", "processing"),
     supabase.from("client_profiles").select("*", { count: "exact", head: true }),
-    supabase.from("applications").select("*", { count: "exact", head: true }).eq("service_type", "basic"),
-    supabase.from("applications").select("*", { count: "exact", head: true }).eq("service_type", "premium"),
-    supabase.from("applications").select("*", { count: "exact", head: true }).eq("service_type", "vip"),
   ]);
 
   // ── Revenue: only fetch amount column, only for successful/cancelled rows ──
@@ -103,7 +96,6 @@ export const getDashboardStats = unstable_cache(
           id,
           user_id,
           application_code,
-          service_type,
           status,
           created_at,
           client_profiles!applications_user_id_fkey (name)
@@ -144,7 +136,6 @@ export const getDashboardStats = unstable_cache(
     user_id: r.user_id,
     applicant_name: r.client_profiles?.name ?? "Unknown",
     application_code: r.application_code,
-    service_type: r.service_type,
     status: r.status,
     created_at: r.created_at,
   }));
@@ -181,11 +172,7 @@ export const getDashboardStats = unstable_cache(
       total: usersTotal ?? 0,
     },
     monthlyRevenue,
-    appsByService: [
-      { label: "basic", count: basicCount ?? 0 },
-      { label: "premium", count: premiumCount ?? 0 },
-      { label: "vip", count: vipCount ?? 0 },
-    ].filter((s) => s.count > 0),
+    appsByService: [],
     appsByStatus: [
       { label: "pending", count: appPending ?? 0 },
       { label: "processing", count: appProcessing ?? 0 },

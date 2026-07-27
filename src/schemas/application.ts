@@ -4,8 +4,8 @@ import { z } from "zod";
 // ENUMS
 // ─────────────────────────────────────────────
 
-export const ServiceTypeEnum = z.enum(["basic", "premium", "vip"], {
-  error: "Please select a valid service type: Basic, Premium, or VIP",
+export const FuturePlanEnum = z.enum(["tourism", "investment", "employment", "others"], {
+  error: "Please select a valid future plan: Tourism, Investment, Employment, or Others",
 });
 export const ApplicationStatusEnum = z.enum([
   "paused",
@@ -20,23 +20,13 @@ export const ApplicationStatusEnum = z.enum([
 
 export const applicationInsertSchema = z.object({
   application_code: z.string(),
-  city: z.string(),
-  country: z.string(),
   created_at: z.string().optional(),
-  emergency_name: z.string().optional().nullable(),
-  emergency_phone: z.string().optional().nullable(),
-  emergency_relationship: z.string().optional().nullable(),
+  future_plans: FuturePlanEnum.optional(),
   id: z.number().optional(),
   payment_id: z.number().optional().nullable(),
-  ph_address: z.string().optional().nullable(),
-  phone_number: z.string(),
-  service_type: ServiceTypeEnum,
-  state: z.string(),
   status: ApplicationStatusEnum.optional(),
-  street: z.string(),
   updated_at: z.string().optional().nullable(),
   user_id: z.string(),
-  zip: z.string(),
 });
 
 export const applicationUpdateSchema = applicationInsertSchema
@@ -48,10 +38,15 @@ export const applicationUpdateSchema = applicationInsertSchema
 // ─────────────────────────────────────────────
 
 export const applicationFormSchema = z.object({
-  name: z
+  last_name: z
     .string()
-    .min(1, "Name is required")
-    .regex(/^[^\d]*$/, "Name must not contain numbers"),
+    .min(1, "Last name is required")
+    .regex(/^[^\d]*$/, "Last name must not contain numbers"),
+  first_name: z
+    .string()
+    .min(1, "First name is required")
+    .regex(/^[^\d]*$/, "First name must not contain numbers"),
+  middle_name: z.string().optional().default(""),
   birthday: z
     .string()
     .min(1, "Birthday is required")
@@ -61,38 +56,77 @@ export const applicationFormSchema = z.object({
       today.setHours(0, 0, 0, 0);
       return date < today;
     }, "Birthday must be valid"),
+  place_of_birth: z
+    .string()
+    .min(1, "Place of birth is required"),
   sex: z.enum(["male", "female"], {
-    error: "Please select a valid sex",
+    error: "Please select a valid gender",
   }),
+  religion: z
+    .string()
+    .min(1, "Religion is required"),
   nationality: z
     .string()
-    .min(1, "Nationality is required")
-    .regex(/^[^\d]*$/, "Nationality must not contain numbers"),
-  marital_status: z.string().min(1, "Marital status is required"),
+    .min(1, "Citizenship is required")
+    .regex(/^[^\d]*$/, "Citizenship must not contain numbers"),
+  marital_status: z.string().min(1, "Civil status is required"),
+  height: z
+    .string()
+    .min(1, "Height is required"),
+  weight: z
+    .string()
+    .min(1, "Weight is required"),
+  passport_number: z
+    .string()
+    .min(1, "Passport number is required"),
+  passport_place_of_issue: z
+    .string()
+    .min(1, "Place of issue is required"),
+  passport_date_of_issue: z
+    .string()
+    .min(1, "Date of issue is required"),
+  passport_valid_until: z
+    .string()
+    .min(1, "Passport validity is required"),
   email: z
     .string()
     .min(1, "Email is required")
     .email("Invalid email address")
     .max(254, "Email address is too long"),
-  phone_number: z
+  mobile_number: z
     .string()
-    .min(1, "Phone number is required")
-    .regex(/^\+?[1-9]\d{6,14}$/, { message: "Invalid phone number format" }),
-  street: z.string().min(1, "Street address is required"),
-  city: z
+    .min(1, "Mobile number is required"),
+  telephone_number: z.string().nullable(),
+  fax_number: z.string().nullable(),
+  home_country_address: z
     .string()
-    .min(1, "City is required")
-    .regex(/^[^\d]*$/, "City must not contain numbers"),
-  state: z
+    .min(1, "Home country address is required"),
+  ph_primary_address: z.string().nullable(),
+  ph_secondary_address: z.string().nullable(),
+  father_name: z
     .string()
-    .min(1, "State/Province is required")
-    .regex(/^[^\d]*$/, "State must not contain numbers"),
-  zip: z.string().min(1, "ZIP/Postal code is required"),
-  country: z
+    .nullable()
+    .refine(
+      (val) => val === null || val === "" || /^[^\d]*$/.test(val),
+      "Father name must not contain numbers",
+    ),
+  father_age: z.string().nullable(),
+  mother_name: z
     .string()
-    .min(1, "Country is required")
-    .regex(/^[^\d]*$/, "Country must not contain numbers"),
-  ph_address: z.string().nullable(),
+    .nullable()
+    .refine(
+      (val) => val === null || val === "" || /^[^\d]*$/.test(val),
+      "Mother name must not contain numbers",
+    ),
+  mother_age: z.string().nullable(),
+  family_members: z.array(z.object({
+    id: z.string().optional(),
+    full_name: z.string(),
+    relationship: z.string(),
+    age: z.string(),
+    passport_no: z.string(),
+    include: z.boolean(),
+  })).default([]),
   emergency_name: z
     .string()
     .nullable()
@@ -108,12 +142,12 @@ export const applicationFormSchema = z.object({
       "Relationship must not contain numbers",
     ),
   emergency_phone: z.string().nullable(),
-  service_type: ServiceTypeEnum,
+  future_plan: z.string().min(1, "Future plan is required"),
 });
 
 export type ApplicationInsertInput = z.infer<typeof applicationInsertSchema>;
 export type ApplicationUpdateInput = z.infer<typeof applicationUpdateSchema>;
 export type ApplicationFormInput = z.infer<typeof applicationFormSchema>;
 
-export type ServiceType = z.infer<typeof ServiceTypeEnum>;
+export type FuturePlan = z.infer<typeof FuturePlanEnum>;
 export type ApplicationStatus = z.infer<typeof ApplicationStatusEnum>;

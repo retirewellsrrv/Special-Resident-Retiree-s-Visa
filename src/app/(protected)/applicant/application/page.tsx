@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { steps } from "@/components/applicant/application/constants";
 import { Step1 } from "@/components/applicant/application/Step1";
 import { Step2 } from "@/components/applicant/application/Step2";
-import { Step3 } from "@/components/applicant/application/Step3";
 import { Step4 } from "@/components/applicant/application/Step4";
 import { Step5 } from "@/components/applicant/application/Step5";
 import { Step6 } from "@/components/applicant/application/Step6";
@@ -37,8 +36,6 @@ export default function SRRVApplicationPage() {
     step1Change,
     step2Data,
     step2Change,
-    selectedService,
-    setSelectedService,
     step4Data,
     docUpload,
     next,
@@ -105,7 +102,7 @@ export default function SRRVApplicationPage() {
                 </div>
               </div>
 
-              <Separator className="mb-6" />
+              <div className="border-t border-red-200 mb-6" />
 
               {/* Loading state for profile data */}
               {isLoadingProfile && (
@@ -157,24 +154,16 @@ export default function SRRVApplicationPage() {
                 />
               )}
               {!isLoadingProfile && currentStep === 3 && (
-                <Step3
-                  selected={selectedService}
-                  onSelect={setSelectedService}
-                  error={errors.service_type}
-                />
-              )}
-              {!isLoadingProfile && currentStep === 4 && (
                 <Step4 data={step4Data} onUpload={docUpload} errors={errors} />
               )}
-              {!isLoadingProfile && currentStep === 5 && (
+              {!isLoadingProfile && currentStep === 4 && (
                 <Step5
                   step1Data={step1Data}
                   step2Data={step2Data}
-                  selectedService={selectedService}
                   step4Data={step4Data}
                 />
               )}
-              {!isLoadingProfile && currentStep === 6 && existingApplication && (
+              {!isLoadingProfile && currentStep === 5 && existingApplication && (
                 <Step6 data={existingApplication} />
               )}
 
@@ -186,7 +175,7 @@ export default function SRRVApplicationPage() {
               )}
 
               {/* Navigation buttons */}
-              {currentStep !== 6 && (
+              {currentStep !== 5 && (
                 <div
                   className={cn(
                     "flex mt-8",

@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import { applicationFormSchema, ServiceTypeEnum } from "@/schemas/application";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { applicationFormSchema } from "@/schemas/application";
 import {
   DocumentTypeEnum,
   DocumentFormatEnum,
@@ -61,9 +61,9 @@ export type ExistingApplicationData = {
   application: {
     id: number;
     application_code: string;
-    service_type: string;
     status: string;
     created_at: string;
+    future_plans: string | null;
     phone_number: string;
     street: string;
     city: string;
@@ -83,6 +83,56 @@ export type ExistingApplicationData = {
     marital_status: string;
     email: string;
   };
+  applicant_profile: {
+    civil_status: string;
+    date_of_birth: string;
+    gender: string;
+    height: number;
+    name: string;
+    nationality: string;
+    place_of_birth: string;
+    religion: string;
+    weight: number;
+  } | null;
+  passport: {
+    date_of_issue: string;
+    expiration: string;
+    passport_number: string;
+    place_of_issue: string;
+  } | null;
+  visa_details: {
+    date_of_arrival: string | null;
+    entry_visa_type: string | null;
+    exp_date_tourist_visa: string | null;
+  } | null;
+  educations: {
+    end_date: string;
+    location: string;
+    school: string;
+    start_date: string;
+  }[];
+  employments: {
+    company_address: string | null;
+    company_name: string | null;
+    contact_no: string | null;
+    end_date: string | null;
+    is_current: boolean | null;
+    job_title: string | null;
+    start_date: string | null;
+  }[];
+  dependents: {
+    age: number;
+    is_included: boolean;
+    name: string;
+    passport_no: string;
+    relationship: string;
+  }[];
+  family_backgrounds: {
+    father_age: number | null;
+    father_name: string;
+    mother_age: number | null;
+    mother_name: string;
+  } | null;
   documents: {
     type: string;
     name: string;
@@ -128,23 +178,74 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
         .single()
     : { data: null };
 
+  const { data: contact } = await supabase
+    .from("contacts")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: emergency } = await supabase
+    .from("emergency_contacts")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: applicantProfile } = await supabase
+    .from("applicant_profiles")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: passport } = await supabase
+    .from("passports")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: visa } = await supabase
+    .from("visa_details")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: educations } = await supabase
+    .from("educations")
+    .select("*")
+    .eq("application_id", app.id);
+
+  const { data: employments } = await supabase
+    .from("employments")
+    .select("*")
+    .eq("application_id", app.id);
+
+  const { data: dependents } = await supabase
+    .from("dependents")
+    .select("*")
+    .eq("application_id", app.id);
+
+  const { data: familyBg } = await supabase
+    .from("family_backgrounds")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
   return {
     application: {
       id: app.id,
       application_code: app.application_code,
-      service_type: app.service_type,
       status: app.status,
       created_at: app.created_at,
-      phone_number: app.phone_number,
-      street: app.street,
-      city: app.city,
-      state: app.state,
-      zip: app.zip,
-      country: app.country,
-      ph_address: app.ph_address,
-      emergency_name: app.emergency_name,
-      emergency_phone: app.emergency_phone,
-      emergency_relationship: app.emergency_relationship,
+      future_plans: app.future_plans,
+      phone_number: contact?.mobile_no ?? "",
+      street: contact?.home_country_address ?? "",
+      city: "",
+      state: "",
+      zip: "",
+      country: "",
+      ph_address: contact?.primary_address_ph ?? null,
+      emergency_name: emergency?.name ?? null,
+      emergency_phone: emergency?.phone_no ?? null,
+      emergency_relationship: emergency?.relationship ?? null,
     },
     profile: {
       name: profile?.name ?? "",
@@ -154,6 +255,64 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
       marital_status: profile?.marital_status ?? "",
       email: user.email ?? "",
     },
+    applicant_profile: applicantProfile
+      ? {
+          civil_status: applicantProfile.civil_status,
+          date_of_birth: applicantProfile.date_of_birth,
+          gender: applicantProfile.gender,
+          height: applicantProfile.height,
+          name: applicantProfile.name,
+          nationality: applicantProfile.nationality,
+          place_of_birth: applicantProfile.place_of_birth,
+          religion: applicantProfile.religion,
+          weight: applicantProfile.weight,
+        }
+      : null,
+    passport: passport
+      ? {
+          date_of_issue: passport.date_of_issue,
+          expiration: passport.expiration,
+          passport_number: passport.passport_number,
+          place_of_issue: passport.place_of_issue,
+        }
+      : null,
+    visa_details: visa
+      ? {
+          date_of_arrival: visa.date_of_arrival,
+          entry_visa_type: visa.entry_visa_type,
+          exp_date_tourist_visa: visa.exp_date_tourist_visa,
+        }
+      : null,
+    educations: (educations ?? []).map((e) => ({
+      end_date: e.end_date,
+      location: e.location,
+      school: e.school,
+      start_date: e.start_date,
+    })),
+    employments: (employments ?? []).map((e) => ({
+      company_address: e.company_address,
+      company_name: e.company_name,
+      contact_no: e.contact_no,
+      end_date: e.end_date,
+      is_current: e.is_current,
+      job_title: e.job_title,
+      start_date: e.start_date,
+    })),
+    dependents: (dependents ?? []).map((d) => ({
+      age: d.age,
+      is_included: d.is_included,
+      name: d.name,
+      passport_no: d.passport_no,
+      relationship: d.relationship,
+    })),
+    family_backgrounds: familyBg
+      ? {
+          father_age: familyBg.father_age,
+          father_name: familyBg.father_name,
+          mother_age: familyBg.mother_age,
+          mother_name: familyBg.mother_name,
+        }
+      : null,
     documents: documents ?? [],
     payment,
   };
@@ -163,7 +322,6 @@ export type DashboardData = {
   application: {
     application_code: string;
     status: string;
-    service_type: string;
     created_at: string;
   };
   documents: {
@@ -190,7 +348,7 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
 
   const { data: app } = await supabase
     .from("applications")
-    .select("id, application_code, status, service_type, created_at, payment_id")
+    .select("id, application_code, status, created_at, payment_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -227,7 +385,6 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
     application: {
       application_code: app.application_code,
       status: app.status,
-      service_type: app.service_type,
       created_at: app.created_at,
     },
     documents: documents ?? [],
@@ -243,7 +400,6 @@ export type PaymentReceiptData = {
   paymentMethod: string;
   createdAt: string;
   applicationCode: string;
-  serviceType: string;
   clientName: string;
   clientEmail: string;
 };
@@ -251,29 +407,41 @@ export type PaymentReceiptData = {
 export async function getPaymentReceipt(
   transactionCode: string,
 ): Promise<PaymentReceiptData | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
-  const { data: payment } = await supabase
+  const { data: payment, error: payErr } = await supabase
     .from("payments")
     .select("*")
     .eq("transaction_code", transactionCode)
-    .single();
+    .maybeSingle();
 
-  if (!payment) return null;
+  if (payErr) {
+    console.error("getPaymentReceipt: payments query error", payErr);
+  }
+  if (!payment) {
+    console.error("getPaymentReceipt: no payment found for", transactionCode);
+    return null;
+  }
 
-  const { data: app } = await supabase
+  const { data: app, error: appErr } = await supabase
     .from("applications")
-    .select("application_code, service_type, user_id")
+    .select("application_code, user_id")
     .eq("payment_id", payment.id)
-    .single();
+    .maybeSingle();
 
-  if (!app) return null;
+  if (appErr) {
+    console.error("getPaymentReceipt: applications query error", appErr);
+  }
+  if (!app) {
+    console.error("getPaymentReceipt: no application for payment_id", payment.id);
+    return null;
+  }
 
   const { data: profile } = await supabase
     .from("client_profiles")
     .select("name")
     .eq("user_id", app.user_id)
-    .single();
+    .maybeSingle();
 
   return {
     transactionCode: payment.transaction_code,
@@ -282,7 +450,6 @@ export async function getPaymentReceipt(
     paymentMethod: payment.payment_method,
     createdAt: payment.created_at,
     applicationCode: app.application_code,
-    serviceType: app.service_type,
     clientName: profile?.name ?? "",
     clientEmail: payment.user_id,
   };
@@ -305,19 +472,13 @@ export async function retryPaymentAction(
 
   const { data: app } = await supabase
     .from("applications")
-    .select("id, service_type")
+    .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (!app) return { error: "No application found", success: false };
 
-  const { data: plan } = await supabase
-    .from("service_plans")
-    .select("price")
-    .eq("type", app.service_type as Database["public"]["Enums"]["service_type"])
-    .single();
-
-  if (!plan) return { error: "Service plan not found", success: false };
+  const DEFAULT_FEE = 350;
 
   const { data: existingSuccess } = await supabase
     .from("payments")
@@ -337,7 +498,7 @@ export async function retryPaymentAction(
     .from("payments")
     .insert({
       user_id: user.id,
-      amount: plan.price,
+      amount: DEFAULT_FEE,
       status: "pending",
       payment_method: paymentMethod,
       transaction_code: externalId,
@@ -369,15 +530,15 @@ export async function retryPaymentAction(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: plan.price,
-        description: `SRRV ${app.service_type} application fee`,
+        amount: DEFAULT_FEE,
+        description: `SRRV application fee`,
         payerEmail: user.email ?? undefined,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=PHP`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
         currency: "PHP",
         metadata: {
           application_id: String(app.id),
-          service_type: app.service_type,
+          service_type: "basic",
           retry: "true",
         },
       },
@@ -421,32 +582,59 @@ export async function submitApplication(
     };
   }
 
-  const serviceType = formData.get("service_type") as string;
-  const parsedServiceType = ServiceTypeEnum.safeParse(serviceType);
-  if (!parsedServiceType.success) {
-    return { error: "Please select a service plan", success: false };
+  const futurePlan = formData.get("future_plan") as string;
+  if (!futurePlan) {
+    return { error: "Please select a future plan", success: false };
   }
 
   const paymentMethod = (formData.get("payment_method") as string) || "CREDIT_CARD";
 
+  // Parse family members from form data
+  const familyMembers: { full_name: string; relationship: string; age: string; passport_no: string; include: boolean }[] = [];
+  let idx = 0;
+  while (formData.get(`family_members[${idx}].full_name`)) {
+    familyMembers.push({
+      full_name: formData.get(`family_members[${idx}].full_name`) as string,
+      relationship: (formData.get(`family_members[${idx}].relationship`) as string) ?? "",
+      age: (formData.get(`family_members[${idx}].age`) as string) ?? "",
+      passport_no: (formData.get(`family_members[${idx}].passport_no`) as string) ?? "",
+      include: formData.get(`family_members[${idx}].include`) !== "false",
+    });
+    idx++;
+  }
+
   const formRaw = {
-    name: formData.get("name"),
+    last_name: formData.get("last_name"),
+    first_name: formData.get("first_name"),
+    middle_name: formData.get("middle_name") || "",
     birthday: formData.get("birthday"),
+    place_of_birth: formData.get("place_of_birth"),
     sex: formData.get("sex"),
+    religion: formData.get("religion"),
     nationality: formData.get("nationality"),
     marital_status: formData.get("marital_status"),
+    height: formData.get("height"),
+    weight: formData.get("weight"),
+    passport_number: formData.get("passport_number"),
+    passport_place_of_issue: formData.get("passport_place_of_issue"),
+    passport_date_of_issue: formData.get("passport_date_of_issue"),
+    passport_valid_until: formData.get("passport_valid_until"),
     email: formData.get("email"),
-    phone_number: formData.get("phone_number"),
-    street: formData.get("street"),
-    city: formData.get("city"),
-    state: formData.get("state"),
-    zip: formData.get("zip"),
-    country: formData.get("country"),
-    ph_address: formData.get("ph_address"),
-    emergency_name: formData.get("emergency_name"),
-    emergency_relationship: formData.get("emergency_relationship"),
-    emergency_phone: formData.get("emergency_phone"),
-    service_type: serviceType,
+    mobile_number: formData.get("mobile_number"),
+    telephone_number: formData.get("telephone_number") || null,
+    fax_number: formData.get("fax_number") || null,
+    home_country_address: formData.get("home_country_address"),
+    ph_primary_address: formData.get("ph_primary_address") || null,
+    ph_secondary_address: formData.get("ph_secondary_address") || null,
+    father_name: formData.get("father_name") || null,
+    father_age: formData.get("father_age") || null,
+    mother_name: formData.get("mother_name") || null,
+    mother_age: formData.get("mother_age") || null,
+    family_members: familyMembers,
+    emergency_name: formData.get("emergency_name") || null,
+    emergency_relationship: formData.get("emergency_relationship") || null,
+    emergency_phone: formData.get("emergency_phone") || null,
+    future_plan: futurePlan,
   };
   const parsed = applicationFormSchema.safeParse(formRaw);
   if (!parsed.success) {
@@ -459,10 +647,14 @@ export async function submitApplication(
   // Generate application code
   const code = `SRRV-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
+  const fullName = [parsed.data.last_name, parsed.data.first_name, parsed.data.middle_name]
+    .filter(Boolean)
+    .join(" ");
+
   const { error: profileError } = await supabase.from("client_profiles").upsert(
     {
       user_id: user.id,
-      name: parsed.data.name,
+      name: fullName,
       sex: parsed.data.sex,
       birthday: parsed.data.birthday,
       nationality: parsed.data.nationality,
@@ -484,19 +676,9 @@ export async function submitApplication(
     .from("applications")
     .insert({
       user_id: user.id,
-      service_type: serviceType as Database["public"]["Enums"]["service_type"],
+      future_plans: futurePlan,
       application_code: code,
-      city: parsed.data.city,
-      country: parsed.data.country,
-      state: parsed.data.state,
-      street: parsed.data.street,
-      zip: parsed.data.zip,
-      phone_number: parsed.data.phone_number,
-      ph_address: parsed.data.ph_address,
-      emergency_name: parsed.data.emergency_name,
-      emergency_phone: parsed.data.emergency_phone,
-      emergency_relationship: parsed.data.emergency_relationship,
-    })
+    } as never)
     .select("id")
     .single();
 
@@ -505,6 +687,153 @@ export async function submitApplication(
       error: appError?.message ?? "Failed to create application",
       success: false,
     };
+
+  // ── Insert contact info ──────────────────────────────────────────────
+  const { error: contactError } = await supabase
+    .from("contacts")
+    .insert({
+      application_id: app.id,
+      email: parsed.data.email,
+      mobile_no: parsed.data.mobile_number,
+      tel_no: parsed.data.telephone_number,
+      fax_no: parsed.data.fax_number,
+      home_country_address: parsed.data.home_country_address,
+      primary_address_ph: parsed.data.ph_primary_address,
+      secondary_address_ph: parsed.data.ph_secondary_address,
+    } as never);
+
+  if (contactError) return { error: contactError.message, success: false };
+
+  // ── Insert emergency contact ─────────────────────────────────────────
+  if (parsed.data.emergency_name) {
+    const { error: emergencyError } = await supabase
+      .from("emergency_contacts")
+      .insert({
+        application_id: app.id,
+        name: parsed.data.emergency_name,
+        phone_no: parsed.data.emergency_phone ?? "",
+        relationship: parsed.data.emergency_relationship ?? "",
+      } as never);
+
+    if (emergencyError) return { error: emergencyError.message, success: false };
+  }
+
+  // ── Insert applicant profile ─────────────────────────────────────────
+  const { error: appProfileError } = await supabase
+    .from("applicant_profiles")
+    .insert({
+      application_id: app.id,
+      civil_status: parsed.data.marital_status as Database["public"]["Enums"]["marital_status"],
+      date_of_birth: parsed.data.birthday,
+      gender: parsed.data.sex as Database["public"]["Enums"]["sex"],
+      height: Number(parsed.data.height) || 0,
+      name: fullName,
+      nationality: parsed.data.nationality,
+      place_of_birth: parsed.data.place_of_birth,
+      religion: parsed.data.religion,
+      weight: Number(parsed.data.weight) || 0,
+    } as never);
+
+  if (appProfileError) return { error: appProfileError.message, success: false };
+
+  // ── Insert passport info (if provided) ───────────────────────────────
+  const passportNumber = formData.get("passport_number") as string | null;
+  if (passportNumber) {
+    const { error: passportError } = await supabase
+      .from("passports")
+      .insert({
+        application_id: app.id,
+        passport_number: passportNumber,
+        date_of_issue: parsed.data.passport_date_of_issue,
+        expiration: parsed.data.passport_valid_until,
+        place_of_issue: parsed.data.passport_place_of_issue,
+      } as never);
+
+    if (passportError) return { error: passportError.message, success: false };
+  }
+
+  // ── Insert visa details (if provided) ─────────────────────────────────
+  const entryVisaType = formData.get("entry_visa_type") as string | null;
+  if (entryVisaType) {
+    const { error: visaError } = await supabase
+      .from("visa_details")
+      .insert({
+        application_id: app.id,
+        entry_visa_type: entryVisaType,
+        date_of_arrival: (formData.get("date_of_arrival") as string) ?? null,
+        exp_date_tourist_visa: (formData.get("exp_date_tourist_visa") as string) ?? null,
+      } as never);
+
+    if (visaError) return { error: visaError.message, success: false };
+  }
+
+  // ── Insert education records (if provided) ────────────────────────────
+  let eduIdx = 0;
+  while (formData.get(`educations[${eduIdx}].school`)) {
+    const { error: eduError } = await supabase
+      .from("educations")
+      .insert({
+        application_id: app.id,
+        school: formData.get(`educations[${eduIdx}].school`) as string,
+        location: (formData.get(`educations[${eduIdx}].location`) as string) ?? "",
+        start_date: (formData.get(`educations[${eduIdx}].start_date`) as string) ?? "",
+        end_date: (formData.get(`educations[${eduIdx}].end_date`) as string) ?? "",
+      } as never);
+
+    if (eduError) return { error: eduError.message, success: false };
+    eduIdx++;
+  }
+
+  // ── Insert employment records (if provided) ───────────────────────────
+  let empIdx = 0;
+  while (formData.get(`employments[${empIdx}].company_name`)) {
+    const { error: empError } = await supabase
+      .from("employments")
+      .insert({
+        application_id: app.id,
+        company_name: formData.get(`employments[${empIdx}].company_name`) as string,
+        job_title: (formData.get(`employments[${empIdx}].job_title`) as string) ?? null,
+        contact_no: (formData.get(`employments[${empIdx}].contact_no`) as string) ?? null,
+        company_address: (formData.get(`employments[${empIdx}].company_address`) as string) ?? null,
+        start_date: (formData.get(`employments[${empIdx}].start_date`) as string) ?? null,
+        end_date: (formData.get(`employments[${empIdx}].end_date`) as string) ?? null,
+      } as never);
+
+    if (empError) return { error: empError.message, success: false };
+    empIdx++;
+  }
+
+  // ── Insert dependents (if provided, Step 2) ────────────────────────────
+  for (const member of parsed.data.family_members) {
+    if (!member.full_name) continue;
+    const { error: depError } = await supabase
+      .from("dependents")
+      .insert({
+        application_id: app.id,
+        name: member.full_name,
+        age: Number(member.age) || 0,
+        passport_no: member.passport_no,
+        relationship: member.relationship,
+        is_included: member.include,
+      } as never);
+
+    if (depError) return { error: depError.message, success: false };
+  }
+
+  // ── Insert family background (if provided, Step 2) ─────────────────────
+  if (parsed.data.father_name) {
+    const { error: famError } = await supabase
+      .from("family_backgrounds")
+      .insert({
+        application_id: app.id,
+        father_name: parsed.data.father_name,
+        father_age: Number(parsed.data.father_age) || null,
+        mother_name: parsed.data.mother_name ?? "",
+        mother_age: Number(parsed.data.mother_age) || null,
+      } as never);
+
+    if (famError) return { error: famError.message, success: false };
+  }
 
   // ── Upload documents to Supabase Storage & insert DB records ──────────────
   const docErrors: string[] = [];
@@ -571,16 +900,7 @@ export async function submitApplication(
     return { error: docErrors.join("; "), success: false };
   }
 
-  // ── Get price from service_plans ─────────────────────────────────────────
-  const { data: plan } = await supabase
-    .from("service_plans")
-    .select("price")
-    .eq("type", serviceType as Database["public"]["Enums"]["service_type"])
-    .single();
-
-  if (!plan) {
-    return { error: "Service plan not found", success: false };
-  }
+  const DEFAULT_FEE = 350;
 
   // ── Create payment record ────────────────────────────────────────────────
   const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
@@ -588,7 +908,7 @@ export async function submitApplication(
     .from("payments")
     .insert({
       user_id: user.id,
-      amount: plan.price,
+      amount: DEFAULT_FEE,
       status: "pending",
       payment_method: paymentMethod.toLowerCase() as Database["public"]["Enums"]["payment_methods"],
       transaction_code: externalId,
@@ -623,15 +943,15 @@ export async function submitApplication(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: plan.price,
-        description: `SRRV ${serviceType} application fee`,
+        amount: DEFAULT_FEE,
+        description: `SRRV application fee`,
         payerEmail: parsed.data.email,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=PHP`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
         currency: "PHP",
         metadata: {
           application_id: String(app.id),
-          service_type: serviceType,
+          service_type: "basic",
         },
       },
     });

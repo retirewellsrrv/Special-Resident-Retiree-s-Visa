@@ -14,12 +14,6 @@ import {
 import { getPaymentReceipt } from "@/actions/applicant/application";
 import type { PaymentReceiptData } from "@/actions/applicant/application";
 
-const SERVICE_LABELS: Record<string, string> = {
-  basic: "Basic",
-  premium: "Premium",
-  vip: "VIP",
-};
-
 function ReceiptContent() {
   const searchParams = useSearchParams();
   const externalId = searchParams.get("external_id");
@@ -112,7 +106,7 @@ function ReceiptContent() {
 
             <div className="flex justify-between text-sm">
               <span className="text-[#3B2A28]">
-                SRRV {SERVICE_LABELS[receipt.serviceType] ?? receipt.serviceType} Application Fee
+                SRRV Application Fee
               </span>
               <span className="text-[#3B2A28] font-medium">
                 ₱{Number(receipt.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
