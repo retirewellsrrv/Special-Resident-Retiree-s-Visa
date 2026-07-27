@@ -17,7 +17,6 @@ export type DocumentForReview = {
   created_at: string
   applicant_name: string
   application_code: string
-  service_type: string
 }
 
 export type ReviewStats = {
@@ -95,7 +94,6 @@ export async function getDocumentsForReview(opts?: {
       created_at,
       applications!documents_application_id_fkey (
         application_code,
-        service_type,
         user_id,
         client_profiles!applications_user_id_fkey (
           name
@@ -158,7 +156,6 @@ function formatResults(data: any[], total: number): { rows: DocumentForReview[];
     created_at: d.created_at,
     applicant_name: d.applications?.client_profiles?.name ?? "Unknown",
     application_code: d.applications?.application_code ?? "",
-    service_type: d.applications?.service_type ?? "",
   }))
 
   // Stats are computed from the paginated page for display accuracy

@@ -1,13 +1,12 @@
 'use client'
 
-import { useCallback, useTransition } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Download, Plus, Wallet, Clock, CheckCircle2, RotateCcw } from 'lucide-react'
+import { Download, Loader2, Banknote, Clock, CheckCircle2, Undo2 } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/loading'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
 import PaymentTable from '@/components/admin/payments/payments-table'
-import { StatCard } from '@/components/admin/shared/stat-card'
 import { Pagination } from '@/components/ui/pagination'
 import { downloadCsv } from '@/lib/utils'
 import { getPayments } from '@/actions/admin/payments'
@@ -48,10 +47,17 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
     navigate({ page: undefined, status: undefined, method: undefined, code: undefined, name: undefined, q: undefined })
   }
 
+  const [isExporting, setIsExporting] = useState(false)
+
   const handleExport = useCallback(async () => {
-    const { rows: all } = await getPayments({ limit: 10000 })
-    const headers = ['id', 'client_name', 'amount', 'status', 'payment_method', 'transaction_code', 'created_at']
-    downloadCsv(all, headers, `payment-logs-${new Date().toISOString().slice(0, 10)}.csv`)
+    setIsExporting(true)
+    try {
+      const { rows: all } = await getPayments({ limit: 10000 })
+      const headers = ['id', 'client_name', 'amount', 'status', 'payment_method', 'transaction_code', 'created_at']
+      downloadCsv(all, headers, `payment-logs-${new Date().toISOString().slice(0, 10)}.csv`)
+    } finally {
+      setIsExporting(false)
+    }
   }, [])
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
@@ -61,60 +67,58 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
     <div className="space-y-4">
       <PageHeader
         title="Payment Logs"
-        description="Monitor and manage all financial transactions related to SRRV applications, including government payments and service fees."
         actions={
           <>
             <button
               onClick={handleExport}
-              className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+              disabled={isExporting}
+              className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </button>
-            <button
-              onClick={() => router.push('/admin/applications')}
-              className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Create New Case
+              {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {isExporting ? 'Exporting...' : 'Export CSV'}
             </button>
           </>
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <StatCard
-          icon={Wallet}
-          label="Total Revenue"
-          value={fmt(stats.revenue)}
-          barWidth={78}
-          barColor="#871426"
-          footer={<><span className="text-green-600 font-medium">↑8.2%</span> from last month</>}
-        />
-        <StatCard
-          icon={Clock}
-          label="Pending Payments"
-          value={stats.pending}
-          barWidth={stats.total ? (stats.pending / stats.total) * 100 : 0}
-          barColor="#d97706"
-          footer={`${stats.pending} application${stats.pending !== 1 ? 's' : ''} awaiting deposit`}
-        />
-        <StatCard
-          icon={CheckCircle2}
-          label="Successful Txns"
-          value={stats.success}
-          barWidth={stats.total ? (stats.success / stats.total) * 100 : 0}
-          barColor="#16a34a"
-          footer="Prior year 2024 baseline"
-        />
-        <StatCard
-          icon={RotateCcw}
-          label="Refunds Issued"
-          value={fmt(stats.refundAmt)}
-          barWidth={stats.total ? (stats.refunded / stats.total) * 100 : 0}
-          barColor="#a6192e"
-          footer={<><span className="text-red-600 font-medium">{refundRate}%</span> refund rate</>}
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+          <div className="flex size-8 items-center justify-center rounded-md bg-blue-50 text-blue-600">
+            <Banknote className="size-4" />
+          </div>
+          <div className="min-w-0 leading-none">
+            <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Revenue</p>
+            <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{fmt(stats.revenue)}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+          <div className="flex size-8 items-center justify-center rounded-md bg-amber-50 text-amber-600">
+            <Clock className="size-4" />
+          </div>
+          <div className="min-w-0 leading-none">
+            <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Pending</p>
+            <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.pending}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+          <div className="flex size-8 items-center justify-center rounded-md bg-green-50 text-green-600">
+            <CheckCircle2 className="size-4" />
+          </div>
+          <div className="min-w-0 leading-none">
+            <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Successful</p>
+            <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.success}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+          <div className="flex size-8 items-center justify-center rounded-md bg-red-50 text-red-600">
+            <Undo2 className="size-4" />
+          </div>
+          <div className="min-w-0 leading-none">
+            <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Refunded</p>
+            <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{fmt(stats.refundAmt)}</p>
+            <p className="text-[10px] text-brand-neutral-400">{refundRate}% rate</p>
+          </div>
+        </div>
       </div>
 
       <FilterBar>
@@ -195,8 +199,6 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
         <PaymentTable
           rows={rows}
           total={total}
-          onView={(row) => console.log('view', row)}
-          onEdit={(row) => console.log('edit', row)}
         />
       )}
 

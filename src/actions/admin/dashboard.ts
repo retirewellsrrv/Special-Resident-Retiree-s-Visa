@@ -27,7 +27,6 @@ export type DashboardStats = {
     total: number
   }
   monthlyRevenue: { month: string; revenue: number }[]
-  appsByService: { label: string; count: number }[]
   appsByStatus: { label: string; count: number }[]
   recentApplications: {
     id: number
@@ -172,7 +171,6 @@ export const getDashboardStats = unstable_cache(
       total: usersTotal ?? 0,
     },
     monthlyRevenue,
-    appsByService: [],
     appsByStatus: [
       { label: "pending", count: appPending ?? 0 },
       { label: "processing", count: appProcessing ?? 0 },

@@ -90,13 +90,16 @@ export function ApplicationDetail({ detail, onStatusChange }: Props) {
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <InfoRow label="Phone" value={detail.phone_number} />
               <InfoRow label="Street" value={detail.street} />
-              <InfoRow label="City" value={detail.city} />
-              <InfoRow label="State/Province" value={detail.state} />
-              <InfoRow label="Country" value={detail.country} />
-              <InfoRow label="ZIP" value={detail.zip} />
               {detail.ph_address && <InfoRow label="PH Address" value={detail.ph_address} className="col-span-2" />}
             </div>
           </section>
+
+          {detail.future_plans && (
+            <section className="px-5 py-4 space-y-3">
+              <h4 className="text-xs font-semibold text-brand-neutral-400 uppercase tracking-wider">Future Plans</h4>
+              <p className="text-sm text-brand-neutral-900 capitalize">{detail.future_plans.replace(/_/g, ' ')}</p>
+            </section>
+          )}
 
           {(detail.emergency_name || detail.emergency_phone || detail.emergency_relationship) && (
             <section className="px-5 py-4 space-y-3">

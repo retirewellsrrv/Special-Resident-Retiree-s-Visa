@@ -113,7 +113,7 @@ export function ServiceCards({ services }: Props) {
               disabled={featuringIds.has(s.id)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all duration-150 disabled:opacity-50 ${s.highlighted
                 ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:border-amber-300'
-                : 'text-brand-neutral-500 hover:text-brand-neutral-700 hover:bg-brand-neutral-50'
+                : 'border border-brand-neutral-200 text-brand-neutral-600 hover:text-brand-neutral-800 hover:bg-brand-neutral-50 hover:border-brand-neutral-300'
                 }`}
             >
               {featuringIds.has(s.id)
