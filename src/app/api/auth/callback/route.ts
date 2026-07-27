@@ -6,6 +6,9 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
+  // Only honor internal, relative paths to avoid open-redirect abuse.
+  const nextParam = searchParams.get('next')
+  const next = nextParam && nextParam.startsWith('/') ? nextParam : null
 
   const supabase = await createClient()
 
@@ -14,6 +17,12 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
+      // Password recovery (and any other flow that passes ?next=) should land
+      // on the requested page instead of a role dashboard.
+      if (next) {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+
       let role = data.user.user_metadata?.role as string | undefined
 
       if (!role) {
