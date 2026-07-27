@@ -97,6 +97,7 @@ export function Step2({
 
       {/* Addresses */}
       <SectionLabel>Addresses</SectionLabel>
+      <div className="border-t border-red-200 mb-6" />
       <div className="mb-6">
         <Label htmlFor="home_country_address" className={LABEL_CLASS}>
           Home Country Address (Please specify)
@@ -156,6 +157,7 @@ export function Step2({
 
       {/* Communication */}
       <SectionLabel>Communication</SectionLabel>
+      <div className="border-t border-red-200 mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div>
           <Label htmlFor="telephone_number" className={LABEL_CLASS}>
@@ -235,6 +237,7 @@ export function Step2({
 
       {/* Parents' Information */}
       <SectionLabel>Parents&apos; Information</SectionLabel>
+      <div className="border-t border-red-200 mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-6 mb-6">
         <div>
           <Label htmlFor="father_name" className={LABEL_CLASS}>
@@ -296,6 +299,7 @@ export function Step2({
       <SectionLabel>
         Family Member Information (Accompanying Dependents)
       </SectionLabel>
+      <div className="border-t border-red-200 mb-6" />
       <div className="mb-3 overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>

@@ -166,6 +166,7 @@ export function Step1({
       <div className="mb-4">
         <SectionLabel>Personal Information</SectionLabel>
       </div>
+      <div className="border-t border-red-200 mb-6" />
 
       {/* Name row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
@@ -464,6 +465,7 @@ export function Step1({
       <div className="mt-8 mb-4">
         <SectionLabel>Educational Attainment</SectionLabel>
       </div>
+      <div className="border-t border-red-200 mb-6" />
       <div className="mb-3 overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
@@ -548,6 +550,7 @@ export function Step1({
       <div className="mt-8 mb-4">
         <SectionLabel>Employment History</SectionLabel>
       </div>
+      <div className="border-t border-red-200 mb-6" />
       <div className="mb-3 overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
@@ -632,6 +635,7 @@ export function Step1({
       <div className="mt-8 mb-4">
         <SectionLabel>Future Plans in the Philippines</SectionLabel>
       </div>
+      <div className="border-t border-red-200 mb-6" />
       <p className="text-sm text-neutral-500 leading-relaxed mb-4">
         Aside from retirement, what are the plans/future actions in the Philippines?
       </p>
@@ -678,6 +682,7 @@ export function Step1({
       <div className="mt-8 mb-4">
         <SectionLabel>Arrival Details</SectionLabel>
       </div>
+      <div className="border-t border-red-200 mb-6" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div>
           <Label htmlFor="date_of_arrival" className={LABEL_CLASS}>

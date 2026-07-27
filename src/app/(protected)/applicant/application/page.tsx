@@ -102,7 +102,7 @@ export default function SRRVApplicationPage() {
                 </div>
               </div>
 
-              <Separator className="mb-6" />
+              <div className="border-t border-red-200 mb-6" />
 
               {/* Loading state for profile data */}
               {isLoadingProfile && (
