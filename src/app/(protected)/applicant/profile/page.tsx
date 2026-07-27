@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useActionState } from "react";
+import { useEffect, useState, useActionState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +35,8 @@ const MARITAL_OPTIONS = [
   { value: "divorced", label: "Divorced" },
 ];
 
-export default function ApplicantProfilePage() {
+function ApplicantProfileContent() {
+  const isSetup = useSearchParams().get("setup") === "1";
   const [profile, setProfile] = useState<ApplicantProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -106,6 +108,13 @@ export default function ApplicantProfilePage() {
           View and update your personal information.
         </p>
       </div>
+
+      {isSetup && (
+        <div className="flex items-center gap-2 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800">
+          <span className="size-1.5 rounded-full bg-amber-500 shrink-0" />
+          Welcome! Please complete your profile details below to continue.
+        </div>
+      )}
 
       <Card className="rounded-xl border border-[#8B1A2B]/20 shadow-sm overflow-hidden">
         <CardHeader className="bg-[#8B1A2B] text-white px-8 py-6">
@@ -269,5 +278,13 @@ export default function ApplicantProfilePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ApplicantProfilePage() {
+  return (
+    <Suspense fallback={null}>
+      <ApplicantProfileContent />
+    </Suspense>
   );
 }

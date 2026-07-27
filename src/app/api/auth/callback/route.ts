@@ -6,6 +6,9 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
+  // Only honor internal, relative paths to avoid open-redirect abuse.
+  const nextParam = searchParams.get('next')
+  const next = nextParam && nextParam.startsWith('/') ? nextParam : null
 
   const supabase = await createClient()
 
@@ -14,9 +17,16 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
+      // Password recovery (and any other flow that passes ?next=) should land
+      // on the requested page instead of a role dashboard.
+      if (next) {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+
       let role = data.user.user_metadata?.role as string | undefined
 
       if (!role) {
+        role = 'applicant'
         await supabase.auth.updateUser({
           data: { role: 'applicant' },
         })
@@ -44,7 +54,31 @@ export async function GET(request: Request) {
         role = 'super_admin'
       }
 
-      const destination = role === 'super_admin' ? '/super-admin/dashboard' : role === 'admin' ? '/admin/dashboard' : '/applicant/dashboard'
+      // Applicants who signed up via OAuth start with placeholder profile
+      // fields (nationality/birthday empty). Send them to complete it first.
+      if (role === 'applicant') {
+        const { data: profile } = await supabase
+          .from('client_profiles')
+          .select('nationality, birthday')
+          .eq('user_id', data.user.id)
+          .maybeSingle()
+
+        const profileIncomplete =
+          !profile ||
+          !profile.nationality?.trim() ||
+          !profile.birthday?.trim()
+
+        if (profileIncomplete) {
+          return NextResponse.redirect(`${origin}/applicant/profile?setup=1`)
+        }
+      }
+
+      const destination =
+        role === 'super_admin'
+          ? '/super-admin/dashboard'
+          : role === 'admin'
+            ? '/admin/dashboard'
+            : '/applicant/dashboard'
       return NextResponse.redirect(`${origin}${destination}`)
     }
 
