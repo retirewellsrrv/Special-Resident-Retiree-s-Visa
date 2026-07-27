@@ -25,6 +25,7 @@ interface NavbarProps {
 
 const navItems = [
   { title: "Services", href: "/services" },
+  { title: "Packages", href: "/packages" },
   { title: "Contact", href: "/contact" },
   { title: "FAQs", href: "/faqs" },
   { title: "About Us", href: "/about" },
