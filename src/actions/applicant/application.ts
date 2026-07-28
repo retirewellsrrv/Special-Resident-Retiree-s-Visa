@@ -409,7 +409,7 @@ export async function getPaymentReceipt(
 ): Promise<PaymentReceiptData | null> {
   const supabase = createAdminClient();
 
-  const { data: payment, error: payErr } = await supabase
+  let { data: payment, error: payErr } = await supabase
     .from("payments")
     .select("*")
     .eq("transaction_code", transactionCode)
@@ -418,12 +418,28 @@ export async function getPaymentReceipt(
   if (payErr) {
     console.error("getPaymentReceipt: payments query error", payErr);
   }
+
   if (!payment) {
-    console.error("getPaymentReceipt: no payment found for", transactionCode);
-    return null;
+    const user = await getUserServer();
+    if (!user) {
+      console.error("getPaymentReceipt: no payment found for", transactionCode);
+      return null;
+    }
+    const { data: fallbackPayment } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    if (!fallbackPayment) {
+      console.error("getPaymentReceipt: no payment found for user", user.id);
+      return null;
+    }
+    payment = fallbackPayment;
   }
 
-  const { data: app, error: appErr } = await supabase
+  let { data: app, error: appErr } = await supabase
     .from("applications")
     .select("application_code, user_id")
     .eq("payment_id", payment.id)
@@ -432,9 +448,18 @@ export async function getPaymentReceipt(
   if (appErr) {
     console.error("getPaymentReceipt: applications query error", appErr);
   }
+
   if (!app) {
-    console.error("getPaymentReceipt: no application for payment_id", payment.id);
-    return null;
+    const { data: fallbackApp } = await supabase
+      .from("applications")
+      .select("application_code, user_id")
+      .eq("user_id", payment.user_id)
+      .maybeSingle();
+    if (!fallbackApp) {
+      console.error("getPaymentReceipt: no application for user_id", payment.user_id);
+      return null;
+    }
+    app = fallbackApp;
   }
 
   const { data: profile } = await supabase
