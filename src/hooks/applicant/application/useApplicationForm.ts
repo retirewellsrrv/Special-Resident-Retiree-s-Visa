@@ -264,6 +264,12 @@ export function useSRRVApplicationForm() {
       emergency_phone: step2Data.emergency_phone || null,
       future_plan: step1Data.future_plan,
       future_plan_other: step1Data.future_plan_other,
+      entry_visa_type: step1Data.entry_visa_type,
+      entry_visa_other: step1Data.entry_visa_other,
+      date_of_arrival: step1Data.date_of_arrival,
+      exp_date_tourist_visa: step1Data.exp_date_tourist_visa,
+      educations: step1Data.educations,
+      employments: step1Data.employments,
 
     };
 
@@ -306,7 +312,7 @@ export function useSRRVApplicationForm() {
       if (!submittedSteps.has(step)) return {};
 
       const stepFields: Record<number, string[]> = {
-        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until"],
+        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until", "educations", "employments", "future_plan_other", "entry_visa_type", "entry_visa_other", "date_of_arrival", "exp_date_tourist_visa"],
         2: [
           "home_country_address",
           "ph_primary_address",
@@ -393,7 +399,7 @@ export function useSRRVApplicationForm() {
       }
       const allErrors = validateForm();
       const stepFields: Record<number, string[]> = {
-        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until"],
+        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until", "educations", "employments", "future_plan_other", "entry_visa_type", "entry_visa_other", "date_of_arrival", "exp_date_tourist_visa"],
         2: [
           "home_country_address",
           "ph_primary_address",

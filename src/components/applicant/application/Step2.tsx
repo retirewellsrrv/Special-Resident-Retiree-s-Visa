@@ -214,8 +214,16 @@ export function Step2({
               const value = e.target.value.replace(/[^0-9]/g, "");
               onChange("fax_number", value);
             }}
-            className={INPUT_CLASS}
+            className={cn(
+              INPUT_CLASS,
+              errors.fax_number && "border-red-500",
+            )}
           />
+          {errors.fax_number && (
+            <p className="text-sm text-red-500 mt-1">
+              {errors.fax_number}
+            </p>
+          )}
         </div>
       </div>
 
@@ -329,113 +337,118 @@ export function Step2({
         Family Member Information (Accompanying Dependents)
       </SectionLabel>
       <div className="border-t border-red-200 mb-6" />
-      <div className="mb-3 overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="text-left text-neutral-500 border-b border-neutral-200">
-              <th className="font-medium py-2 pr-3">Full Legal Name</th>
-              <th className="font-medium py-2 pr-3">Relationship</th>
-              <th className="font-medium py-2 pr-3 w-20">Age</th>
-              <th className="font-medium py-2 pr-3">Passport No.</th>
-              <th className="font-medium py-2 pr-3 w-16 text-center">
-                Include?
-              </th>
-              <th className="w-8" />
-            </tr>
-          </thead>
-          <tbody>
-            {data.family_members.map((member) => (
-              <tr key={member.id} className="border-b border-neutral-100">
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="Enter name"
-                    value={member.full_name}
-                    onChange={(e) =>
-                      updateFamilyMember(member.id, "full_name", e.target.value.replace(/[0-9]/g, ""))
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="e.g. Spouse, Child"
-                    value={member.relationship}
-                    onChange={(e) =>
-                      updateFamilyMember(
-                        member.id,
-                        "relationship",
-                        e.target.value.replace(/[0-9]/g, ""),
-                      )
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    type="number"
-                    inputMode="numeric"
-                    placeholder="Years"
-                    value={member.age}
-                    onChange={(e) =>
-                      updateFamilyMember(
-                        member.id,
-                        "age",
-                        e.target.value.replace(/[^0-9]/g, ""),
-                      )
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="Passport No."
-                    value={member.passport_no}
-                    onChange={(e) =>
-                      updateFamilyMember(
-                        member.id,
-                        "passport_no",
-                        e.target.value,
-                      )
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3 text-center">
-                  <Checkbox
-                    checked={member.include}
-                    onCheckedChange={(checked) =>
-                      updateFamilyMember(member.id, "include", checked === true)
-                    }
-                  />
-                </td>
-                <td className="py-2">
-                  <button
-                    type="button"
-                    onClick={() => removeFamilyMember(member.id)}
-                    className="text-neutral-400 hover:text-red-500"
-                    aria-label="Remove family member"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
+      <div className="border border-red-300 rounded-xl p-5 mb-8" style={{ backgroundColor: "rgb(246, 243, 242)" }}>
+        {errors.family_members && (
+          <p className="text-sm text-red-500 mb-3">{errors.family_members}</p>
+        )}
+        <div className="mb-3 overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="text-left text-black border-b border-neutral-200">
+                <th className="font-medium py-2 pr-3">Full Legal Name</th>
+                <th className="font-medium py-2 pr-3">Relationship</th>
+                <th className="font-medium py-2 pr-3 w-20">Age</th>
+                <th className="font-medium py-2 pr-3">Passport No.</th>
+                <th className="font-medium py-2 pr-3 w-16 text-center">
+                  Include?
+                </th>
+                <th className="w-8" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.family_members.map((member) => (
+                <tr key={member.id} className="border-b border-neutral-100">
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="Enter name"
+                      value={member.full_name}
+                      onChange={(e) =>
+                        updateFamilyMember(member.id, "full_name", e.target.value.replace(/[0-9]/g, ""))
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="e.g. Spouse, Child"
+                      value={member.relationship}
+                      onChange={(e) =>
+                        updateFamilyMember(
+                          member.id,
+                          "relationship",
+                          e.target.value.replace(/[0-9]/g, ""),
+                        )
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="Years"
+                      value={member.age}
+                      onChange={(e) =>
+                        updateFamilyMember(
+                          member.id,
+                          "age",
+                          e.target.value.replace(/[^0-9]/g, ""),
+                        )
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="Passport No."
+                      value={member.passport_no}
+                      onChange={(e) =>
+                        updateFamilyMember(
+                          member.id,
+                          "passport_no",
+                          e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase(),
+                        )
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3 text-center">
+                    <Checkbox
+                      checked={member.include}
+                      onCheckedChange={(checked) =>
+                        updateFamilyMember(member.id, "include", checked === true)
+                      }
+                    />
+                  </td>
+                  <td className="py-2">
+                    <button
+                      type="button"
+                      onClick={() => removeFamilyMember(member.id)}
+                      className="text-neutral-400 hover:text-red-500"
+                      aria-label="Remove family member"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={addFamilyMember}
+          className="text-sm text-neutral-600 hover:text-neutral-900 px-0"
+        >
+          <Plus size={16} className="mr-1" />
+          Add another family member
+        </Button>
       </div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={addFamilyMember}
-        className="mb-8 text-sm text-neutral-600 hover:text-neutral-900 px-0"
-      >
-        <Plus size={16} className="mr-1" />
-        Add another family member
-      </Button>
-
       {/* Emergency Contact */}
-      <div className="border border-neutral-200 rounded-xl p-5">
+      <div className="border border-red-300 rounded-xl p-5" style={{ backgroundColor: "rgb(246, 243, 242)" }}>
         <p className="text-sm font-semibold text-neutral-700 mb-4">
           Emergency Contact
         </p>

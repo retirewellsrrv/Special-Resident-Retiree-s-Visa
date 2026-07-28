@@ -37,6 +37,82 @@ export const applicationUpdateSchema = applicationInsertSchema
 // APPLICATION FORM SCHEMA (Multi-step form)
 // ─────────────────────────────────────────────
 
+const educationEntrySchema = z.object({
+  id: z.string().optional(),
+  school: z.string(),
+  location: z.string(),
+  start_date: z.string(),
+  end_date: z.string(),
+}).refine(
+  (data) => {
+    const values = [data.school, data.location, data.start_date, data.end_date];
+    const filled = values.filter((v) => v?.trim().length > 0).length;
+    return filled === 0 || filled === 4;
+  },
+  {
+    message: "All fields in this row must be filled",
+  },
+).refine(
+  (data) => {
+    if (!data.start_date || !data.end_date) return true;
+    return data.start_date < data.end_date;
+  },
+  {
+    message: "Start date must be before end date",
+    path: ["start_date"],
+  },
+).refine(
+  (data) => {
+    if (!data.end_date) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(data.end_date) < today;
+  },
+  {
+    message: "End date cannot be in the future",
+    path: ["end_date"],
+  },
+);
+
+const employmentEntrySchema = z.object({
+  id: z.string().optional(),
+  company_name: z.string(),
+  job_title: z.string(),
+  contact_no: z.string(),
+  company_address: z.string(),
+  start_date: z.string(),
+  end_date: z.string(),
+}).refine(
+  (data) => {
+    const values = [data.company_name, data.job_title, data.contact_no, data.company_address, data.start_date, data.end_date];
+    const filled = values.filter((v) => v?.trim().length > 0).length;
+    return filled === 0 || filled === 6;
+  },
+  {
+    message: "All fields in this row must be filled",
+  },
+).refine(
+  (data) => {
+    if (!data.start_date || !data.end_date) return true;
+    return data.start_date < data.end_date;
+  },
+  {
+    message: "Start date must be before end date",
+    path: ["start_date"],
+  },
+).refine(
+  (data) => {
+    if (!data.end_date) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(data.end_date) < today;
+  },
+  {
+    message: "End date cannot be in the future",
+    path: ["end_date"],
+  },
+);
+
 export const applicationFormSchema = z.object({
   last_name: z
     .string()
@@ -78,16 +154,23 @@ export const applicationFormSchema = z.object({
     .min(1, "Weight is required"),
   passport_number: z
     .string()
-    .min(1, "Passport number is required"),
+    .min(1, "Passport number is required")
+    .regex(/^[A-Z0-9]{5,20}$/, "Invalid passport number format"),
   passport_place_of_issue: z
     .string()
-    .min(1, "Place of issue is required"),
+    .min(1, "Place of issue is required")
+    .regex(/^[^\d]*$/, "Place of issue must not contain numbers"),
   passport_date_of_issue: z
     .string()
     .min(1, "Date of issue is required"),
   passport_valid_until: z
     .string()
-    .min(1, "Passport validity is required"),
+    .min(1, "Passport validity is required")
+    .refine((val) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return new Date(val) > today;
+    }, "Passport is expired or expires today"),
   email: z
     .string()
     .min(1, "Email is required")
@@ -95,9 +178,22 @@ export const applicationFormSchema = z.object({
     .max(254, "Email address is too long"),
   mobile_number: z
     .string()
-    .min(1, "Mobile number is required"),
-  telephone_number: z.string().nullable(),
-  fax_number: z.string().nullable(),
+    .min(1, "Mobile number is required")
+    .regex(/^\d{10,15}$/, "Invalid mobile number"),
+  telephone_number: z
+    .string()
+    .nullable()
+    .refine(
+      (val) => val === null || val === "" || /^\d{7,15}$/.test(val),
+      "Invalid telephone number",
+    ),
+  fax_number: z
+    .string()
+    .nullable()
+    .refine(
+      (val) => val === null || val === "" || /^\d{7,15}$/.test(val),
+      "Invalid fax number",
+    ),
   home_country_address: z
     .string()
     .min(1, "Home country address is required"),
@@ -124,9 +220,20 @@ export const applicationFormSchema = z.object({
     full_name: z.string(),
     relationship: z.string(),
     age: z.string(),
-    passport_no: z.string(),
+    passport_no: z.string().regex(/^[A-Z0-9]{5,20}$/, "Invalid passport number format"),
     include: z.boolean(),
-  })).default([]),
+  }).refine(
+    (data) => {
+      const values = [data.full_name, data.relationship, data.age, data.passport_no];
+      const filled = values.filter((v) => v?.trim().length > 0).length;
+      return filled === 0 || filled === 4;
+    },
+    {
+      message: "All fields in this row must be filled",
+    },
+  )).default([]),
+  educations: z.array(educationEntrySchema).default([]),
+  employments: z.array(employmentEntrySchema).default([]),
   emergency_name: z
     .string()
     .nullable()
@@ -141,9 +248,69 @@ export const applicationFormSchema = z.object({
       (val) => val === null || val === "" || /^[^\d]*$/.test(val),
       "Relationship must not contain numbers",
     ),
-  emergency_phone: z.string().nullable(),
+  emergency_phone: z
+    .string()
+    .nullable()
+    .refine(
+      (val) => val === null || val === "" || /^\d{7,15}$/.test(val),
+      "Invalid phone number",
+    ),
   future_plan: z.string().min(1, "Future plan is required"),
-});
+  future_plan_other: z.string().optional().default(""),
+  entry_visa_type: z.string().optional().default(""),
+  entry_visa_other: z.string().optional().default(""),
+  date_of_arrival: z.string().optional().default(""),
+  exp_date_tourist_visa: z.string().optional().default(""),
+}).refine(
+  (data) => {
+    if (!data.passport_date_of_issue || !data.passport_valid_until) return true;
+    return data.passport_date_of_issue < data.passport_valid_until;
+  },
+  {
+    message: "Date of issue must be before valid until date",
+    path: ["passport_date_of_issue"],
+  },
+).refine(
+  (data) => {
+    if (data.future_plan !== "others") return true;
+    return data.future_plan_other?.trim().length > 0;
+  },
+  {
+    message: "Please specify your future plans",
+    path: ["future_plan_other"],
+  },
+).refine(
+  (data) => {
+    if (data.entry_visa_type !== "others") return true;
+    return data.entry_visa_other?.trim().length > 0;
+  },
+  {
+    message: "Please specify your entry visa type",
+    path: ["entry_visa_other"],
+  },
+).refine(
+  (data) => {
+    if (!data.date_of_arrival) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(data.date_of_arrival) >= today;
+  },
+  {
+    message: "Date of arrival cannot be in the past",
+    path: ["date_of_arrival"],
+  },
+).refine(
+  (data) => {
+    if (!data.exp_date_tourist_visa) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(data.exp_date_tourist_visa) > today;
+  },
+  {
+    message: "Tourist visa has expired",
+    path: ["exp_date_tourist_visa"],
+  },
+);
 
 export type ApplicationInsertInput = z.infer<typeof applicationInsertSchema>;
 export type ApplicationUpdateInput = z.infer<typeof applicationUpdateSchema>;
