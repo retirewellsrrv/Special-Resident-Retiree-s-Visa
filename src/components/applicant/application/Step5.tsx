@@ -100,7 +100,7 @@ export function Step5({
           <Field label="Religion" value={step1Data.religion} />
           <Field label="Citizenship" value={step1Data.nationality} />
           <Field label="Civil Status" value={step1Data.marital_status} />
-          <Field label="Height (m)" value={step1Data.height} />
+          <Field label="Height (cm)" value={step1Data.height} />
           <Field label="Weight (kg)" value={step1Data.weight} />
         </Section>
 

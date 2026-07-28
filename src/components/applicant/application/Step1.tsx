@@ -347,7 +347,7 @@ export function Step1({
         </div>
         <div>
           <Label htmlFor="height" className={LABEL_CLASS}>
-            Height (m) <span className="text-red-500">*</span>
+            Height (cm) <span className="text-red-500">*</span>
           </Label>
           <Input
             id="height"
