@@ -61,7 +61,7 @@ export function UploadRow({
   onUpload: (f: File) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const hasFile = !!file?.file;
+  const hasFile = !!file?.file || !!file?.name;
   const [internalError, setInternalError] = useState<string | null>(null);
 
   // Internal type-error takes priority; fall back to external (missing file) error

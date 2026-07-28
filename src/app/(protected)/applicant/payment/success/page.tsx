@@ -25,10 +25,14 @@ function ReceiptContent() {
       setLoading(false);
       return;
     }
-    getPaymentReceipt(externalId).then((data) => {
-      setReceipt(data);
-      setLoading(false);
-    });
+    getPaymentReceipt(externalId)
+      .then((data) => {
+        setReceipt(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
   }, [externalId]);
 
   if (loading) {
@@ -41,8 +45,19 @@ function ReceiptContent() {
 
   if (!receipt) {
     return (
-      <main className="min-h-screen w-full bg-white flex items-center justify-center px-4">
+      <main className="min-h-screen w-full bg-white flex flex-col items-center justify-center px-4 gap-2">
         <p className="text-sm text-brand-neutral-400">Receipt not found.</p>
+        <p className="text-xs text-brand-neutral-300 max-w-md text-center">
+          This can happen if the payment reference in the URL doesn&apos;t match our records.
+          Check your dashboard for the latest payment status.
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4 text-sm"
+          onClick={() => window.location.href = "/applicant/dashboard"}
+        >
+          Go to Dashboard
+        </Button>
       </main>
     );
   }
@@ -140,6 +155,7 @@ function ReceiptContent() {
           <Button
             variant="ghost"
             className="text-[#8A7B72] hover:text-[#3B2A28] gap-1.5"
+            onClick={() => window.location.href = "/applicant/dashboard"}
           >
             Return to Dashboard
             <ArrowRight className="h-4 w-4" />

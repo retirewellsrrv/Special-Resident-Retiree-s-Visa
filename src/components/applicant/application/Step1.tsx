@@ -347,7 +347,7 @@ export function Step1({
         </div>
         <div>
           <Label htmlFor="height" className={LABEL_CLASS}>
-            Height (m) <span className="text-red-500">*</span>
+            Height (cm) <span className="text-red-500">*</span>
           </Label>
           <Input
             id="height"
@@ -393,7 +393,7 @@ export function Step1({
             id="passport_number"
             placeholder="Passport number"
             value={data.passport_number}
-            onChange={(e) => onChange("passport_number", e.target.value)}
+            onChange={(e) => onChange("passport_number", e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase())}
             className={cn(INPUT_CLASS, errors.passport_number && "border-red-500")}
           />
           {errors.passport_number && (
@@ -408,7 +408,7 @@ export function Step1({
             id="passport_place_of_issue"
             placeholder="e.g. London"
             value={data.passport_place_of_issue}
-            onChange={(e) => onChange("passport_place_of_issue", e.target.value)}
+            onChange={(e) => onChange("passport_place_of_issue", e.target.value.replace(/[0-9]/g, ""))}
             className={cn(
               INPUT_CLASS,
               errors.passport_place_of_issue && "border-red-500",
@@ -472,192 +472,202 @@ export function Step1({
         <SectionLabel>Educational Attainment</SectionLabel>
       </div>
       <div className="border-t border-red-200 mb-6" />
-      <div className="mb-3 overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="text-left text-neutral-500 border-b border-neutral-200">
-              <th className="font-medium py-2 pr-3">School</th>
-              <th className="font-medium py-2 pr-3">Location</th>
-              <th className="font-medium py-2 pr-3">Start Date</th>
-              <th className="font-medium py-2 pr-3">End Date</th>
-              <th className="w-8" />
-            </tr>
-          </thead>
-          <tbody>
-            {data.educations.map((entry) => (
-              <tr key={entry.id} className="border-b border-neutral-100">
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="School name"
-                    value={entry.school}
-                    onChange={(e) =>
-                      updateEducation(entry.id, "school", e.target.value)
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="e.g. Manila, Philippines"
-                    value={entry.location}
-                    onChange={(e) =>
-                      updateEducation(entry.id, "location", e.target.value)
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    type="date"
-                    value={entry.start_date}
-                    onChange={(e) =>
-                      updateEducation(entry.id, "start_date", e.target.value)
-                    }
-                    className={cn(INPUT_CLASS, "text-neutral-700")}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    type="date"
-                    value={entry.end_date}
-                    onChange={(e) =>
-                      updateEducation(entry.id, "end_date", e.target.value)
-                    }
-                    className={cn(INPUT_CLASS, "text-neutral-700")}
-                  />
-                </td>
-                <td className="py-2">
-                  <button
-                    type="button"
-                    onClick={() => removeEducation(entry.id)}
-                    className="text-neutral-400 hover:text-red-500"
-                    aria-label="Remove education"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
+      <div className="border border-red-300 rounded-xl p-5 mb-8" style={{ backgroundColor: "rgb(246, 243, 242)" }}>
+        {errors.educations && (
+          <p className="text-sm text-red-500 mb-3">{errors.educations}</p>
+        )}
+        <div className="mb-3 overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="text-left text-black border-b border-neutral-200">
+                <th className="font-medium py-2 pr-3">School</th>
+                <th className="font-medium py-2 pr-3">Location</th>
+                <th className="font-medium py-2 pr-3">Start Date</th>
+                <th className="font-medium py-2 pr-3">End Date</th>
+                <th className="w-8" />
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {data.educations.map((entry) => (
+                <tr key={entry.id} className="border-b border-neutral-100">
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="School name"
+                      value={entry.school}
+                      onChange={(e) =>
+                        updateEducation(entry.id, "school", e.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="e.g. Manila, Philippines"
+                      value={entry.location}
+                      onChange={(e) =>
+                        updateEducation(entry.id, "location", e.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      type="date"
+                      value={entry.start_date}
+                      onChange={(e) =>
+                        updateEducation(entry.id, "start_date", e.target.value)
+                      }
+                      className={cn(INPUT_CLASS, "text-neutral-700")}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      type="date"
+                      value={entry.end_date}
+                      onChange={(e) =>
+                        updateEducation(entry.id, "end_date", e.target.value)
+                      }
+                      className={cn(INPUT_CLASS, "text-neutral-700")}
+                    />
+                  </td>
+                  <td className="py-2">
+                    <button
+                      type="button"
+                      onClick={() => removeEducation(entry.id)}
+                      className="text-neutral-400 hover:text-red-500"
+                      aria-label="Remove education"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={addEducation}
-        className="mb-8 text-sm text-neutral-600 hover:text-neutral-900 px-0"
-      >
-        <Plus size={16} className="mr-1" />
-        Add another educational attainment
-      </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={addEducation}
+          className="text-sm text-neutral-600 hover:text-neutral-900 px-0"
+        >
+          <Plus size={16} className="mr-1" />
+          Add another educational attainment
+        </Button>
+      </div>
 
       {/* Employment History */}
       <div className="mt-8 mb-4">
         <SectionLabel>Employment History</SectionLabel>
       </div>
       <div className="border-t border-red-200 mb-6" />
-      <div className="mb-3 overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="text-left text-neutral-500 border-b border-neutral-200">
-              <th className="font-medium py-2 pr-3">Company Name</th>
-              <th className="font-medium py-2 pr-3">Job Title</th>
-              <th className="font-medium py-2 pr-3">Contact No.</th>
-              <th className="font-medium py-2 pr-3">Company Address</th>
-              <th className="font-medium py-2 pr-3">Start Date</th>
-              <th className="font-medium py-2 pr-3">End Date</th>
-              <th className="w-8" />
-            </tr>
-          </thead>
-          <tbody>
-            {data.employments.map((entry) => (
-              <tr key={entry.id} className="border-b border-neutral-100">
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="Company name"
-                    value={entry.company_name}
-                    onChange={(e) =>
-                      updateEmployment(entry.id, "company_name", e.target.value)
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="e.g. Software Engineer"
-                    value={entry.job_title}
-                    onChange={(e) =>
-                      updateEmployment(entry.id, "job_title", e.target.value)
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="Contact number"
-                    value={entry.contact_no}
-                    onChange={(e) =>
-                      updateEmployment(entry.id, "contact_no", e.target.value.replace(/\D/g, ""))
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    placeholder="Company address"
-                    value={entry.company_address}
-                    onChange={(e) =>
-                      updateEmployment(entry.id, "company_address", e.target.value)
-                    }
-                    className={INPUT_CLASS}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    type="date"
-                    value={entry.start_date}
-                    onChange={(e) =>
-                      updateEmployment(entry.id, "start_date", e.target.value)
-                    }
-                    className={cn(INPUT_CLASS, "text-neutral-700")}
-                  />
-                </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    type="date"
-                    value={entry.end_date}
-                    onChange={(e) =>
-                      updateEmployment(entry.id, "end_date", e.target.value)
-                    }
-                    className={cn(INPUT_CLASS, "text-neutral-700")}
-                  />
-                </td>
-                <td className="py-2">
-                  <button
-                    type="button"
-                    onClick={() => removeEmployment(entry.id)}
-                    className="text-neutral-400 hover:text-red-500"
-                    aria-label="Remove employment"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
+      <div className="border border-red-300 rounded-xl p-5 mb-8" style={{ backgroundColor: "rgb(246, 243, 242)" }}>
+        {errors.employments && (
+          <p className="text-sm text-red-500 mb-3">{errors.employments}</p>
+        )}
+        <div className="mb-3 overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="text-left text-black border-b border-neutral-200">
+                <th className="font-medium py-2 pr-3">Company Name</th>
+                <th className="font-medium py-2 pr-3">Job Title</th>
+                <th className="font-medium py-2 pr-3">Contact No.</th>
+                <th className="font-medium py-2 pr-3">Company Address</th>
+                <th className="font-medium py-2 pr-3">Start Date</th>
+                <th className="font-medium py-2 pr-3">End Date</th>
+                <th className="w-8" />
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {data.employments.map((entry) => (
+                <tr key={entry.id} className="border-b border-neutral-100">
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="Company name"
+                      value={entry.company_name}
+                      onChange={(e) =>
+                        updateEmployment(entry.id, "company_name", e.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="e.g. Software Engineer"
+                      value={entry.job_title}
+                      onChange={(e) =>
+                        updateEmployment(entry.id, "job_title", e.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="Contact number"
+                      value={entry.contact_no}
+                      onChange={(e) =>
+                        updateEmployment(entry.id, "contact_no", e.target.value.replace(/\D/g, ""))
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      placeholder="Company address"
+                      value={entry.company_address}
+                      onChange={(e) =>
+                        updateEmployment(entry.id, "company_address", e.target.value)
+                      }
+                      className={INPUT_CLASS}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      type="date"
+                      value={entry.start_date}
+                      onChange={(e) =>
+                        updateEmployment(entry.id, "start_date", e.target.value)
+                      }
+                      className={cn(INPUT_CLASS, "text-neutral-700")}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <Input
+                      type="date"
+                      value={entry.end_date}
+                      onChange={(e) =>
+                        updateEmployment(entry.id, "end_date", e.target.value)
+                      }
+                      className={cn(INPUT_CLASS, "text-neutral-700")}
+                    />
+                  </td>
+                  <td className="py-2">
+                    <button
+                      type="button"
+                      onClick={() => removeEmployment(entry.id)}
+                      className="text-neutral-400 hover:text-red-500"
+                      aria-label="Remove employment"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={addEmployment}
-        className="mb-8 text-sm text-neutral-600 hover:text-neutral-900 px-0"
-      >
-        <Plus size={16} className="mr-1" />
-        Add another employment history
-      </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={addEmployment}
+          className="text-sm text-neutral-600 hover:text-neutral-900 px-0"
+        >
+          <Plus size={16} className="mr-1" />
+          Add another employment history
+        </Button>
+      </div>
 
       {/* Future Plans in the Philippines */}
       <div className="mt-8 mb-4">
@@ -698,12 +708,17 @@ export function Step1({
         </div>
       </RadioGroup>
       {data.future_plan === "others" && (
-        <Input
-          placeholder="Please specify your plans"
-          value={data.future_plan_other}
-          onChange={(e) => onChange("future_plan_other", e.target.value)}
-          className={INPUT_CLASS}
-        />
+        <>
+          <Input
+            placeholder="Please specify your plans"
+            value={data.future_plan_other}
+            onChange={(e) => onChange("future_plan_other", e.target.value)}
+            className={cn(INPUT_CLASS, errors.future_plan_other && "border-red-500")}
+          />
+          {errors.future_plan_other && (
+            <p className="text-sm text-red-500 mt-1">{errors.future_plan_other}</p>
+          )}
+        </>
       )}
 
       {/* Arrival Details */}
@@ -721,8 +736,11 @@ export function Step1({
             type="date"
             value={data.date_of_arrival}
             onChange={(e) => onChange("date_of_arrival", e.target.value)}
-            className={cn(INPUT_CLASS, "text-neutral-700")}
+            className={cn(INPUT_CLASS, "text-neutral-700", errors.date_of_arrival && "border-red-500")}
           />
+          {errors.date_of_arrival && (
+            <p className="text-sm text-red-500 mt-1">{errors.date_of_arrival}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="exp_date_tourist_visa" className={LABEL_CLASS}>
@@ -733,8 +751,11 @@ export function Step1({
             type="date"
             value={data.exp_date_tourist_visa}
             onChange={(e) => onChange("exp_date_tourist_visa", e.target.value)}
-            className={cn(INPUT_CLASS, "text-neutral-700")}
+            className={cn(INPUT_CLASS, "text-neutral-700", errors.exp_date_tourist_visa && "border-red-500")}
           />
+          {errors.exp_date_tourist_visa && (
+            <p className="text-sm text-red-500 mt-1">{errors.exp_date_tourist_visa}</p>
+          )}
         </div>
       </div>
       <div className="mb-4">
@@ -783,12 +804,17 @@ export function Step1({
         </div>
       </RadioGroup>
       {data.entry_visa_type === "others" && (
-        <Input
-          placeholder="Please specify"
-          value={data.entry_visa_other}
-          onChange={(e) => onChange("entry_visa_other", e.target.value)}
-          className={cn(INPUT_CLASS, "mb-8")}
-        />
+        <>
+          <Input
+            placeholder="Please specify"
+            value={data.entry_visa_other}
+            onChange={(e) => onChange("entry_visa_other", e.target.value)}
+            className={cn(INPUT_CLASS, "mb-1", errors.entry_visa_other && "border-red-500")}
+          />
+          {errors.entry_visa_other && (
+            <p className="text-sm text-red-500 mb-3">{errors.entry_visa_other}</p>
+          )}
+        </>
       )}
     </>
   );

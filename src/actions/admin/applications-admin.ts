@@ -164,7 +164,9 @@ export type AppDetail = {
     date_of_birth: string
     gender: string
     height: number
-    name: string
+    first_name: string
+    last_name: string
+    middle_name: string
     nationality: string
     place_of_birth: string
     religion: string
@@ -330,7 +332,9 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
           date_of_birth: appProfileData.data.date_of_birth,
           gender: appProfileData.data.gender,
           height: appProfileData.data.height,
-          name: appProfileData.data.name,
+          first_name: appProfileData.data.first_name,
+          last_name: appProfileData.data.last_name,
+          middle_name: appProfileData.data.middle_name,
           nationality: appProfileData.data.nationality,
           place_of_birth: appProfileData.data.place_of_birth,
           religion: appProfileData.data.religion,

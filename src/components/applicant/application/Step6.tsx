@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle2, FileText, Clock } from "lucide-react";
+import { CheckCircle2, FileText, Clock, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { ExistingApplicationData } from "@/actions/applicant/application";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -41,20 +42,37 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export function Step6({ data }: { data: ExistingApplicationData }) {
+export function Step6({
+  data,
+  onEdit,
+}: {
+  data: ExistingApplicationData;
+  onEdit?: () => void;
+}) {
   const { application, profile, documents, payment } = data;
   const statusColor = STATUS_COLORS[application.status] ?? "text-neutral-600 bg-neutral-50";
+  const canEdit = application.status === "pending" || application.status === "rejected";
 
   return (
     <>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-900 mb-2">
-          Application Under Review
+          {canEdit ? "Application Details" : "Application Under Review"}
         </h1>
         <p className="text-sm text-neutral-500 leading-relaxed">
-          Your application has been submitted and is currently being reviewed.
-          You will be notified of any updates.
+          {canEdit
+            ? "You can review your application details below. If you need to make changes, click the Edit button."
+            : "Your application has been submitted and is currently being reviewed. You will be notified of any updates."}
         </p>
+        {canEdit && onEdit && (
+          <Button
+            onClick={onEdit}
+            className="mt-4 bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-5 py-2 rounded-md font-semibold flex items-center gap-2"
+          >
+            <Pencil className="w-4 h-4" />
+            Edit Application
+          </Button>
+        )}
       </div>
 
       <div className="mb-6 p-4 rounded-lg bg-neutral-50 border border-neutral-200 space-y-2">

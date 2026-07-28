@@ -160,10 +160,87 @@ export function useSRRVApplicationForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedSteps, setSubmittedSteps] = useState<Set<number>>(new Set());
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [existingApplication, setExistingApplication] = useState<ExistingApplicationData | null>(null);
   const restored = useRef(false);
+
+  function populateFromExisting(existing: ExistingApplicationData) {
+    setStep1Data({
+      last_name: existing.applicant_profile?.last_name ?? existing.profile.name.split(" ")[0] ?? "",
+      first_name: existing.applicant_profile?.first_name ?? existing.profile.name.split(" ").slice(1).join(" ") ?? "",
+      middle_name: existing.applicant_profile?.middle_name ?? "",
+      birthday: existing.applicant_profile?.date_of_birth ?? existing.profile.birthday ?? "",
+      place_of_birth: existing.applicant_profile?.place_of_birth ?? "",
+      sex: existing.applicant_profile?.gender ?? existing.profile.sex ?? "",
+      religion: existing.applicant_profile?.religion ?? "",
+      nationality: existing.applicant_profile?.nationality ?? existing.profile.nationality ?? "",
+      marital_status: existing.applicant_profile?.civil_status ?? existing.profile.marital_status ?? "",
+      height: String(existing.applicant_profile?.height ?? ""),
+      weight: String(existing.applicant_profile?.weight ?? ""),
+      passport_number: existing.passport?.passport_number ?? "",
+      passport_place_of_issue: existing.passport?.place_of_issue ?? "",
+      passport_date_of_issue: existing.passport?.date_of_issue ?? "",
+      passport_valid_until: existing.passport?.expiration ?? "",
+      future_plan: existing.application.future_plans ?? "",
+      future_plan_other: "",
+      date_of_arrival: existing.visa_details?.date_of_arrival ?? "",
+      exp_date_tourist_visa: existing.visa_details?.exp_date_tourist_visa ?? "",
+      entry_visa_type: existing.visa_details?.entry_visa_type ?? "",
+      entry_visa_other: "",
+      educations: existing.educations.map((e) => ({
+        id: crypto.randomUUID(),
+        school: e.school,
+        location: e.location,
+        start_date: e.start_date,
+        end_date: e.end_date,
+      })),
+      employments: existing.employments.map((e) => ({
+        id: crypto.randomUUID(),
+        company_name: e.company_name ?? "",
+        job_title: e.job_title ?? "",
+        contact_no: e.contact_no ?? "",
+        company_address: e.company_address ?? "",
+        start_date: e.start_date ?? "",
+        end_date: e.end_date ?? "",
+      })),
+    });
+    setStep2Data({
+      home_country_address: existing.application.street ?? "",
+      ph_primary_address: existing.application.ph_address ?? "",
+      ph_secondary_address: existing.application.ph_secondary_address ?? "",
+      telephone_number: existing.application.tel_no ?? "",
+      fax_number: existing.application.fax_no ?? "",
+      mobile_number: existing.application.phone_number ?? "",
+      email: existing.profile.email ?? "",
+      father_name: existing.family_backgrounds?.father_name ?? "",
+      father_age: String(existing.family_backgrounds?.father_age ?? ""),
+      mother_name: existing.family_backgrounds?.mother_name ?? "",
+      mother_age: String(existing.family_backgrounds?.mother_age ?? ""),
+      family_members: existing.dependents.map((d) => ({
+        id: crypto.randomUUID(),
+        full_name: d.name,
+        relationship: d.relationship,
+        age: String(d.age),
+        passport_no: d.passport_no,
+        include: d.is_included,
+      })),
+      emergency_name: existing.application.emergency_name ?? "",
+      emergency_relationship: existing.application.emergency_relationship ?? "",
+      emergency_phone: existing.application.emergency_phone ?? "",
+    });
+    setStep4Data((prev) => {
+      const next = { ...prev };
+      for (const doc of existing.documents) {
+        const key = doc.type as DocumentType;
+        if (key in next) {
+          next[key] = { file: null, name: doc.name };
+        }
+      }
+      return next;
+    });
+  }
 
   // ── Restore persisted state ───────────────────────────────────────────
   useEffect(() => {
@@ -176,7 +253,12 @@ export function useSRRVApplicationForm() {
         if (existing) {
           clearPersistedState();
           setExistingApplication(existing);
-          setCurrentStep(5);
+          if (existing.application.status === "pending" || existing.application.status === "rejected") {
+            populateFromExisting(existing);
+            setCurrentStep(4);
+          } else {
+            setCurrentStep(5);
+          }
           return;
         }
 
@@ -264,6 +346,12 @@ export function useSRRVApplicationForm() {
       emergency_phone: step2Data.emergency_phone || null,
       future_plan: step1Data.future_plan,
       future_plan_other: step1Data.future_plan_other,
+      entry_visa_type: step1Data.entry_visa_type,
+      entry_visa_other: step1Data.entry_visa_other,
+      date_of_arrival: step1Data.date_of_arrival,
+      exp_date_tourist_visa: step1Data.exp_date_tourist_visa,
+      educations: step1Data.educations,
+      employments: step1Data.employments,
 
     };
 
@@ -291,14 +379,17 @@ export function useSRRVApplicationForm() {
     if (!result.success) {
       result.error.issues.forEach((issue) => {
         if (issue.path.length > 0) {
-          fileErrors[issue.path[0] as string] = issue.message;
+          const key = issue.path[0] as string;
+          // When editing, skip file-required errors for docs with existing names
+          if (existingApplication && step4Data[key as DocumentType]?.name) return;
+          fileErrors[key] = issue.message;
         }
       });
     }
 
     setErrors((prev) => ({ ...prev, ...fileErrors }));
     return fileErrors;
-  }, [step4Data]);
+  }, [step4Data, existingApplication]);
 
   // ── Filter errors per step ─────────────────────────────────────────────────
   const getStepErrors = useCallback(
@@ -306,7 +397,7 @@ export function useSRRVApplicationForm() {
       if (!submittedSteps.has(step)) return {};
 
       const stepFields: Record<number, string[]> = {
-        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until"],
+        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until", "educations", "employments", "future_plan_other", "entry_visa_type", "entry_visa_other", "date_of_arrival", "exp_date_tourist_visa"],
         2: [
           "home_country_address",
           "ph_primary_address",
@@ -393,7 +484,7 @@ export function useSRRVApplicationForm() {
       }
       const allErrors = validateForm();
       const stepFields: Record<number, string[]> = {
-        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until"],
+        1: ["last_name", "first_name", "middle_name", "birthday", "place_of_birth", "sex", "religion", "nationality", "marital_status", "height", "weight", "passport_number", "passport_place_of_issue", "passport_date_of_issue", "passport_valid_until", "educations", "employments", "future_plan_other", "entry_visa_type", "entry_visa_other", "date_of_arrival", "exp_date_tourist_visa"],
         2: [
           "home_country_address",
           "ph_primary_address",
@@ -521,6 +612,11 @@ export function useSRRVApplicationForm() {
       return;
     }
 
+    if (existingApplication) {
+      setShowSuccess(true);
+      return;
+    }
+
     // Reset form on success (fallback if no invoiceUrl)
     clearPersistedState();
     clearAllFiles();
@@ -548,7 +644,114 @@ export function useSRRVApplicationForm() {
     if (currentStep > 1) setCurrentStep((s) => s - 1);
   };
 
+  const handleEdit = useCallback(() => {
+    if (!existingApplication) return;
+    populateFromExisting(existingApplication);
+    setCurrentStep(4);
+  }, [existingApplication]);
+
   const stepErrors = getStepErrors(currentStep);
+
+  // ── TEST: auto-fill step 1 & 2 fields ────────────────────────────────
+  const fillTestData = useCallback(() => {
+    const today = new Date();
+    const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
+
+    const past = new Date(today);
+    past.setFullYear(past.getFullYear() - 5);
+    const pastStr = fmtDate(past);
+
+    const eduEnd = new Date(today);
+    eduEnd.setFullYear(eduEnd.getFullYear() - 2);
+    const eduEndStr = fmtDate(eduEnd);
+
+    const eduStart = new Date(today);
+    eduStart.setFullYear(eduStart.getFullYear() - 8);
+    const eduStartStr = fmtDate(eduStart);
+
+    const future = new Date(today);
+    future.setFullYear(future.getFullYear() + 5);
+    const futureStr = fmtDate(future);
+
+    const soon = new Date(today);
+    soon.setDate(soon.getDate() + 60);
+    const soonStr = fmtDate(soon);
+
+    const empStart = new Date(today);
+    empStart.setFullYear(empStart.getFullYear() - 3);
+    const empStartStr = fmtDate(empStart);
+
+    const empEnd = new Date(today);
+    empEnd.setFullYear(empEnd.getFullYear() - 1);
+    const empEndStr = fmtDate(empEnd);
+
+    handleStep1Change("last_name", "Doe");
+    handleStep1Change("first_name", "John");
+    handleStep1Change("middle_name", "M");
+    handleStep1Change("birthday", "1985-03-12");
+    handleStep1Change("place_of_birth", "Manila");
+    handleStep1Change("sex", "male");
+    handleStep1Change("religion", "Catholic");
+    handleStep1Change("nationality", "Filipino");
+    handleStep1Change("marital_status", "married");
+    handleStep1Change("height", "170");
+    handleStep1Change("weight", "70");
+    handleStep1Change("passport_number", "P12345678");
+    handleStep1Change("passport_place_of_issue", "Manila");
+    handleStep1Change("passport_date_of_issue", pastStr);
+    handleStep1Change("passport_valid_until", futureStr);
+    handleStep1Change("future_plan", "tourism");
+    handleStep1Change("future_plan_other", "");
+    handleStep1Change("date_of_arrival", fmtDate(today));
+    handleStep1Change("exp_date_tourist_visa", soonStr);
+    handleStep1Change("entry_visa_type", "tourist");
+    handleStep1Change("entry_visa_other", "");
+    handleStep1Change("educations", [
+      {
+        id: crypto.randomUUID(),
+        school: "University of the Philippines",
+        location: "Quezon City",
+        start_date: eduStartStr,
+        end_date: eduEndStr,
+      },
+    ]);
+    handleStep1Change("employments", [
+      {
+        id: crypto.randomUUID(),
+        company_name: "ABC Corporation",
+        job_title: "Senior Manager",
+        contact_no: "0287654321",
+        company_address: "Makati City",
+        start_date: empStartStr,
+        end_date: empEndStr,
+      },
+    ]);
+
+    handleStep2Change("home_country_address", "123 Rizal St, Makati");
+    handleStep2Change("ph_primary_address", "Unit 5, Greenfield Tower, Mandaluyong");
+    handleStep2Change("ph_secondary_address", "");
+    handleStep2Change("telephone_number", "028765432");
+    handleStep2Change("fax_number", "028765433");
+    handleStep2Change("mobile_number", "09171234567");
+    handleStep2Change("email", "john.doe@example.com");
+    handleStep2Change("father_name", "Juan Doe");
+    handleStep2Change("father_age", "65");
+    handleStep2Change("mother_name", "Maria Doe");
+    handleStep2Change("mother_age", "60");
+    handleStep2Change("emergency_name", "Jane Doe");
+    handleStep2Change("emergency_relationship", "Spouse");
+    handleStep2Change("emergency_phone", "09189876543");
+    handleStep2Change("family_members", [
+      {
+        id: crypto.randomUUID(),
+        full_name: "Jane Doe Jr",
+        relationship: "Daughter",
+        age: "10",
+        passport_no: "CHILD12345",
+        include: true,
+      },
+    ]);
+  }, [handleStep1Change, handleStep2Change]);
 
   return {
     currentStep,
@@ -557,6 +760,7 @@ export function useSRRVApplicationForm() {
     step1Change: handleStep1Change,
     step2Data,
     step2Change: handleStep2Change,
+    fillTestData,
     paymentMethod,
     setPaymentMethod,
     step4Data,
@@ -569,10 +773,18 @@ export function useSRRVApplicationForm() {
     hasStepErrors: Object.keys(stepErrors).length > 0,
     isFormValid: Object.keys(errors).length === 0,
     showConfirm,
+    showSuccess,
     confirmSubmit,
     cancelSubmit: () => setShowConfirm(false),
+    dismissSuccess: () => {
+      setShowSuccess(false);
+      clearPersistedState();
+      clearAllFiles();
+      window.location.href = "/applicant/dashboard";
+    },
     isLoadingProfile,
     isSubmitting,
     existingApplication,
+    startEditing: handleEdit,
   };
 }
