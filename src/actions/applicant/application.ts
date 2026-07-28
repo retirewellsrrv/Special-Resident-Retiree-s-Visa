@@ -596,13 +596,16 @@ export async function submitApplication(
   // Check if user already has an application
   const { data: existingApp } = await supabase
     .from("applications")
-    .select("id")
+    .select("id, status")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (existingApp) {
+  const isEditing = existingApp && (existingApp.status === "pending" || existingApp.status === "rejected");
+  const appId = existingApp?.id;
+
+  if (existingApp && !isEditing) {
     return {
-      error: "You already have an existing application. Only one application per user is allowed.",
+      error: "Your application cannot be modified at this stage.",
       success: false,
     };
   }
@@ -697,27 +700,52 @@ export async function submitApplication(
 
   if (profileError) return { error: profileError.message, success: false };
 
-  const { data: app, error: appError } = await supabase
-    .from("applications")
-    .insert({
-      user_id: user.id,
-      future_plans: futurePlan,
-      application_code: code,
-    } as never)
-    .select("id")
-    .single();
+  let appIdToUse: number;
 
-  if (appError || !app)
-    return {
-      error: appError?.message ?? "Failed to create application",
-      success: false,
-    };
+  if (isEditing && appId) {
+    // Update existing application
+    appIdToUse = appId;
+    const { error: appUpdateError } = await supabase
+      .from("applications")
+      .update({ future_plans: futurePlan, status: "pending" } as never)
+      .eq("id", appId);
+
+    if (appUpdateError) return { error: appUpdateError.message, success: false };
+
+    // Delete existing child records using admin client (bypass RLS)
+    const adminSupabase = createAdminClient();
+    const tables = [
+      "contacts", "emergency_contacts", "applicant_profiles", "passports",
+      "visa_details", "educations", "employments", "dependents", "family_backgrounds",
+    ];
+    for (const table of tables) {
+      await adminSupabase.from(table as never).delete().eq("application_id", appId);
+    }
+  } else {
+    // Create new application
+    const { data: app, error: appError } = await supabase
+      .from("applications")
+      .insert({
+        user_id: user.id,
+        future_plans: futurePlan,
+        application_code: code,
+      } as never)
+      .select("id")
+      .single();
+
+    if (appError || !app)
+      return {
+        error: appError?.message ?? "Failed to create application",
+        success: false,
+      };
+    appIdToUse = app.id;
+  }
 
   // ── Insert contact info ──────────────────────────────────────────────
   const { error: contactError } = await supabase
     .from("contacts")
     .insert({
-      application_id: app.id,
+      application_id: appIdToUse,
       email: parsed.data.email,
       mobile_no: parsed.data.mobile_number,
       tel_no: parsed.data.telephone_number,
@@ -734,7 +762,7 @@ export async function submitApplication(
     const { error: emergencyError } = await supabase
       .from("emergency_contacts")
       .insert({
-        application_id: app.id,
+        application_id: appIdToUse,
         name: parsed.data.emergency_name,
         phone_no: parsed.data.emergency_phone ?? "",
         relationship: parsed.data.emergency_relationship ?? "",
@@ -747,7 +775,7 @@ export async function submitApplication(
   const { error: appProfileError } = await supabase
     .from("applicant_profiles")
     .insert({
-      application_id: app.id,
+      application_id: appIdToUse,
       civil_status: parsed.data.marital_status as Database["public"]["Enums"]["marital_status"],
       date_of_birth: parsed.data.birthday,
       gender: parsed.data.sex as Database["public"]["Enums"]["sex"],
@@ -767,7 +795,7 @@ export async function submitApplication(
     const { error: passportError } = await supabase
       .from("passports")
       .insert({
-        application_id: app.id,
+        application_id: appIdToUse,
         passport_number: passportNumber,
         date_of_issue: parsed.data.passport_date_of_issue,
         expiration: parsed.data.passport_valid_until,
@@ -783,7 +811,7 @@ export async function submitApplication(
     const { error: visaError } = await supabase
       .from("visa_details")
       .insert({
-        application_id: app.id,
+        application_id: appIdToUse,
         entry_visa_type: entryVisaType,
         date_of_arrival: (formData.get("date_of_arrival") as string) ?? null,
         exp_date_tourist_visa: (formData.get("exp_date_tourist_visa") as string) ?? null,
@@ -798,7 +826,7 @@ export async function submitApplication(
     const { error: eduError } = await supabase
       .from("educations")
       .insert({
-        application_id: app.id,
+        application_id: appIdToUse,
         school: formData.get(`educations[${eduIdx}].school`) as string,
         location: (formData.get(`educations[${eduIdx}].location`) as string) ?? "",
         start_date: (formData.get(`educations[${eduIdx}].start_date`) as string) ?? "",
@@ -815,7 +843,7 @@ export async function submitApplication(
     const { error: empError } = await supabase
       .from("employments")
       .insert({
-        application_id: app.id,
+        application_id: appIdToUse,
         company_name: formData.get(`employments[${empIdx}].company_name`) as string,
         job_title: (formData.get(`employments[${empIdx}].job_title`) as string) ?? null,
         contact_no: (formData.get(`employments[${empIdx}].contact_no`) as string) ?? null,
@@ -834,7 +862,7 @@ export async function submitApplication(
     const { error: depError } = await supabase
       .from("dependents")
       .insert({
-        application_id: app.id,
+        application_id: appIdToUse,
         name: member.full_name,
         age: Number(member.age) || 0,
         passport_no: member.passport_no,
@@ -850,7 +878,7 @@ export async function submitApplication(
     const { error: famError } = await supabase
       .from("family_backgrounds")
       .insert({
-        application_id: app.id,
+        application_id: appIdToUse,
         father_name: parsed.data.father_name,
         father_age: Number(parsed.data.father_age) || null,
         mother_name: parsed.data.mother_name ?? "",
@@ -869,6 +897,21 @@ export async function submitApplication(
     const name = formData.get(`doc_${docType}_name`) as string | null;
     const formatRaw = formData.get(`doc_${docType}_format`) as string | null;
 
+    // When editing, remove existing document of this type before re-uploading
+    if (isEditing && file && name) {
+      const { data: existingDocs } = await supabase
+        .from("documents")
+        .select("path")
+        .eq("application_id", appIdToUse)
+        .eq("type", docType);
+      if (existingDocs && existingDocs.length > 0) {
+        for (const doc of existingDocs) {
+          await supabase.storage.from(BUCKET).remove([doc.path]);
+        }
+        await supabase.from("documents").delete().eq("application_id", appIdToUse).eq("type", docType);
+      }
+    }
+
     if (!file || !name) continue;
 
     const typeParsed = DocumentTypeEnum.safeParse(docType);
@@ -883,7 +926,7 @@ export async function submitApplication(
       continue;
     }
 
-    const storagePath = `${user.id}/${app.id}/${docType}/${name}`;
+    const storagePath = `${user.id}/${appIdToUse}/${docType}/${name}`;
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
@@ -898,7 +941,7 @@ export async function submitApplication(
     }
 
     const docInsert = {
-      application_id: app.id,
+      application_id: appIdToUse,
       format: formatParsed.data,
       name,
       path: storagePath,
@@ -923,6 +966,12 @@ export async function submitApplication(
 
   if (docErrors.length > 0) {
     return { error: docErrors.join("; "), success: false };
+  }
+
+  // If editing, don't create a new payment — keep existing payment
+  if (isEditing) {
+    revalidatePath("/applicant/application");
+    return { error: null, success: true };
   }
 
   const DEFAULT_FEE = 350;
@@ -953,7 +1002,7 @@ export async function submitApplication(
   const { error: linkError } = await supabase
     .from("applications")
     .update({ payment_id: payment.id })
-    .eq("id", app.id);
+    .eq("id", appIdToUse);
 
   if (linkError) {
     return { error: linkError.message, success: false };
@@ -975,7 +1024,7 @@ export async function submitApplication(
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
         currency: "PHP",
         metadata: {
-          application_id: String(app.id),
+          application_id: String(appIdToUse),
           service_type: "basic",
         },
       },

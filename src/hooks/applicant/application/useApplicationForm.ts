@@ -160,10 +160,89 @@ export function useSRRVApplicationForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedSteps, setSubmittedSteps] = useState<Set<number>>(new Set());
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [existingApplication, setExistingApplication] = useState<ExistingApplicationData | null>(null);
   const restored = useRef(false);
+
+  function populateFromExisting(existing: ExistingApplicationData) {
+    const name = existing.applicant_profile?.name ?? existing.profile.name;
+    const nameParts = name.split(" ");
+    setStep1Data({
+      last_name: nameParts[0] ?? "",
+      first_name: (nameParts.slice(1).join(" ") || nameParts[0]) ?? "",
+      middle_name: "",
+      birthday: existing.applicant_profile?.date_of_birth ?? existing.profile.birthday ?? "",
+      place_of_birth: existing.applicant_profile?.place_of_birth ?? "",
+      sex: existing.applicant_profile?.gender ?? existing.profile.sex ?? "",
+      religion: existing.applicant_profile?.religion ?? "",
+      nationality: existing.applicant_profile?.nationality ?? existing.profile.nationality ?? "",
+      marital_status: existing.applicant_profile?.civil_status ?? existing.profile.marital_status ?? "",
+      height: String(existing.applicant_profile?.height ?? ""),
+      weight: String(existing.applicant_profile?.weight ?? ""),
+      passport_number: existing.passport?.passport_number ?? "",
+      passport_place_of_issue: existing.passport?.place_of_issue ?? "",
+      passport_date_of_issue: existing.passport?.date_of_issue ?? "",
+      passport_valid_until: existing.passport?.expiration ?? "",
+      future_plan: existing.application.future_plans ?? "",
+      future_plan_other: "",
+      date_of_arrival: existing.visa_details?.date_of_arrival ?? "",
+      exp_date_tourist_visa: existing.visa_details?.exp_date_tourist_visa ?? "",
+      entry_visa_type: existing.visa_details?.entry_visa_type ?? "",
+      entry_visa_other: "",
+      educations: existing.educations.map((e) => ({
+        id: crypto.randomUUID(),
+        school: e.school,
+        location: e.location,
+        start_date: e.start_date,
+        end_date: e.end_date,
+      })),
+      employments: existing.employments.map((e) => ({
+        id: crypto.randomUUID(),
+        company_name: e.company_name ?? "",
+        job_title: e.job_title ?? "",
+        contact_no: e.contact_no ?? "",
+        company_address: e.company_address ?? "",
+        start_date: e.start_date ?? "",
+        end_date: e.end_date ?? "",
+      })),
+    });
+    setStep2Data({
+      home_country_address: existing.application.street ?? "",
+      ph_primary_address: existing.application.ph_address ?? "",
+      ph_secondary_address: "",
+      telephone_number: "",
+      fax_number: "",
+      mobile_number: existing.application.phone_number ?? "",
+      email: existing.profile.email ?? "",
+      father_name: existing.family_backgrounds?.father_name ?? "",
+      father_age: String(existing.family_backgrounds?.father_age ?? ""),
+      mother_name: existing.family_backgrounds?.mother_name ?? "",
+      mother_age: String(existing.family_backgrounds?.mother_age ?? ""),
+      family_members: existing.dependents.map((d) => ({
+        id: crypto.randomUUID(),
+        full_name: d.name,
+        relationship: d.relationship,
+        age: String(d.age),
+        passport_no: d.passport_no,
+        include: d.is_included,
+      })),
+      emergency_name: existing.application.emergency_name ?? "",
+      emergency_relationship: existing.application.emergency_relationship ?? "",
+      emergency_phone: existing.application.emergency_phone ?? "",
+    });
+    setStep4Data((prev) => {
+      const next = { ...prev };
+      for (const doc of existing.documents) {
+        const key = doc.type as DocumentType;
+        if (key in next) {
+          next[key] = { file: null, name: doc.name };
+        }
+      }
+      return next;
+    });
+  }
 
   // ── Restore persisted state ───────────────────────────────────────────
   useEffect(() => {
@@ -176,7 +255,12 @@ export function useSRRVApplicationForm() {
         if (existing) {
           clearPersistedState();
           setExistingApplication(existing);
-          setCurrentStep(5);
+          if (existing.application.status === "pending" || existing.application.status === "rejected") {
+            populateFromExisting(existing);
+            setCurrentStep(4);
+          } else {
+            setCurrentStep(5);
+          }
           return;
         }
 
@@ -297,14 +381,17 @@ export function useSRRVApplicationForm() {
     if (!result.success) {
       result.error.issues.forEach((issue) => {
         if (issue.path.length > 0) {
-          fileErrors[issue.path[0] as string] = issue.message;
+          const key = issue.path[0] as string;
+          // When editing, skip file-required errors for docs with existing names
+          if (existingApplication && step4Data[key as DocumentType]?.name) return;
+          fileErrors[key] = issue.message;
         }
       });
     }
 
     setErrors((prev) => ({ ...prev, ...fileErrors }));
     return fileErrors;
-  }, [step4Data]);
+  }, [step4Data, existingApplication]);
 
   // ── Filter errors per step ─────────────────────────────────────────────────
   const getStepErrors = useCallback(
@@ -527,6 +614,11 @@ export function useSRRVApplicationForm() {
       return;
     }
 
+    if (existingApplication) {
+      setShowSuccess(true);
+      return;
+    }
+
     // Reset form on success (fallback if no invoiceUrl)
     clearPersistedState();
     clearAllFiles();
@@ -554,6 +646,12 @@ export function useSRRVApplicationForm() {
     if (currentStep > 1) setCurrentStep((s) => s - 1);
   };
 
+  const handleEdit = useCallback(() => {
+    if (!existingApplication) return;
+    populateFromExisting(existingApplication);
+    setCurrentStep(4);
+  }, [existingApplication]);
+
   const stepErrors = getStepErrors(currentStep);
 
   return {
@@ -575,10 +673,18 @@ export function useSRRVApplicationForm() {
     hasStepErrors: Object.keys(stepErrors).length > 0,
     isFormValid: Object.keys(errors).length === 0,
     showConfirm,
+    showSuccess,
     confirmSubmit,
     cancelSubmit: () => setShowConfirm(false),
+    dismissSuccess: () => {
+      setShowSuccess(false);
+      clearPersistedState();
+      clearAllFiles();
+      window.location.href = "/applicant/dashboard";
+    },
     isLoadingProfile,
     isSubmitting,
     existingApplication,
+    startEditing: handleEdit,
   };
 }

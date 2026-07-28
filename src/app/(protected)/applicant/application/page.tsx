@@ -44,11 +44,14 @@ export default function SRRVApplicationPage() {
     errors,
     submitError,
     showConfirm,
+    showSuccess,
     confirmSubmit,
     cancelSubmit,
+    dismissSuccess,
     isLoadingProfile,
     isSubmitting,
     existingApplication,
+    startEditing,
   } = useSRRVApplicationForm();
 
   return (
@@ -164,7 +167,7 @@ export default function SRRVApplicationPage() {
                 />
               )}
               {!isLoadingProfile && currentStep === 5 && existingApplication && (
-                <Step6 data={existingApplication} />
+                <Step6 data={existingApplication} onEdit={startEditing} />
               )}
 
               {/* Submit error banner */}
@@ -226,8 +229,9 @@ export default function SRRVApplicationPage() {
           <AlertDialogHeader className="bg-brand-primary-50 -mx-4 -mt-4 rounded-t-xl p-4 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.15)] relative z-10">
             <AlertDialogTitle className="font-bold">Confirm Submission</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure the details you provided are correct? You will not be
-              able to modify your application after submission.
+              {existingApplication
+                ? "Are you sure the updated details are correct? Your application will be re-submitted for review."
+                : "Are you sure the details you provided are correct? You will not be able to modify your application after submission."}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -242,6 +246,26 @@ export default function SRRVApplicationPage() {
               Yes, Submit
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showSuccess}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader className="bg-brand-primary-50 -mx-4 -mt-4 rounded-t-xl p-4 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.15)] relative z-10">
+            <AlertDialogTitle className="font-bold">Update Successful</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your application has been updated successfully. You will be
+              redirected to your dashboard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-center py-4">
+            <AlertDialogAction
+              onClick={dismissSuccess}
+              className="bg-[#8B1A2B] hover:bg-[#6f1522]"
+            >
+              Continue
+            </AlertDialogAction>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>

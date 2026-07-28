@@ -76,7 +76,7 @@ export function Step5({
   step2Data: Step2Data;
   step4Data: Step4Data;
 }) {
-  const uploadedDocs = Object.entries(step4Data).filter(([, doc]) => doc.file);
+  const uploadedDocs = Object.entries(step4Data).filter(([, doc]) => doc.file || doc.name);
 
   return (
     <>
