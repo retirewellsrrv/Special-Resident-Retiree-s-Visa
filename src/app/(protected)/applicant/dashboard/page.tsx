@@ -58,11 +58,16 @@ const DOC_ICONS: Record<string, typeof FileText> = {
 };
 
 const DOC_LABELS: Record<string, string> = {
-  passport: "Valid Passport (Main Applicant)",
+  passport: "Valid Passport",
+  photo_2x2: "2×2 ID Photo",
+  pra_application: "PRA Application Form",
   medical: "Medical Clearance Certificate",
-  pension: "Bank Deposit Certification",
-  nbi: "NBI / Police Clearance",
-  visa: "Visa Documentation",
+  police: "Police Clearance",
+  bicc: "Bureau of Immigration Clearance Certificate",
+  bank_cert: "Bank Certification",
+  proof_payment: "Proof of Payment",
+  proof_pension: "Proof of Pension",
+  proof_relationship: "Proof of Relationship (Dependents)",
 };
 
 function documentToStatus(docStatus: string): string {
