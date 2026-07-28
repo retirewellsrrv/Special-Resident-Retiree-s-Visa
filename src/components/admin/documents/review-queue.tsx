@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, FileIcon, Inbox, Plus } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileIcon, Inbox, Plus, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { StatusChip } from '@/components/ui/status-chip'
 import type { DocumentForReview, ReviewStats } from '@/actions/admin/documents'
@@ -175,7 +175,12 @@ export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortCha
                         <p className="text-[11px] text-brand-neutral-400 truncate mt-0.5">{doc.name}</p>
                         <p className="text-[10px] text-brand-neutral-300 truncate mt-0.5">{doc.application_code}</p>
                       </div>
-                      <StatusChip status={doc.status} className="shrink-0" />
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {doc.review_note && doc.review_note.length > 0 && (
+                          <MessageSquare className="h-3 w-3 text-amber-500" />
+                        )}
+                        <StatusChip status={doc.status} />
+                      </div>
                     </button>
                   )
                 })}
