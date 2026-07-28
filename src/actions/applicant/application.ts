@@ -65,12 +65,15 @@ export type ExistingApplicationData = {
     created_at: string;
     future_plans: string | null;
     phone_number: string;
+    tel_no: string | null;
+    fax_no: string | null;
     street: string;
     city: string;
     state: string;
     zip: string;
     country: string;
     ph_address: string | null;
+    ph_secondary_address: string | null;
     emergency_name: string | null;
     emergency_phone: string | null;
     emergency_relationship: string | null;
@@ -83,12 +86,14 @@ export type ExistingApplicationData = {
     marital_status: string;
     email: string;
   };
-  applicant_profile: {
+    applicant_profile: {
     civil_status: string;
     date_of_birth: string;
     gender: string;
     height: number;
-    name: string;
+    first_name: string;
+    last_name: string;
+    middle_name: string;
     nationality: string;
     place_of_birth: string;
     religion: string;
@@ -237,12 +242,15 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
       created_at: app.created_at,
       future_plans: app.future_plans,
       phone_number: contact?.mobile_no ?? "",
+      tel_no: contact?.tel_no ?? null,
+      fax_no: contact?.fax_no ?? null,
       street: contact?.home_country_address ?? "",
       city: "",
       state: "",
       zip: "",
       country: "",
       ph_address: contact?.primary_address_ph ?? null,
+      ph_secondary_address: contact?.secondary_address_ph ?? null,
       emergency_name: emergency?.name ?? null,
       emergency_phone: emergency?.phone_no ?? null,
       emergency_relationship: emergency?.relationship ?? null,
@@ -261,7 +269,9 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
           date_of_birth: applicantProfile.date_of_birth,
           gender: applicantProfile.gender,
           height: applicantProfile.height,
-          name: applicantProfile.name,
+          first_name: applicantProfile.first_name,
+          last_name: applicantProfile.last_name,
+          middle_name: applicantProfile.middle_name,
           nationality: applicantProfile.nationality,
           place_of_birth: applicantProfile.place_of_birth,
           religion: applicantProfile.religion,
@@ -494,6 +504,7 @@ export async function retryPaymentAction(
   if (!user) return { error: "Unauthorized", success: false };
 
   const supabase = await createClient();
+  const adminSupabase = createAdminClient();
 
   const { data: app } = await supabase
     .from("applications")
@@ -539,7 +550,7 @@ export async function retryPaymentAction(
     };
   }
 
-  const { error: linkError } = await supabase
+  const { error: linkError } = await adminSupabase
     .from("applications")
     .update({ payment_id: payment.id })
     .eq("id", app.id);
@@ -592,6 +603,7 @@ export async function submitApplication(
   if (!user) return { error: "Unauthorized", success: false };
 
   const supabase = await createClient();
+  const adminSupabase = createAdminClient();
 
   // Check if user already has an application
   const { data: existingApp } = await supabase
@@ -703,9 +715,9 @@ export async function submitApplication(
   let appIdToUse: number;
 
   if (isEditing && appId) {
-    // Update existing application
+    // Update existing application (use admin client to bypass RLS)
     appIdToUse = appId;
-    const { error: appUpdateError } = await supabase
+    const { error: appUpdateError } = await adminSupabase
       .from("applications")
       .update({ future_plans: futurePlan, status: "pending" } as never)
       .eq("id", appId);
@@ -713,7 +725,6 @@ export async function submitApplication(
     if (appUpdateError) return { error: appUpdateError.message, success: false };
 
     // Delete existing child records using admin client (bypass RLS)
-    const adminSupabase = createAdminClient();
     const tables = [
       "contacts", "emergency_contacts", "applicant_profiles", "passports",
       "visa_details", "educations", "employments", "dependents", "family_backgrounds",
@@ -772,7 +783,7 @@ export async function submitApplication(
   }
 
   // ── Insert applicant profile ─────────────────────────────────────────
-  const { error: appProfileError } = await supabase
+  const { error: appProfileError } = await adminSupabase
     .from("applicant_profiles")
     .insert({
       application_id: appIdToUse,
@@ -780,7 +791,9 @@ export async function submitApplication(
       date_of_birth: parsed.data.birthday,
       gender: parsed.data.sex as Database["public"]["Enums"]["sex"],
       height: Number(parsed.data.height) || 0,
-      name: fullName,
+      first_name: parsed.data.first_name,
+      last_name: parsed.data.last_name,
+      middle_name: parsed.data.middle_name ?? "",
       nationality: parsed.data.nationality,
       place_of_birth: parsed.data.place_of_birth,
       religion: parsed.data.religion,
@@ -999,7 +1012,7 @@ export async function submitApplication(
   }
 
   // ── Link payment to application ──────────────────────────────────────────
-  const { error: linkError } = await supabase
+  const { error: linkError } = await adminSupabase
     .from("applications")
     .update({ payment_id: payment.id })
     .eq("id", appIdToUse);

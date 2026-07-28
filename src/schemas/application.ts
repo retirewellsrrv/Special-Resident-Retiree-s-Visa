@@ -220,7 +220,10 @@ export const applicationFormSchema = z.object({
     full_name: z.string(),
     relationship: z.string(),
     age: z.string(),
-    passport_no: z.string().regex(/^[A-Z0-9]{5,20}$/, "Invalid passport number format"),
+    passport_no: z.string().refine(
+      (val) => val === "" || /^[A-Z0-9]{5,20}$/.test(val),
+      "Invalid passport number format",
+    ),
     include: z.boolean(),
   }).refine(
     (data) => {

@@ -167,12 +167,10 @@ export function useSRRVApplicationForm() {
   const restored = useRef(false);
 
   function populateFromExisting(existing: ExistingApplicationData) {
-    const name = existing.applicant_profile?.name ?? existing.profile.name;
-    const nameParts = name.split(" ");
     setStep1Data({
-      last_name: nameParts[0] ?? "",
-      first_name: (nameParts.slice(1).join(" ") || nameParts[0]) ?? "",
-      middle_name: "",
+      last_name: existing.applicant_profile?.last_name ?? existing.profile.name.split(" ")[0] ?? "",
+      first_name: existing.applicant_profile?.first_name ?? existing.profile.name.split(" ").slice(1).join(" ") ?? "",
+      middle_name: existing.applicant_profile?.middle_name ?? "",
       birthday: existing.applicant_profile?.date_of_birth ?? existing.profile.birthday ?? "",
       place_of_birth: existing.applicant_profile?.place_of_birth ?? "",
       sex: existing.applicant_profile?.gender ?? existing.profile.sex ?? "",
@@ -211,9 +209,9 @@ export function useSRRVApplicationForm() {
     setStep2Data({
       home_country_address: existing.application.street ?? "",
       ph_primary_address: existing.application.ph_address ?? "",
-      ph_secondary_address: "",
-      telephone_number: "",
-      fax_number: "",
+      ph_secondary_address: existing.application.ph_secondary_address ?? "",
+      telephone_number: existing.application.tel_no ?? "",
+      fax_number: existing.application.fax_no ?? "",
       mobile_number: existing.application.phone_number ?? "",
       email: existing.profile.email ?? "",
       father_name: existing.family_backgrounds?.father_name ?? "",
@@ -654,6 +652,107 @@ export function useSRRVApplicationForm() {
 
   const stepErrors = getStepErrors(currentStep);
 
+  // ── TEST: auto-fill step 1 & 2 fields ────────────────────────────────
+  const fillTestData = useCallback(() => {
+    const today = new Date();
+    const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
+
+    const past = new Date(today);
+    past.setFullYear(past.getFullYear() - 5);
+    const pastStr = fmtDate(past);
+
+    const eduEnd = new Date(today);
+    eduEnd.setFullYear(eduEnd.getFullYear() - 2);
+    const eduEndStr = fmtDate(eduEnd);
+
+    const eduStart = new Date(today);
+    eduStart.setFullYear(eduStart.getFullYear() - 8);
+    const eduStartStr = fmtDate(eduStart);
+
+    const future = new Date(today);
+    future.setFullYear(future.getFullYear() + 5);
+    const futureStr = fmtDate(future);
+
+    const soon = new Date(today);
+    soon.setDate(soon.getDate() + 60);
+    const soonStr = fmtDate(soon);
+
+    const empStart = new Date(today);
+    empStart.setFullYear(empStart.getFullYear() - 3);
+    const empStartStr = fmtDate(empStart);
+
+    const empEnd = new Date(today);
+    empEnd.setFullYear(empEnd.getFullYear() - 1);
+    const empEndStr = fmtDate(empEnd);
+
+    handleStep1Change("last_name", "Doe");
+    handleStep1Change("first_name", "John");
+    handleStep1Change("middle_name", "M");
+    handleStep1Change("birthday", "1985-03-12");
+    handleStep1Change("place_of_birth", "Manila");
+    handleStep1Change("sex", "male");
+    handleStep1Change("religion", "Catholic");
+    handleStep1Change("nationality", "Filipino");
+    handleStep1Change("marital_status", "married");
+    handleStep1Change("height", "170");
+    handleStep1Change("weight", "70");
+    handleStep1Change("passport_number", "P12345678");
+    handleStep1Change("passport_place_of_issue", "Manila");
+    handleStep1Change("passport_date_of_issue", pastStr);
+    handleStep1Change("passport_valid_until", futureStr);
+    handleStep1Change("future_plan", "tourism");
+    handleStep1Change("future_plan_other", "");
+    handleStep1Change("date_of_arrival", fmtDate(today));
+    handleStep1Change("exp_date_tourist_visa", soonStr);
+    handleStep1Change("entry_visa_type", "tourist");
+    handleStep1Change("entry_visa_other", "");
+    handleStep1Change("educations", [
+      {
+        id: crypto.randomUUID(),
+        school: "University of the Philippines",
+        location: "Quezon City",
+        start_date: eduStartStr,
+        end_date: eduEndStr,
+      },
+    ]);
+    handleStep1Change("employments", [
+      {
+        id: crypto.randomUUID(),
+        company_name: "ABC Corporation",
+        job_title: "Senior Manager",
+        contact_no: "0287654321",
+        company_address: "Makati City",
+        start_date: empStartStr,
+        end_date: empEndStr,
+      },
+    ]);
+
+    handleStep2Change("home_country_address", "123 Rizal St, Makati");
+    handleStep2Change("ph_primary_address", "Unit 5, Greenfield Tower, Mandaluyong");
+    handleStep2Change("ph_secondary_address", "");
+    handleStep2Change("telephone_number", "028765432");
+    handleStep2Change("fax_number", "028765433");
+    handleStep2Change("mobile_number", "09171234567");
+    handleStep2Change("email", "john.doe@example.com");
+    handleStep2Change("father_name", "Juan Doe");
+    handleStep2Change("father_age", "65");
+    handleStep2Change("mother_name", "Maria Doe");
+    handleStep2Change("mother_age", "60");
+    handleStep2Change("emergency_name", "Jane Doe");
+    handleStep2Change("emergency_relationship", "Spouse");
+    handleStep2Change("emergency_phone", "09189876543");
+    handleStep2Change("family_members", [
+      {
+        id: crypto.randomUUID(),
+        full_name: "Jane Doe Jr",
+        relationship: "Daughter",
+        age: "10",
+        passport_no: "CHILD12345",
+        include: true,
+      },
+    ]);
+  }, [handleStep1Change, handleStep2Change]);
+
   return {
     currentStep,
     setCurrentStep,
@@ -661,6 +760,7 @@ export function useSRRVApplicationForm() {
     step1Change: handleStep1Change,
     step2Data,
     step2Change: handleStep2Change,
+    fillTestData,
     paymentMethod,
     setPaymentMethod,
     step4Data,

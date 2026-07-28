@@ -245,9 +245,19 @@ export default function ApplicantDashboardPage() {
                 </span>
               </p>
             </div>
-            <span className="text-xs font-semibold text-[#8B1A2B] bg-[#8B1A2B]/10 border border-[#8B1A2B]/20 rounded-md px-3 py-1.5 whitespace-nowrap">
-              {progress}% Complete
-            </span>
+            <div className="flex items-center gap-2">
+              {(application?.status === "pending" || application?.status === "rejected") && (
+                <a
+                  href="/applicant/application"
+                  className="text-xs font-semibold text-white bg-[#8B1A2B] hover:bg-[#6f1522] rounded-md px-3 py-1.5 transition-colors"
+                >
+                  Update
+                </a>
+              )}
+              <span className="text-xs font-semibold text-[#8B1A2B] bg-[#8B1A2B]/10 border border-[#8B1A2B]/20 rounded-md px-3 py-1.5 whitespace-nowrap">
+                {progress}% Complete
+              </span>
+            </div>
           </div>
 
           {!application ? (

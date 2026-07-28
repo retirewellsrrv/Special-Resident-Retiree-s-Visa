@@ -36,6 +36,7 @@ export default function SRRVApplicationPage() {
     step1Change,
     step2Data,
     step2Change,
+    fillTestData,
     step4Data,
     docUpload,
     next,
@@ -168,6 +169,21 @@ export default function SRRVApplicationPage() {
               )}
               {!isLoadingProfile && currentStep === 5 && existingApplication && (
                 <Step6 data={existingApplication} onEdit={startEditing} />
+              )}
+
+              {/* ── TEST: auto-fill button (remove after testing) ── */}
+              {currentStep >= 1 && currentStep <= 2 && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={fillTestData}
+                    className="border-dashed border-amber-300 text-amber-700 hover:bg-amber-50 text-xs"
+                  >
+                    Fill Test Data
+                  </Button>
+                </div>
               )}
 
               {/* Submit error banner */}
