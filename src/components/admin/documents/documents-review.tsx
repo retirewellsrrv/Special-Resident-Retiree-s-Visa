@@ -72,7 +72,6 @@ export function DocumentsReview({ docs, stats, total, page, search, sort }: Prop
     <div className="flex flex-col gap-4 h-full">
       <PageHeader
         title="Document Review"
-        description="Review applicant documents, verify authenticity, and approve or request changes."
         actions={
           <FilterInput
             label="Search documents"

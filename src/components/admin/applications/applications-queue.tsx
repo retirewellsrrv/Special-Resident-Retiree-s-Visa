@@ -1,5 +1,7 @@
 'use client'
 
+import { Inbox, Plus } from 'lucide-react'
+import Link from 'next/link'
 import { StatusChip } from '@/components/ui/status-chip'
 import type { AppStats, AppRow } from '@/actions/admin/applications-admin'
 
@@ -26,8 +28,15 @@ export function ApplicationQueue({ rows, stats, selectedId, onSelect }: Props) {
 
       <div className="flex-1 overflow-y-auto divide-y divide-brand-neutral-50">
         {rows.length === 0 ? (
-          <div className="px-4 py-12 text-center text-sm text-brand-neutral-400">
-            No applications found.
+          <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
+            <Inbox className="size-10 text-brand-neutral-300" />
+            <p className="text-sm text-brand-neutral-400">No applications found.</p>
+            <Link
+              href="/admin/dashboard"
+              className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+            >
+              <Plus className="h-4 w-4" /> Back to Dashboard
+            </Link>
           </div>
         ) : (
           rows.map((row) => {

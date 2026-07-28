@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useOptimistic, useMemo } from 'react'
 import { toast } from 'sonner'
-import { Loader2, Trash2, Pencil, Check, X, Plus, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { Loader2, Trash2, Pencil, Check, X, Plus, ArrowUpDown, ArrowUp, ArrowDown, Inbox } from 'lucide-react'
 import type { ServicePlan } from '@/types/services'
 import {
   deleteServicePlan, toggleServicePlanAvailability,
@@ -200,8 +200,13 @@ export function ServiceTable({ services }: Props) {
         <tbody className="divide-y divide-brand-neutral-100">
           {services.length === 0 ? (
             <tr>
-              <td colSpan={6} className="px-3 py-12 text-center text-sm text-brand-neutral-400">
-                No service plans yet. Click "Add service plan" to create one.
+              <td colSpan={6} className="px-3 py-12 text-center">
+                <div className="flex flex-col items-center gap-2">
+                  <Inbox className="size-8 text-brand-neutral-300 mx-auto" />
+                  <p className="text-sm text-brand-neutral-400">
+                    No service plans yet. Click "Add service plan" to create one.
+                  </p>
+                </div>
               </td>
             </tr>
           ) : (

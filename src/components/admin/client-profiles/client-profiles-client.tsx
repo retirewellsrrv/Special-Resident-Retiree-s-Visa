@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useTransition } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -11,19 +11,20 @@ import {
 import { StatusChip } from '@/components/ui/status-chip'
 import { TableSkeleton } from '@/components/ui/loading'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
-import { StatCard } from '@/components/admin/shared/stat-card'
 import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
 import { downloadCsv } from '@/lib/utils'
 import {
     Download,
-    Plus,
-    Users,
+    Inbox,
+    Loader2,
+    UserRound,
     Clock,
     CheckCircle2,
     XCircle,
     PauseCircle,
     AlertTriangle,
     Eye,
+    Plus,
     type LucideIcon,
 } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
@@ -73,7 +74,7 @@ function ClientDirectoryRow({ row }: { row: ClientRow }) {
 }
 
 export function ClientProfilesClient({
-    stats,
+    stats: _stats,
     rows,
     total,
     page,
@@ -106,14 +107,17 @@ export function ClientProfilesClient({
         startTransition(() => router.push(`${pathname}?${next}`))
     }
 
-    function handleFilterStatus(status?: string) {
-        navigate({ status: status || undefined, page: '1' })
-    }
+    const [isExporting, setIsExporting] = useState(false)
 
     const handleExport = useCallback(async () => {
-        const { rows: all } = await getClientDirectory({ limit: 10000 })
-        const headers = ['user_id', 'name', 'application_code', 'status', 'updated_at']
-        downloadCsv(all, headers, `client-profiles-${new Date().toISOString().slice(0, 10)}.csv`)
+        setIsExporting(true)
+        try {
+            const { rows: all } = await getClientDirectory({ limit: 10000 })
+            const headers = ['user_id', 'name', 'application_code', 'status', 'updated_at']
+            downloadCsv(all, headers, `client-profiles-${new Date().toISOString().slice(0, 10)}.csv`)
+        } finally {
+            setIsExporting(false)
+        }
     }, [])
 
     function handleClear() {
@@ -123,34 +127,59 @@ export function ClientProfilesClient({
     return (
         <div className="p-6 space-y-6">
             <PageHeader
-                title="Client Profiles"
-                description="Manage and review existing clients, track application history, and coordinate with the visa processing department for ongoing cases."
+                title="Manage Client Profiles"
                 actions={
                     <>
                         <button
                             onClick={handleExport}
-                            className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+                            disabled={isExporting}
+                            className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            <Download className="h-4 w-4" />
-                            Export CSV
-                        </button>
-                        <button
-                            onClick={() => router.push('/admin/applications')}
-                            className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Add New Client
+                            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                            {isExporting ? 'Exporting...' : 'Export CSV'}
                         </button>
                     </>
                 }
             />
 
-            {/* Stat Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Total Clients" value={stats.total} badge="+12%" icon={Users} onClick={() => handleFilterStatus(undefined)} active={!statusFilter} />
-                <StatCard label="Pending" value={stats.pending} icon={Clock} onClick={() => handleFilterStatus('pending')} active={statusFilter === 'pending'} />
-                <StatCard label="Approved" value={stats.approved} icon={CheckCircle2} onClick={() => handleFilterStatus('approved')} active={statusFilter === 'approved'} />
-                <StatCard label="Rejected" value={stats.rejected} badge="High Priority" icon={AlertTriangle} onClick={() => handleFilterStatus('rejected')} active={statusFilter === 'rejected'} />
+            {/* Compact Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-md bg-blue-50 text-blue-600">
+                        <UserRound className="size-4" />
+                    </div>
+                    <div className="min-w-0 leading-none">
+                        <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Total Clients</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.total}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-md bg-amber-50 text-amber-600">
+                        <Clock className="size-4" />
+                    </div>
+                    <div className="min-w-0 leading-none">
+                        <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Pending</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.pending}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-md bg-green-50 text-green-600">
+                        <CheckCircle2 className="size-4" />
+                    </div>
+                    <div className="min-w-0 leading-none">
+                        <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Approved</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.approved}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-md bg-red-50 text-red-600">
+                        <AlertTriangle className="size-4" />
+                    </div>
+                    <div className="min-w-0 leading-none">
+                        <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Rejected</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.rejected}</p>
+                    </div>
+                </div>
             </div>
 
             {/* Filters */}
@@ -191,9 +220,8 @@ export function ClientProfilesClient({
 
             {/* Table */}
             <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-brand-neutral-100">
+                <div className="px-4 py-3 border-b border-brand-neutral-100">
                     <span className="text-sm font-medium text-brand-neutral-900">Client Records</span>
-                    <span className="text-xs text-brand-neutral-500">{rows.length} of {total} records</span>
                 </div>
                 <Table>
                     <TableHeader>
@@ -209,8 +237,17 @@ export function ClientProfilesClient({
                             <TableSkeleton rows={Math.min(rows.length || limit, limit)} columns={4} />
                         ) : rows.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center text-brand-neutral-400 py-12">
-                                    No clients found.
+                                <TableCell colSpan={4} className="text-center py-12">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Inbox className="size-10 text-brand-neutral-300" />
+                                        <p className="text-sm text-brand-neutral-400">No clients found.</p>
+                                        <Link
+                                            href="/admin/applications"
+                                            className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+                                        >
+                                            <Plus className="h-4 w-4" /> View Applications
+                                        </Link>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (

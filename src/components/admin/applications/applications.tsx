@@ -4,8 +4,7 @@ import { useState, useCallback, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, FileText, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
-import { StatCard } from '@/components/admin/shared/stat-card'
-import { FilterInput } from '@/components/admin/shared/filters'
+import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
 import { ApplicationQueue } from './applications-queue'
 import { ApplicationDetail } from './application-detail'
 import { Pagination } from '@/components/ui/pagination'
@@ -31,14 +30,13 @@ interface Props {
   search?: string
 }
 
-export function ApplicationsClient({ stats, rows, total, page, statusFilter, userId, search }: Props) {
+export function ApplicationsClient({ stats: _stats, rows, total, page, statusFilter, userId, search }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detail, setDetail] = useState<AppDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const lastPage = Math.max(1, Math.ceil(total / 10))
-  const autoSelected = useRef(false)
   const fetchRef = useRef(0)
 
   const handleSelect = useCallback((id: number) => {
@@ -56,17 +54,9 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
     })
   }, [selectedId])
 
-  useEffect(() => {
-    if (!autoSelected.current && rows.length > 0 && selectedId === null) {
-      autoSelected.current = true
-      handleSelect(rows[0].id)
-    }
-  }, [rows, selectedId, handleSelect])
-
   const handleStatusChange = useCallback(() => {
     setDetail(null)
     setSelectedId(null)
-    autoSelected.current = false
     router.refresh()
   }, [router])
 
@@ -77,13 +67,6 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
     [router, statusFilter, userId, search, startTransition],
   )
 
-  const handleFilterStatus = useCallback(
-    (status?: string) => {
-      startTransition(() => router.push(`/admin/applications?${buildQuery({ status, userId, search, page: 1 })}`))
-    },
-    [router, userId, search, startTransition],
-  )
-
   const handleSearch = useCallback(
     (q: string) => {
       startTransition(() => router.push(`/admin/applications?${buildQuery({ status: statusFilter, userId, search: q, page: 1 })}`))
@@ -91,30 +74,80 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
     [router, statusFilter, userId, startTransition],
   )
 
+  function handleClear() {
+    startTransition(() => router.push(`/admin/applications?${buildQuery({ page: 1 })}`))
+  }
+
   return (
     <div className="flex flex-col gap-4 h-full">
-      <PageHeader
-        title="Applications"
-        description="Review and manage visa applications, their details, and submitted documents."
-        actions={
-          <FilterInput
-            label="Search applications"
-            placeholder="Search by name or application code..."
-            defaultValue={search ?? ''}
-            onChange={handleSearch}
-            disabled={isPending}
-            isPending={isPending}
-            debounceMs={400}
-          />
-        }
-      />
+      <PageHeader title="Manage Applications" />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={FileText} label="Total" value={stats.total} onClick={() => handleFilterStatus(undefined)} active={!statusFilter} />
-        <StatCard icon={Clock} label="Pending" value={stats.pending} iconBgClass="bg-amber-50" iconColorClass="text-amber-600" onClick={() => handleFilterStatus('pending')} active={statusFilter === 'pending'} />
-        <StatCard icon={CheckCircle2} label="Approved" value={stats.approved} iconBgClass="bg-green-50" iconColorClass="text-green-600" onClick={() => handleFilterStatus('approved')} active={statusFilter === 'approved'} />
-        <StatCard icon={AlertTriangle} label="Rejected" value={stats.rejected} badge={stats.rejected > 0 ? 'Needs Review' : undefined} iconBgClass="bg-red-50" iconColorClass="text-red-600" onClick={() => handleFilterStatus('rejected')} active={statusFilter === 'rejected'} />
+      {/* Compact Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+          <div className="flex size-8 items-center justify-center rounded-md bg-blue-50 text-blue-600">
+            <FileText className="size-4" />
+          </div>
+          <div className="min-w-0 leading-none">
+            <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Total</p>
+            <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.total}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+          <div className="flex size-8 items-center justify-center rounded-md bg-amber-50 text-amber-600">
+            <Clock className="size-4" />
+          </div>
+          <div className="min-w-0 leading-none">
+            <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Pending</p>
+            <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.pending}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+          <div className="flex size-8 items-center justify-center rounded-md bg-green-50 text-green-600">
+            <CheckCircle2 className="size-4" />
+          </div>
+          <div className="min-w-0 leading-none">
+            <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Approved</p>
+            <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.approved}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+          <div className="flex size-8 items-center justify-center rounded-md bg-red-50 text-red-600">
+            <AlertTriangle className="size-4" />
+          </div>
+          <div className="min-w-0 leading-none">
+            <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Rejected</p>
+            <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.rejected}</p>
+          </div>
+        </div>
       </div>
+
+      <FilterBar>
+        <FilterSelect
+          label="Status"
+          placeholder="All Status"
+          value={statusFilter}
+          options={[
+            { value: 'pending', label: 'Pending' },
+            { value: 'processing', label: 'Processing' },
+            { value: 'approved', label: 'Approved' },
+            { value: 'rejected', label: 'Rejected' },
+            { value: 'paused', label: 'Paused' },
+          ]}
+          onChange={(v) => startTransition(() => router.push(`/admin/applications?${buildQuery({ status: v !== 'all' ? v : undefined, userId, search, page: 1 })}`))}
+          disabled={isPending}
+        />
+        <FilterInput
+          label="Search applications"
+          placeholder="Search by name or code..."
+          defaultValue={search ?? ''}
+          onChange={handleSearch}
+          disabled={isPending}
+          isPending={isPending}
+          debounceMs={400}
+        />
+        <FilterClear onClick={handleClear} disabled={isPending} />
+      </FilterBar>
 
       <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-4 flex-1 min-h-0">
         {isPending ? (
@@ -137,7 +170,7 @@ export function ApplicationsClient({ stats, rows, total, page, statusFilter, use
         ) : (
           <ApplicationQueue
             rows={rows}
-            stats={stats}
+            stats={_stats}
             selectedId={selectedId}
             onSelect={handleSelect}
           />

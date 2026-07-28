@@ -171,7 +171,7 @@ export function SidebarLayout({
               </div>
             </header>
 
-            <main className="flex-1 overflow-auto p-6">{children}</main>
+            <main className="flex-1 overflow-auto p-6 animate-in fade-in duration-300">{children}</main>
           </SidebarInset>
         </div>
       </SidebarProvider>

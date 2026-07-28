@@ -153,10 +153,6 @@ export type AppDetail = {
   applicant_name: string
   phone_number: string
   email?: string
-  city: string
-  state: string
-  country: string
-  zip: string
   street: string
   ph_address: string | null
   emergency_name: string | null
@@ -249,7 +245,7 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
 
   if (error || !data) return null
 
-  const [docs, _plans, paymentData, contactData, emergencyData,
+  const [docs, paymentData, contactData, emergencyData,
        appProfileData, passportData, visaData, eduData, empData, depData, famData] = await Promise.all([
     // review_note was added via migration — re-run `supabase gen types` to remove cast
     supabase
@@ -260,11 +256,6 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
       data: { id: number; name: string; type: string; format: string; status: string; review_note: string | null; path: string; created_at: string }[] | null
       error: unknown
     }>,
-    supabase
-      .from("service_plans")
-      .select("name, price")
-      .eq("name", "basic")
-      .maybeSingle(),
     supabase
       .from("payments")
       .select("id, amount, status, payment_method, transaction_code, created_at")
@@ -327,10 +318,6 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
     applicant_name: (data as { client_profiles?: { name: string } }).client_profiles?.name ?? "Unknown",
     phone_number: contactData.data?.mobile_no ?? "",
     email: contactData.data?.email ?? undefined,
-    city: "",
-    state: "",
-    country: "",
-    zip: "",
     street: contactData.data?.home_country_address ?? "",
     ph_address: contactData.data?.primary_address_ph ?? null,
     emergency_name: emergencyData.data?.name ?? null,
@@ -444,6 +431,7 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
   const target = parsed.data
 
   if (target === 'approved') {
+    // Validate contact fields exist
     const { data: contactCheck } = await supabase
       .from("contacts")
       .select("mobile_no, home_country_address")
@@ -454,6 +442,7 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
       return { error: "Cannot approve: missing required contact fields (Phone Number, Address)", success: false }
     }
 
+    // Validate payment was successful
     const { data: payment } = await supabase
       .from("payments")
       .select("status")
@@ -465,6 +454,7 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
       return { error: "Cannot approve: no successful payment found", success: false }
     }
 
+    // Validate all documents are accepted
     const { data: docs } = await supabase
       .from("documents")
       .select("status")
@@ -472,6 +462,26 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
     const unapproved = (docs ?? []).filter((d) => d.status !== 'accepted')
     if (unapproved.length > 0) {
       return { error: `Cannot approve: ${unapproved.length} document(s) not yet accepted`, success: false }
+    }
+
+    // Validate applicant profile exists
+    const { data: appProfile } = await supabase
+      .from("applicant_profiles")
+      .select("id")
+      .eq("application_id", app.id)
+      .maybeSingle()
+    if (!appProfile) {
+      return { error: "Cannot approve: applicant profile is missing", success: false }
+    }
+
+    // Validate passport was submitted
+    const { data: passport } = await supabase
+      .from("passports")
+      .select("id")
+      .eq("application_id", app.id)
+      .maybeSingle()
+    if (!passport) {
+      return { error: "Cannot approve: passport information is missing", success: false }
     }
   }
 

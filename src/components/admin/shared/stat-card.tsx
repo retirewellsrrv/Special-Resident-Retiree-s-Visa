@@ -1,3 +1,5 @@
+'use client'
+
 import type { LucideIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -39,7 +41,7 @@ export function StatCard({
     <Card
       className={`rounded-xl border bg-white p-4 space-y-2.5 transition-all
         ${onClick ? 'cursor-pointer hover:shadow-md' : ''}
-        ${showActive ? 'ring-2 ring-brand-primary-500 border-brand-primary-300 shadow-sm' : 'border-neutral-200 shadow-sm'}
+        ${showActive ? 'ring-2 ring-brand-neutral-300 border-brand-neutral-300 shadow-sm' : 'border-neutral-200 shadow-sm'}
       `}
       onClick={onClick}
       role={onClick ? 'button' : undefined}

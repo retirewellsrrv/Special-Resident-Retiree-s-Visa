@@ -4,7 +4,7 @@ import { ClientProfilesClient } from '@/components/admin/client-profiles/client-
 export default async function ClientProfilesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; filter?: string; service_type?: string; status?: string; q?: string; application_code?: string }>
+  searchParams: Promise<{ page?: string; filter?: string; status?: string; q?: string; application_code?: string }>
 }) {
   const resolvedParams = await searchParams
   const page = Number(resolvedParams.page ?? 1)
