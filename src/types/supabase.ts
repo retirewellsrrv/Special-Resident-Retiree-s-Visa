@@ -37,10 +37,12 @@ export type Database = {
           application_id: number | null
           civil_status: Database["public"]["Enums"]["marital_status"]
           date_of_birth: string
+          first_name: string
           gender: Database["public"]["Enums"]["sex"]
           height: number
           id: number
-          name: string
+          last_name: string
+          middle_name: string
           nationality: string
           place_of_birth: string
           religion: string
@@ -50,10 +52,12 @@ export type Database = {
           application_id?: number | null
           civil_status: Database["public"]["Enums"]["marital_status"]
           date_of_birth: string
+          first_name: string
           gender: Database["public"]["Enums"]["sex"]
           height: number
           id?: number
-          name: string
+          last_name: string
+          middle_name: string
           nationality: string
           place_of_birth: string
           religion: string
@@ -63,10 +67,12 @@ export type Database = {
           application_id?: number | null
           civil_status?: Database["public"]["Enums"]["marital_status"]
           date_of_birth?: string
+          first_name?: string
           gender?: Database["public"]["Enums"]["sex"]
           height?: number
           id?: number
-          name?: string
+          last_name?: string
+          middle_name?: string
           nationality?: string
           place_of_birth?: string
           religion?: string
