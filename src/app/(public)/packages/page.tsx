@@ -13,7 +13,6 @@ import { Footer } from '@/components/layout/Footer';
 import ServiceCard from '@/components/services/service-card';
 import Hero from '@/components/public/Hero';
 import { createClient } from '@/lib/supabase/client';
-import { Database } from '@/types/supabase';
 import { LucideIcon } from 'lucide-react';
 
 const supabase = createClient();
@@ -29,7 +28,6 @@ type Service = {
     price_note: string | null;
     subtitle: string;
     tags: string[];
-    type: Database["public"]["Enums"]["service_type"];
     updated_at: string;
 };
 
