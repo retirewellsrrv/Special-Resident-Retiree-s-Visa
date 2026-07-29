@@ -22,11 +22,11 @@ export function HeroSection() {
           </Badge>
 
           <h1 className="text-ht-display font-display text-brand-secondary-500 mb-4 leading-tight">
-            Your Lifelong Pass to Paradise: The Philippine SRRV
+            Your Trusted Partner for a Seamless Retirement in the Philippines
           </h1>
 
           <p className="text-ht-body-md text-brand-neutral-600 mb-8 max-w-sm">
-            Live, invest, and retire in one of the world's friendliest destinations. At Retire Well SRRV Marketing and Consulting, we streamline the entire residency process so you can focus on your next great adventure.
+            Begin your retirement journey with confidence through expert guidance on the Special Resident Retiree's Visa (SRRV) process. Retire Well provides personalized, end-to-end assistance to help you understand requirements, prepare your application, and navigate your transition to a comfortable retirement lifestyle in the Philippines.
           </p>
         </div>
       </div>

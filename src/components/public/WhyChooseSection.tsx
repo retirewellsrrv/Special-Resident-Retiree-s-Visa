@@ -1,18 +1,11 @@
-import { Star, Phone, Clock, Users, Award } from "lucide-react";
+import { Star, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import type { LucideIcon } from "lucide-react";
 
-interface Stat {
-  value: string;
-  label: string;
-  icon: LucideIcon;
-}
-
-const stats: Stat[] = [
-  { value: "99%", label: "Visa Approval Rate", icon: Award },
-  { value: "10+", label: "Years of Expertise", icon: Clock },
-  { value: "500+", label: "Retirees Assisted", icon: Users },
-  { value: "24/7", label: "Support Access", icon: Phone },
+const features = [
+  "99% Visa Approval Rate",
+  "Dedicated Client Care",
+  "PRA-Accredited SRRV Marketing Partner",
+  "24/7 Support Access",
 ];
 
 export function WhyChooseSection() {
@@ -20,56 +13,36 @@ export function WhyChooseSection() {
     <section className="py-20 bg-brand-primary-500">
       <div className="max-w-ht-content mx-auto px-ht-margin-mobile md:px-ht-margin-desktop">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Stats */}
+          {/* Features List */}
           <div>
             <h2 className="text-ht-headline-lg font-display text-white mb-8">
               Why Choose Retire Well?
             </h2>
-            <div className="grid grid-cols-2 gap-6">
-              {stats.map((stat) => (
-                <div key={stat.label}>
-                  <p className="text-5xl font-display font-bold text-white leading-none mb-1">
-                    {stat.value}
-                  </p>
-                  <p className="text-ht-label-md text-brand-primary-100 uppercase tracking-wide">
-                    {stat.label}
-                  </p>
-                </div>
+            <ul className="space-y-4">
+              {features.map((feature) => (
+                <li key={feature} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                    <Check className="w-5 h-5 text-green-400" />
+                  </div>
+                  <span className="text-white text-ht-body-lg">{feature}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           {/* Testimonial */}
           <Card className="bg-brand-primary-600 border-0 rounded-xl shadow-ht-elevated">
-            <CardContent className="pt-6">
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 fill-brand-goldAccent-1 text-brand-goldAccent-1"
-                  />
-                ))}
+            <CardContent className="pt-8 pb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Star className="w-5 h-5 fill-brand-goldAccent-1 text-brand-goldAccent-1 shrink-0" />
+                <h4 className="text-white font-display text-xl">A Trusted Partner for Your Retirement Dreams</h4>
               </div>
               <blockquote className="text-ht-body-lg text-white italic mb-6 leading-relaxed">
-                "The team at Retire Well made the entire SRRV application
-                process incredibly simple. I was worried about the paperwork,
-                but they handled everything with such professionalism and care.
-                I'm now enjoying my retirement in Cebu thanks to their
-                expertise."
+&ldquo;With our commitment, knowledge, and dedication, Retire Well aims to become your reliable partner in building a comfortable retirement life in the Philippines.&rdquo;
               </blockquote>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand-primary-400 flex items-center justify-center text-white font-bold text-sm">
-                  JW
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-ht-body-md">
-                    James Wilson
-                  </p>
-                  <p className="text-brand-primary-200 text-ht-caption uppercase tracking-widest">
-                    British Expat, Retiree
-                  </p>
-                </div>
-              </div>
+              <p className="text-white text-ht-body-lg leading-relaxed">
+                Retire Well &mdash; guiding you toward a peaceful, secure, and fulfilling retirement experience.
+              </p>
             </CardContent>
           </Card>
         </div>

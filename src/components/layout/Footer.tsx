@@ -2,6 +2,7 @@ import retireWellLogo from "@/assets/images/logo.jpg";
 
 const navLinks = [
   { label: "Services", href: "/services" },
+  { label: "Packages", href: "/packages" },
   { label: "About Us", href: "/about" },
   { label: "FAQs", href: "/faqs" },
   { label: "Contact", href: "/contact" },
