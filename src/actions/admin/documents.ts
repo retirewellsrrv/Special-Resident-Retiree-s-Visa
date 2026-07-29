@@ -14,6 +14,7 @@ export type DocumentForReview = {
   type: string
   format: string
   status: string
+  review_note: string | null
   created_at: string
   applicant_name: string
   application_code: string
@@ -91,6 +92,7 @@ export async function getDocumentsForReview(opts?: {
       type,
       format,
       status,
+      review_note,
       created_at,
       applications!documents_application_id_fkey (
         application_code,
@@ -153,6 +155,7 @@ function formatResults(data: any[], total: number): { rows: DocumentForReview[];
     type: d.type,
     format: d.format,
     status: d.status,
+    review_note: d.review_note ?? null,
     created_at: d.created_at,
     applicant_name: d.applications?.client_profiles?.name ?? "Unknown",
     application_code: d.applications?.application_code ?? "",
@@ -174,6 +177,7 @@ function formatResults(data: any[], total: number): { rows: DocumentForReview[];
 export const updateDocumentStatus = withAdmin(async function updateDocumentStatus(
   documentId: number,
   status: string,
+  reviewNote?: string | null,
 ) {
   const supabase = createAdminClient()
 
@@ -184,7 +188,7 @@ export const updateDocumentStatus = withAdmin(async function updateDocumentStatu
 
   const { error } = await supabase
     .from("documents")
-    .update({ status: parsed.data })
+    .update({ status: parsed.data, review_note: reviewNote ?? null } as any)
     .eq("id", documentId)
 
   if (error) return { error: error.message }

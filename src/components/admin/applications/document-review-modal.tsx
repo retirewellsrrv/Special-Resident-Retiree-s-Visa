@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useTransition } from 'react'
 import {
   Loader2,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   FileIcon,
@@ -50,12 +51,25 @@ export function DocumentReviewModal({
   const [statusMap, setStatusMap] = useState<Record<number, string>>({})
   const [noteMap, setNoteMap] = useState<Record<number, string>>({})
 
-  // Reset local state when documents change
+  // Reset local state only when the modal opens (open → true) or initialIndex changes
+  // (e.g. user clicks a different document). Do NOT reset on `documents` reference
+  // changes, which happen on every data refresh and would undo auto-advance.
+  const prevOpenRef = useRef(open)
+  const prevInitialIndexRef = useRef(initialIndex)
+
   useEffect(() => {
-    setCurrentIndex(initialIndex)
-    setStatusMap({})
-    setNoteMap({})
-  }, [initialIndex, documents])
+    const justOpened = open && !prevOpenRef.current
+    const indexChanged = initialIndex !== prevInitialIndexRef.current
+
+    if (justOpened || indexChanged) {
+      setCurrentIndex(initialIndex)
+      setStatusMap({})
+      setNoteMap({})
+    }
+
+    prevOpenRef.current = open
+    prevInitialIndexRef.current = initialIndex
+  }, [open, initialIndex])
 
   // Signed URL for preview
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
@@ -104,6 +118,9 @@ export function DocumentReviewModal({
   const currentNote = currentDoc
     ? noteMap[currentDoc.id] ?? currentDoc.review_note ?? ''
     : ''
+  const statusChanged = currentDoc ? currentStatus !== currentDoc.status : false
+  const noteChanged = currentDoc ? currentNote !== (currentDoc.review_note ?? '') : false
+  const hasChanges = statusChanged || noteChanged
 
   const handleStatusChange = (value: string) => {
     if (!currentDoc) return
@@ -115,8 +132,28 @@ export function DocumentReviewModal({
     setNoteMap((prev) => ({ ...prev, [currentDoc.id]: value }))
   }
 
+  const goNext = useCallback(() => {
+    if (currentIndex < documents.length - 1) {
+      setCurrentIndex((i) => i + 1)
+    }
+  }, [currentIndex, documents.length])
+
+  const goPrev = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1)
+    }
+  }, [currentIndex])
+
   const handleSave = () => {
     if (!currentDoc) return
+
+    // Enforce review note for rejection or action-needed
+    const needsNote = currentStatus === 'rejected' || currentStatus === 'action need'
+    if (needsNote && !currentNote.trim()) {
+      toast.error('A review note is required when rejecting or requesting action from the applicant')
+      return
+    }
+
     startTransition(async () => {
       const result = await updateDocumentReview(
         currentDoc.id,
@@ -129,19 +166,13 @@ export function DocumentReviewModal({
       }
       toast.success('Document review saved')
       onDocumentsUpdated(currentDoc.id, currentStatus)
+      // Auto-advance to next document, or close if this was the last one
+      if (currentIndex < documents.length - 1) {
+        goNext()
+      } else {
+        onOpenChange(false)
+      }
     })
-  }
-
-  const goNext = () => {
-    if (currentIndex < documents.length - 1) {
-      setCurrentIndex((i) => i + 1)
-    }
-  }
-
-  const goPrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1)
-    }
   }
 
   const isImage =
@@ -329,19 +360,26 @@ export function DocumentReviewModal({
                 <label className="text-[11px] font-semibold text-brand-neutral-400 uppercase tracking-wider block mb-2">
                   Change Status
                 </label>
-                <select
-                  value={currentStatus}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  disabled={isPending}
-                  aria-label="Document status"
-                  className="w-full text-sm rounded-lg border border-brand-neutral-200 bg-white text-brand-neutral-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 disabled:opacity-40"
-                >
+                <div className="relative">
+                  {statusChanged && (
+                    <span className="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-500" title="Unsaved change" />
+                  )}
+                  <select
+                    value={currentStatus}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                    disabled={isPending}
+                    aria-label="Document status"
+                    className={`w-full text-sm rounded-lg border bg-white text-brand-neutral-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 disabled:opacity-40 ${
+                      statusChanged ? 'border-amber-300 ring-1 ring-amber-200' : 'border-brand-neutral-200'
+                    }`}
+                  >
                   <option value="pending">Pending</option>
                   <option value="processing">Processing</option>
                   <option value="accepted">Accepted</option>
                   <option value="rejected">Rejected</option>
                   <option value="action need">Action Need</option>
                 </select>
+                </div>
               </div>
 
               {/* Review note (required for rejection / action need) */}
@@ -356,21 +394,28 @@ export function DocumentReviewModal({
                     <span className="text-red-500 ml-1">*</span>
                   )}
                 </label>
-                <textarea
-                  id="review-note"
-                  value={currentNote}
-                  onChange={(e) => handleNoteChange(e.target.value)}
-                  placeholder={
-                    currentStatus === 'rejected'
-                      ? 'Reason for rejection...'
-                      : currentStatus === 'action need'
-                        ? 'What action is needed from the applicant...'
-                        : 'Optional review note...'
-                  }
-                  rows={4}
-                  disabled={isPending}
-                  className="w-full text-sm rounded-lg border border-brand-neutral-200 bg-white text-brand-neutral-900 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 placeholder:text-brand-neutral-300 disabled:opacity-40"
-                />
+                <div className="relative">
+                  {noteChanged && (
+                    <span className="absolute -left-3 top-3 w-1.5 h-1.5 rounded-full bg-amber-500" title="Unsaved change" />
+                  )}
+                  <textarea
+                    id="review-note"
+                    value={currentNote}
+                    onChange={(e) => handleNoteChange(e.target.value)}
+                    placeholder={
+                      currentStatus === 'rejected'
+                        ? 'Reason for rejection...'
+                        : currentStatus === 'action need'
+                          ? 'What action is needed from the applicant...'
+                          : 'Optional review note...'
+                    }
+                    rows={4}
+                    disabled={isPending}
+                    className={`w-full text-sm rounded-lg border bg-white text-brand-neutral-900 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 placeholder:text-brand-neutral-300 disabled:opacity-40 ${
+                      noteChanged ? 'border-amber-300 ring-1 ring-amber-200' : 'border-brand-neutral-200'
+                    }`}
+                  />
+                </div>
                 <p className="text-[11px] text-brand-neutral-400 mt-1">
                   {currentStatus === 'rejected' || currentStatus === 'action need'
                     ? 'A note is strongly recommended for this status.'
@@ -383,13 +428,16 @@ export function DocumentReviewModal({
             <div className="p-6 border-t-2 border-brand-neutral-200">
               <button
                 onClick={handleSave}
-                disabled={isPending}
+                disabled={isPending || !hasChanges}
                 className="w-full inline-flex items-center justify-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 disabled:opacity-40 text-white text-sm font-medium rounded-md px-4 py-2.5 transition-colors"
+                title={!hasChanges ? 'All changes saved' : 'Save changes'}
               >
                 {isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
+                ) : !hasChanges ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-200" />
                 ) : null}
-                Save Review
+                {isPending ? 'Saving...' : !hasChanges ? 'Saved' : 'Save Review'}
               </button>
             </div>
           </div>

@@ -54,11 +54,22 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
     })
   }, [selectedId])
 
-  const handleStatusChange = useCallback(() => {
+  // Called when the overall application status changes (pending → approved, etc.)
+  // Deselects the application because it may no longer be in the current filter.
+  const handleAppStatusChange = useCallback(() => {
     setDetail(null)
     setSelectedId(null)
     router.refresh()
   }, [router])
+
+  // Called when a document review is saved (status unchanged for the app itself).
+  // Silently re-fetches the detail to keep data fresh, without deselecting.
+  const handleDocReviewSaved = useCallback(() => {
+    if (selectedId === null) return
+    getApplicationDetail(selectedId).then((data) => {
+      if (data) setDetail(data)
+    })
+  }, [selectedId])
 
   const handlePageChange = useCallback(
     (newPage: number) => {
@@ -184,7 +195,11 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
             </div>
           </div>
         ) : detail ? (
-          <ApplicationDetail detail={detail} onStatusChange={handleStatusChange} />
+          <ApplicationDetail
+            detail={detail}
+            onStatusChange={handleAppStatusChange}
+            onDocReviewSaved={handleDocReviewSaved}
+          />
         ) : selectedId === null ? (
           <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
             <p className="text-sm text-brand-neutral-400">Select an application to review.</p>
