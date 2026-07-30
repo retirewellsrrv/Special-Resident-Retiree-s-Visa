@@ -11,9 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { steps } from "@/components/applicant/application/constants";
 import { Step1 } from "@/components/applicant/application/Step1";
 import { Step2 } from "@/components/applicant/application/Step2";
+import { Step3 } from "@/components/applicant/application/Step3";
 import { Step4 } from "@/components/applicant/application/Step4";
 import { Step5 } from "@/components/applicant/application/Step5";
-import { Step6 } from "@/components/applicant/application/Step6";
 import { ApplicationSidebar } from "@/components/applicant/application/application-sidebar";
 import { useSRRVApplicationForm } from "@/hooks/applicant/application/useApplicationForm";
 
@@ -158,17 +158,17 @@ export default function SRRVApplicationPage() {
                 />
               )}
               {!isLoadingProfile && currentStep === 3 && (
-                <Step4 data={step4Data} onUpload={docUpload} errors={errors} />
+                <Step3 data={step4Data} onUpload={docUpload} errors={errors} />
               )}
               {!isLoadingProfile && currentStep === 4 && (
-                <Step5
+                <Step4
                   step1Data={step1Data}
                   step2Data={step2Data}
                   step4Data={step4Data}
                 />
               )}
               {!isLoadingProfile && currentStep === 5 && existingApplication && (
-                <Step6 data={existingApplication} onEdit={startEditing} />
+                <Step5 data={existingApplication} onEdit={startEditing} />
               )}
 
               {/* ── TEST: auto-fill button (remove after testing) ── */}
