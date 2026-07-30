@@ -119,10 +119,10 @@ export function SidebarLayout({
           </Sidebar>
 
           {/* ── Main content area ── */}
-          <SidebarInset className="flex flex-col flex-1 min-w-0 min-h-svh bg-white">
+          <SidebarInset className="flex flex-col flex-1 min-w-0 max-h-svh bg-white">
 
             {/* ── Top header ── */}
-            <header className="flex h-14 shrink-0 items-center justify-between border-b border-brand-neutral-200 bg-white px-4 gap-4">
+            <header className="flex h-14 shrink-0 items-center justify-between border-b border-brand-neutral-200 bg-white px-4 gap-4 sticky top-0 z-10">
               <SidebarTrigger className="text-brand-neutral-400 hover:text-brand-neutral-700 shrink-0" />
 
               <div className="flex items-center gap-1">
