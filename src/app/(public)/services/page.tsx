@@ -5,6 +5,58 @@ import { useRouter } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
 import Hero from '@/components/public/Hero';
 
+type PlanTier = {
+    ageRange: string;
+    pensioner: string;
+    nonPensioner?: string; // omit if same rate applies to both
+};
+
+type PlanCardProps = {
+    title: React.ReactNode;
+    description: string;
+    tiers: PlanTier[];
+};
+
+function PlanCard({ title, description, tiers }: PlanCardProps) {
+    return (
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col h-full">
+            <h3 className="text-lg font-bold text-[#0F172A] mb-3 text-center leading-snug">
+                {title}
+            </h3>
+            <p className="text-sm text-gray-500 mb-6 leading-relaxed text-center">
+                {description}
+            </p>
+
+            <div className="mt-auto pt-6 border-t border-gray-100 space-y-5">
+                <h4 className="text-xs font-bold text-[#9E1B32] tracking-wide uppercase">
+                    Visa Deposit
+                </h4>
+                {tiers.map((tier) => (
+                    <div key={tier.ageRange}>
+                        <p className="text-xs font-semibold text-gray-400 mb-1.5">
+                            {tier.ageRange}
+                        </p>
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">
+                                    {tier.nonPensioner ? 'Pensioner' : 'Pensioner / Non-pensioner'}
+                                </span>
+                                <span className="font-semibold text-[#0F172A]">{tier.pensioner}</span>
+                            </div>
+                            {tier.nonPensioner && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-600">Non-pensioner</span>
+                                    <span className="font-semibold text-[#0F172A]">{tier.nonPensioner}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default function Services() {
     const router = useRouter();
 
@@ -16,7 +68,10 @@ export default function Services() {
         <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-800 flex flex-col">
 
             {/* Hero Section */}
-            <Hero title="Our Retirement Services" description="Discover personalized SRRV solutions and dedicated concierge programs designed to simplify your retirement journey in the Philippines. From initial consultation to application support, we provide professional guidance every step of the way to help you transition with confidence and ease."/>
+            <Hero
+                title="Our Retirement Services"
+                description="Discover personalized SRRV solutions and dedicated concierge programs designed to simplify your retirement journey in the Philippines. From initial consultation to application support, we provide professional guidance every step of the way to help you transition with confidence and ease."
+            />
 
             <section className="max-w-6xl mx-auto w-full px-6 py-16 flex-grow">
 
@@ -40,88 +95,42 @@ export default function Services() {
 
                 {/* Categories Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-16">
-                    
-                    {/* SRRV Classic */}
-                    <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col h-full text-center">
-                        <h3 className="text-xl font-bold text-[#0F172A] mb-4">SRRV CLASSIC</h3>
-                        <p className="text-sm text-gray-600 mb-8 uppercase leading-relaxed font-medium">
-                            Ideal for both pensioners and non-pensioners, with the option to convert the required SRRV time deposit into eligible PRA-approved investments.
-                        </p>
-                        <div className="mt-auto space-y-6">
-                            <div>
-                                <h4 className="font-bold text-[#0F172A] mb-2">VISA DEPOSIT:</h4>
-                                <div className="text-sm text-gray-700">
-                                    <p className="font-bold mb-1">50 YEARS OLD AND ABOVE</p>
-                                    <p>* PENSIONER: $15,000 USD</p>
-                                    <p>* NON-PENSIONER: $30,000 USD</p>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-700">
-                                    <p className="font-bold mb-1">40-49 YEARS OLD</p>
-                                    <p>* PENSIONER: $25,000 USD</p>
-                                    <p>* NON-PENSIONER: $50,000 USD</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* SRRV Courtesy Foreign */}
-                    <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col h-full text-center">
-                        <h3 className="text-xl font-bold text-[#0F172A] mb-4">SRRV COURTESY<br/>(FOREIGN NATIONALS)</h3>
-                        <p className="text-sm text-gray-600 mb-8 uppercase leading-relaxed font-medium">
-                            Designed for qualified foreign nationals, including former diplomats, retired military personnel, officials of international organizations, and individuals with outstanding achievements in business, academics, arts, culture, music, sports, or philanthropy.
-                        </p>
-                        <div className="mt-auto space-y-6">
-                            <div>
-                                <h4 className="font-bold text-[#0F172A] mb-2">VISA DEPOSIT:</h4>
-                                <div className="text-sm text-gray-700">
-                                    <p className="font-bold mb-1">50 YEARS OLD AND ABOVE</p>
-                                    <p>PENSIONER OR NON-PENSIONER: $1,500 USD</p>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-700">
-                                    <p className="font-bold mb-1">40-49 YEARS OLD</p>
-                                    <p>* PENSIONER: $3,000 USD</p>
-                                    <p>* NON-PENSIONER: $6,000 USD</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* SRRV Courtesy Filipino */}
-                    <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col h-full text-center">
-                        <h3 className="text-xl font-bold text-[#0F172A] mb-4">SRRV COURTESY<br/>(FORMER FILIPINOS)</h3>
-                        <p className="text-sm text-gray-600 mb-8 uppercase leading-relaxed font-medium">
-                            Designed for former Filipino citizens who have become naturalized in another country and have not reacquired Philippine citizenship.
-                        </p>
-                        <div className="mt-auto space-y-6">
-                            <div>
-                                <h4 className="font-bold text-[#0F172A] mb-2">VISA DEPOSIT:</h4>
-                                <div className="text-sm text-gray-700">
-                                    <p className="font-bold mb-1">50 YEARS OLD AND ABOVE</p>
-                                    <p>PENSIONER OR NON-PENSIONER: $1,500 USD</p>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="text-sm text-gray-700">
-                                    <p className="font-bold mb-1">40-49 YEARS OLD</p>
-                                    <p>PENSIONER OR NON-PENSIONER: $3,000 USD</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                    <PlanCard
+                        title="SRRV Classic"
+                        description="Ideal for both pensioners and non-pensioners, with the option to convert the required SRRV time deposit into eligible PRA-approved investments."
+                        tiers={[
+                            { ageRange: '50 years old and above', pensioner: '$15,000', nonPensioner: '$30,000' },
+                            { ageRange: '40–49 years old', pensioner: '$25,000', nonPensioner: '$50,000' },
+                        ]}
+                    />
+                    <PlanCard
+                        title={<>SRRV Courtesy<br />(Foreign Nationals)</>}
+                        description="Designed for qualified foreign nationals, including former diplomats, retired military personnel, officials of international organizations, and individuals with outstanding achievements in business, academics, arts, culture, music, sports, or philanthropy."
+                        tiers={[
+                            { ageRange: '50 years old and above', pensioner: '$1,500' },
+                            { ageRange: '40–49 years old', pensioner: '$3,000', nonPensioner: '$6,000' },
+                        ]}
+                    />
+                    <PlanCard
+                        title={<>SRRV Courtesy<br />(Former Filipinos)</>}
+                        description="Designed for former Filipino citizens who have become naturalized in another country and have not reacquired Philippine citizenship."
+                        tiers={[
+                            { ageRange: '50 years old and above', pensioner: '$1,500' },
+                            { ageRange: '40–49 years old', pensioner: '$3,000' },
+                        ]}
+                    />
                 </div>
 
                 {/* Fees Section */}
                 <div className="max-w-5xl mx-auto bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-gray-100">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        
+
                         {/* Processing Fee */}
                         <div>
-                            <h3 className="text-xl font-bold text-[#0F172A] mb-6">PRA Processing / Service Fee <span className="text-base font-normal text-gray-500">(one time)</span></h3>
+                            <h3 className="text-xl font-bold text-[#0F172A] mb-6">
+                                PRA Processing / Service Fee{' '}
+                                <span className="text-base font-normal text-gray-500">(one time)</span>
+                            </h3>
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center py-3 border-b border-gray-100">
                                     <span className="text-gray-700">Principal:</span>
@@ -129,7 +138,10 @@ export default function Services() {
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-gray-100">
                                     <span className="text-gray-700">Dependent:</span>
-                                    <span className="font-bold text-[#0F172A]">USD 300.00 <span className="text-sm font-normal text-gray-500">each dependent</span></span>
+                                    <span className="font-bold text-[#0F172A]">
+                                        USD 300.00{' '}
+                                        <span className="text-sm font-normal text-gray-500">each dependent</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -139,24 +151,36 @@ export default function Services() {
                             <h3 className="text-xl font-bold text-[#0F172A] mb-6">PRA Annual Fee</h3>
                             <div className="space-y-5">
                                 <div className="flex items-start gap-3">
-                                    <div className="mt-1 text-[#9E1B32] text-sm">▶</div>
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
                                     <div>
-                                        <p className="text-gray-900"><span className="font-bold">SRRV Classic</span> - USD 360.00</p>
-                                        <p className="text-sm text-gray-500 italic">(Additional USD 100.00 for each Dependent in excess of two)</p>
+                                        <p className="text-gray-900">
+                                            <span className="font-bold">SRRV Classic</span> — USD 360.00
+                                        </p>
+                                        <p className="text-sm text-gray-500 italic">
+                                            (Additional USD 100.00 for each dependent in excess of two)
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="mt-1 text-[#9E1B32] text-sm">▶</div>
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
                                     <div>
-                                        <p className="text-gray-900"><span className="font-bold">SRRV Courtesy for Foreign Nationals</span> - USD 100.00</p>
-                                        <p className="text-sm text-gray-500 italic">(Additional USD 10.00 for each dependent in excess of two)</p>
+                                        <p className="text-gray-900">
+                                            <span className="font-bold">SRRV Courtesy for Foreign Nationals</span> — USD 100.00
+                                        </p>
+                                        <p className="text-sm text-gray-500 italic">
+                                            (Additional USD 10.00 for each dependent in excess of two)
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="mt-1 text-[#9E1B32] text-sm">▶</div>
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
                                     <div>
-                                        <p className="text-gray-900"><span className="font-bold">SRRV Courtesy for Former Filipinos</span> - USD 50.00</p>
-                                        <p className="text-sm text-gray-500 italic">(Additional USD 10.00 for each Dependent in excess of two)</p>
+                                        <p className="text-gray-900">
+                                            <span className="font-bold">SRRV Courtesy for Former Filipinos</span> — USD 50.00
+                                        </p>
+                                        <p className="text-sm text-gray-500 italic">
+                                            (Additional USD 10.00 for each dependent in excess of two)
+                                        </p>
                                     </div>
                                 </div>
                             </div>
