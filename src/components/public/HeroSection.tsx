@@ -21,11 +21,11 @@ export function HeroSection() {
             Premier SRRV Consulting
           </Badge>
 
-          <h1 className="text-ht-display font-display text-brand-secondary-500 mb-4 leading-tight">
+          <h1 className="w-[650px] text-[36px] font-bold font-display text-brand-secondary-500 mb-4 leading-tight">
             Your Trusted Partner for a Seamless Retirement in the Philippines
           </h1>
 
-          <p className="text-ht-body-md text-brand-neutral-600 mb-8 max-w-sm">
+          <p className="text-ht-body-md text-brand-neutral-600 mb-8 max-w-3xl text-justify">
             Begin your retirement journey with confidence through expert guidance on the Special Resident Retiree's Visa (SRRV) process. Retire Well provides personalized, end-to-end assistance to help you understand requirements, prepare your application, and navigate your transition to a comfortable retirement lifestyle in the Philippines.
           </p>
         </div>
