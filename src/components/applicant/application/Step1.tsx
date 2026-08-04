@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -68,6 +68,14 @@ type Step1Data = {
 
 type Step1Field = keyof Step1Data;
 type Step1Value<F extends Step1Field> = Step1Data[F];
+
+function CellLabel({ children }: { children: ReactNode }) {
+  return (
+    <span className="mb-1 block text-xs font-medium text-neutral-500 sm:hidden">
+      {children}
+    </span>
+  );
+}
 
 export function Step1({
   data,
@@ -487,105 +495,110 @@ export function Step1({
         {errors.educations && (
           <p className="text-sm text-red-500 mb-3">{errors.educations}</p>
         )}
-        <div className="mb-3 overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="text-left text-black border-b border-neutral-200">
-                <th className="font-medium py-2 pr-3">Attainment</th>
-                <th className="font-medium py-2 pr-3">School</th>
-                <th className="font-medium py-2 pr-3">Location</th>
-                <th className="font-medium py-2 pr-3">From Date</th>
-                <th className="font-medium py-2 pr-3">To Date</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody>
-              {data.educations.map((entry) => (
-                <tr key={entry.id} className="border-b border-neutral-100">
-                  <td className="py-2 pr-3">
-                    <Combobox
-                      value={entry.educ_attainment}
-                      onValueChange={(v) => v && updateEducation(entry.id, "educ_attainment", v)}
-                    >
-                      <ComboboxInput
-                        placeholder="Select"
-                        className={INPUT_CLASS}
-                      />
-                      <ComboboxContent>
-                        <ComboboxList>
-                          {EDUC_ATTAINMENT_OPTIONS.map((option) => (
-                            <ComboboxItem key={option} value={option}>
-                              {option}
-                            </ComboboxItem>
-                          ))}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      placeholder="School name"
-                      value={entry.school}
-                      onChange={(e) =>
-                        updateEducation(entry.id, "school", e.target.value)
-                      }
-                      className={INPUT_CLASS}
+        <div className="mb-3">
+          <div className="hidden sm:grid sm:grid-cols-[130px_1fr_1fr_120px_120px_28px] sm:items-center sm:gap-4 text-left text-black text-sm font-medium border-b border-neutral-200 pb-2">
+            <span>Attainment</span>
+            <span>School</span>
+            <span>Location</span>
+            <span>From Date</span>
+            <span>To Date</span>
+          </div>
+          <div>
+            {data.educations.map((entry) => (
+              <div
+                key={entry.id}
+                className="grid grid-cols-1 sm:grid-cols-[130px_1fr_1fr_120px_120px_28px] sm:items-center sm:gap-4 gap-3 border-b border-neutral-100 py-3 sm:py-2"
+              >
+                <div>
+                  <CellLabel>Attainment</CellLabel>
+                  <Combobox
+                    value={entry.educ_attainment}
+                    onValueChange={(v) => v && updateEducation(entry.id, "educ_attainment", v)}
+                  >
+                    <ComboboxInput
+                      placeholder="Select"
+                      className={cn(INPUT_CLASS, "w-full")}
                     />
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      placeholder="e.g. Manila, Philippines"
-                      value={entry.location}
-                      onChange={(e) =>
-                        updateEducation(entry.id, "location", e.target.value)
-                      }
-                      className={INPUT_CLASS}
-                    />
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      type="date"
-                      value={entry.from_date}
-                      onChange={(e) =>
-                        updateEducation(entry.id, "from_date", e.target.value)
-                      }
-                      className={cn(INPUT_CLASS, "text-neutral-700")}
-                    />
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      type="date"
-                      value={entry.to_date}
-                      onChange={(e) =>
-                        updateEducation(entry.id, "to_date", e.target.value)
-                      }
-                      className={cn(INPUT_CLASS, "text-neutral-700")}
-                    />
-                  </td>
-                  <td className="py-2">
-                    <button
-                      type="button"
-                      onClick={() => removeEducation(entry.id)}
-                      className="text-neutral-400 hover:text-red-500"
-                      aria-label="Remove education"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <ComboboxContent>
+                      <ComboboxList>
+                        {EDUC_ATTAINMENT_OPTIONS.map((option) => (
+                          <ComboboxItem key={option} value={option}>
+                            {option}
+                          </ComboboxItem>
+                        ))}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                </div>
+                <div>
+                  <CellLabel>School</CellLabel>
+                  <Input
+                    placeholder="School name"
+                    value={entry.school}
+                    onChange={(e) =>
+                      updateEducation(entry.id, "school", e.target.value)
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <CellLabel>Location</CellLabel>
+                  <Input
+                    placeholder="e.g. Manila, Philippines"
+                    value={entry.location}
+                    onChange={(e) =>
+                      updateEducation(entry.id, "location", e.target.value)
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <CellLabel>From Date</CellLabel>
+                  <Input
+                    type="date"
+                    value={entry.from_date}
+                    onChange={(e) =>
+                      updateEducation(entry.id, "from_date", e.target.value)
+                    }
+                    className={cn(INPUT_CLASS, "text-neutral-700")}
+                  />
+                </div>
+                <div>
+                  <CellLabel>To Date</CellLabel>
+                  <Input
+                    type="date"
+                    value={entry.to_date}
+                    onChange={(e) =>
+                      updateEducation(entry.id, "to_date", e.target.value)
+                    }
+                    className={cn(INPUT_CLASS, "text-neutral-700")}
+                  />
+                </div>
+                <div className="flex justify-end sm:block">
+                  <button
+                    type="button"
+                    onClick={() => removeEducation(entry.id)}
+                    className="text-neutral-400 hover:text-red-500"
+                    aria-label="Remove education"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <Button
           type="button"
           variant="ghost"
           onClick={addEducation}
-          className="text-sm text-neutral-600 hover:text-neutral-900 px-0"
+          className="px-0 h-auto text-sm text-neutral-600 hover:text-neutral-900"
         >
-          <Plus size={16} className="mr-1" />
-          Add another educational attainment
+          <Plus size={16} className="mr-1 shrink-0" />
+          <span className="min-w-0 whitespace-normal text-left">
+            Add another educational attainment
+          </span>
         </Button>
       </div>
 
@@ -598,106 +611,112 @@ export function Step1({
         {errors.employments && (
           <p className="text-sm text-red-500 mb-3">{errors.employments}</p>
         )}
-        <div className="mb-3 overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="text-left text-black border-b border-neutral-200">
-                <th className="font-medium py-2 pr-3">Company Name</th>
-                <th className="font-medium py-2 pr-3">Job Title</th>
-                <th className="font-medium py-2 pr-3">Contact No.</th>
-                <th className="font-medium py-2 pr-3">Company Address</th>
-                <th className="font-medium py-2 pr-3">From Date</th>
-                <th className="font-medium py-2 pr-3">To Date <span className="font-normal text-neutral-400">(Optional)</span></th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody>
-              {data.employments.map((entry) => (
-                <tr key={entry.id} className="border-b border-neutral-100">
-                  <td className="py-2 pr-3">
-                    <Input
-                      placeholder="Company name"
-                      value={entry.company_name}
-                      onChange={(e) =>
-                        updateEmployment(entry.id, "company_name", e.target.value)
-                      }
-                      className={INPUT_CLASS}
-                    />
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      placeholder="e.g. Software Engineer"
-                      value={entry.job_title}
-                      onChange={(e) =>
-                        updateEmployment(entry.id, "job_title", e.target.value)
-                      }
-                      className={INPUT_CLASS}
-                    />
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      placeholder="Contact number"
-                      value={entry.contact_no}
-                      onChange={(e) =>
-                        updateEmployment(entry.id, "contact_no", e.target.value.replace(/\D/g, ""))
-                      }
-                      className={INPUT_CLASS}
-                    />
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      placeholder="Company address"
-                      value={entry.company_address}
-                      onChange={(e) =>
-                        updateEmployment(entry.id, "company_address", e.target.value)
-                      }
-                      className={INPUT_CLASS}
-                    />
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      type="date"
-                      value={entry.from_date}
-                      onChange={(e) =>
-                        updateEmployment(entry.id, "from_date", e.target.value)
-                      }
-                      className={cn(INPUT_CLASS, "text-neutral-700")}
-                    />
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Input
-                      type="date"
-                      value={entry.to_date}
-                      onChange={(e) =>
-                        updateEmployment(entry.id, "to_date", e.target.value)
-                      }
-                      className={cn(INPUT_CLASS, "text-neutral-700")}
-                    />
-                  </td>
-                  <td className="py-2">
-                    <button
-                      type="button"
-                      onClick={() => removeEmployment(entry.id)}
-                      className="text-neutral-400 hover:text-red-500"
-                      aria-label="Remove employment"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mb-3">
+          <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_120px_1fr_110px_110px_28px] sm:items-center sm:gap-4 text-left text-black text-sm font-medium border-b border-neutral-200 pb-2">
+            <span>Company Name</span>
+            <span>Job Title</span>
+            <span>Contact No.</span>
+            <span>Company Address</span>
+            <span>From Date</span>
+            <span>To Date <span className="font-normal text-neutral-400">(Optional)</span></span>
+          </div>
+          <div>
+            {data.employments.map((entry) => (
+              <div
+                key={entry.id}
+                className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_120px_1fr_110px_110px_28px] sm:items-center sm:gap-4 gap-3 border-b border-neutral-100 py-3 sm:py-2"
+              >
+                <div>
+                  <CellLabel>Company Name</CellLabel>
+                  <Input
+                    placeholder="Company name"
+                    value={entry.company_name}
+                    onChange={(e) =>
+                      updateEmployment(entry.id, "company_name", e.target.value)
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <CellLabel>Job Title</CellLabel>
+                  <Input
+                    placeholder="e.g. Software Engineer"
+                    value={entry.job_title}
+                    onChange={(e) =>
+                      updateEmployment(entry.id, "job_title", e.target.value)
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <CellLabel>Contact No.</CellLabel>
+                  <Input
+                    placeholder="Contact number"
+                    value={entry.contact_no}
+                    onChange={(e) =>
+                      updateEmployment(entry.id, "contact_no", e.target.value.replace(/\D/g, ""))
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <CellLabel>Company Address</CellLabel>
+                  <Input
+                    placeholder="Company address"
+                    value={entry.company_address}
+                    onChange={(e) =>
+                      updateEmployment(entry.id, "company_address", e.target.value)
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </div>
+                <div>
+                  <CellLabel>From Date</CellLabel>
+                  <Input
+                    type="date"
+                    value={entry.from_date}
+                    onChange={(e) =>
+                      updateEmployment(entry.id, "from_date", e.target.value)
+                    }
+                    className={cn(INPUT_CLASS, "text-neutral-700")}
+                  />
+                </div>
+                <div>
+                  <CellLabel>To Date</CellLabel>
+                  <Input
+                    type="date"
+                    value={entry.to_date}
+                    onChange={(e) =>
+                      updateEmployment(entry.id, "to_date", e.target.value)
+                    }
+                    className={cn(INPUT_CLASS, "text-neutral-700")}
+                  />
+                </div>
+                <div className="flex justify-end sm:block">
+                  <button
+                    type="button"
+                    onClick={() => removeEmployment(entry.id)}
+                    className="text-neutral-400 hover:text-red-500"
+                    aria-label="Remove employment"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <Button
           type="button"
           variant="ghost"
           onClick={addEmployment}
-          className="text-sm text-neutral-600 hover:text-neutral-900 px-0"
+          className="px-0 h-auto text-sm text-neutral-600 hover:text-neutral-900"
         >
-          <Plus size={16} className="mr-1" />
-          Add another employment history
+          <Plus size={16} className="mr-1 shrink-0" />
+          <span className="min-w-0 whitespace-normal text-left">
+            Add another employment history
+          </span>
         </Button>
       </div>
 
