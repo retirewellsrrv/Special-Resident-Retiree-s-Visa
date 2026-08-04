@@ -6,18 +6,19 @@ import type { FamilyMember } from "./Step2";
 
 type EducationEntry = {
   id: string;
+  educ_attainment: string;
   school: string;
   location: string;
-  start_date: string;
-  end_date: string;
+  from_date: string;
+  to_date: string;
 };
 
 type EmploymentEntry = {
   id: string;
   company_name: string;
   job_title: string;
-  start_date: string;
-  end_date: string;
+  from_date: string;
+  to_date: string;
   contact_no: string;
   company_address: string;
 };
@@ -156,10 +157,11 @@ export function Step4({
             <div className="space-y-3">
               {step1Data.educations.map((edu) => (
                 <div key={edu.id} className="border border-neutral-200 rounded-lg p-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                  <Field label="Attainment" value={edu.educ_attainment} />
                   <Field label="School" value={edu.school} />
                   <Field label="Location" value={edu.location} />
-                  <Field label="Start Date" value={edu.start_date} />
-                  <Field label="End Date" value={edu.end_date} />
+                  <Field label="From Date" value={edu.from_date} />
+                  <Field label="To Date" value={edu.to_date} />
                 </div>
               ))}
             </div>
@@ -179,8 +181,8 @@ export function Step4({
                   <Field label="Job Title" value={emp.job_title} />
                   <Field label="Contact No." value={emp.contact_no} />
                   <Field label="Address" value={emp.company_address} />
-                  <Field label="Start Date" value={emp.start_date} />
-                  <Field label="End Date" value={emp.end_date} />
+                  <Field label="From Date" value={emp.from_date} />
+                  <Field label="To Date" value={emp.to_date} />
                 </div>
               ))}
             </div>

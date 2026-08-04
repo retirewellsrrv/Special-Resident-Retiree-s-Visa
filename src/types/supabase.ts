@@ -42,7 +42,7 @@ export type Database = {
           height: number
           id: number
           last_name: string
-          middle_name: string
+          middle_name: string | null
           nationality: string
           place_of_birth: string
           religion: string
@@ -57,7 +57,7 @@ export type Database = {
           height: number
           id?: number
           last_name: string
-          middle_name: string
+          middle_name?: string | null
           nationality: string
           place_of_birth: string
           religion: string
@@ -72,7 +72,7 @@ export type Database = {
           height?: number
           id?: number
           last_name?: string
-          middle_name?: string
+          middle_name?: string | null
           nationality?: string
           place_of_birth?: string
           religion?: string
@@ -298,27 +298,30 @@ export type Database = {
       educations: {
         Row: {
           application_id: number | null
-          end_date: string
+          educ_attainment: string
+          from_date: string
           id: number
           location: string
           school: string
-          start_date: string
+          to_date: string
         }
         Insert: {
           application_id?: number | null
-          end_date: string
+          educ_attainment: string
+          from_date: string
           id?: number
           location: string
           school: string
-          start_date: string
+          to_date: string
         }
         Update: {
           application_id?: number | null
-          end_date?: string
+          educ_attainment?: string
+          from_date?: string
           id?: number
           location?: string
           school?: string
-          start_date?: string
+          to_date?: string
         }
         Relationships: [
           {
@@ -368,33 +371,33 @@ export type Database = {
           company_address: string | null
           company_name: string | null
           contact_no: string | null
-          end_date: string | null
+          from_date: string | null
           id: number
           is_current: boolean | null
           job_title: string | null
-          start_date: string | null
+          to_date: string | null
         }
         Insert: {
           application_id?: number | null
           company_address?: string | null
           company_name?: string | null
           contact_no?: string | null
-          end_date?: string | null
+          from_date?: string | null
           id?: number
           is_current?: boolean | null
           job_title?: string | null
-          start_date?: string | null
+          to_date?: string | null
         }
         Update: {
           application_id?: number | null
           company_address?: string | null
           company_name?: string | null
           contact_no?: string | null
-          end_date?: string | null
+          from_date?: string | null
           id?: number
           is_current?: boolean | null
           job_title?: string | null
-          start_date?: string | null
+          to_date?: string | null
         }
         Relationships: [
           {

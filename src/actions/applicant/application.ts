@@ -93,7 +93,7 @@ export type ExistingApplicationData = {
     height: number;
     first_name: string;
     last_name: string;
-    middle_name: string;
+    middle_name: string | null;
     nationality: string;
     place_of_birth: string;
     religion: string;
@@ -111,19 +111,20 @@ export type ExistingApplicationData = {
     exp_date_tourist_visa: string | null;
   } | null;
   educations: {
-    end_date: string;
+    educ_attainment: string;
+    to_date: string;
     location: string;
     school: string;
-    start_date: string;
+    from_date: string;
   }[];
   employments: {
     company_address: string | null;
     company_name: string | null;
     contact_no: string | null;
-    end_date: string | null;
+    to_date: string | null;
     is_current: boolean | null;
     job_title: string | null;
-    start_date: string | null;
+    from_date: string | null;
   }[];
   dependents: {
     age: number;
@@ -294,19 +295,20 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
         }
       : null,
     educations: (educations ?? []).map((e) => ({
-      end_date: e.end_date,
+      educ_attainment: e.educ_attainment,
+      to_date: e.to_date,
       location: e.location,
       school: e.school,
-      start_date: e.start_date,
+      from_date: e.from_date,
     })),
     employments: (employments ?? []).map((e) => ({
       company_address: e.company_address,
       company_name: e.company_name,
       contact_no: e.contact_no,
-      end_date: e.end_date,
+      to_date: e.to_date,
       is_current: e.is_current,
       job_title: e.job_title,
-      start_date: e.start_date,
+      from_date: e.from_date,
     })),
     dependents: (dependents ?? []).map((d) => ({
       age: d.age,
@@ -840,10 +842,11 @@ export async function submitApplication(
       .from("educations")
       .insert({
         application_id: appIdToUse,
+        educ_attainment: (formData.get(`educations[${eduIdx}].educ_attainment`) as string) ?? "",
         school: formData.get(`educations[${eduIdx}].school`) as string,
         location: (formData.get(`educations[${eduIdx}].location`) as string) ?? "",
-        start_date: (formData.get(`educations[${eduIdx}].start_date`) as string) ?? "",
-        end_date: (formData.get(`educations[${eduIdx}].end_date`) as string) ?? "",
+        from_date: (formData.get(`educations[${eduIdx}].from_date`) as string) ?? "",
+        to_date: (formData.get(`educations[${eduIdx}].to_date`) as string) ?? "",
       } as never);
 
     if (eduError) return { error: eduError.message, success: false };
@@ -861,8 +864,8 @@ export async function submitApplication(
         job_title: (formData.get(`employments[${empIdx}].job_title`) as string) ?? null,
         contact_no: (formData.get(`employments[${empIdx}].contact_no`) as string) ?? null,
         company_address: (formData.get(`employments[${empIdx}].company_address`) as string) ?? null,
-        start_date: (formData.get(`employments[${empIdx}].start_date`) as string) ?? null,
-        end_date: (formData.get(`employments[${empIdx}].end_date`) as string) ?? null,
+        from_date: (formData.get(`employments[${empIdx}].from_date`) as string) ?? null,
+        to_date: (formData.get(`employments[${empIdx}].to_date`) as string) ?? null,
       } as never);
 
     if (empError) return { error: empError.message, success: false };

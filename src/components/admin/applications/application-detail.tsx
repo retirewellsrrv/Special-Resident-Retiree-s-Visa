@@ -296,8 +296,13 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
                           <div key={idx} className="rounded-lg border border-brand-neutral-100 bg-brand-neutral-50/50 px-3 py-2.5 text-sm">
                             <p className="font-medium text-brand-neutral-900">{edu.school}</p>
                             <p className="text-brand-neutral-500 text-xs">{edu.location}</p>
+                            {edu.educ_attainment && (
+                              <span className="inline-block mt-1 rounded-full bg-brand-neutral-100 px-2 py-0.5 text-xs font-medium text-brand-neutral-700">
+                                {edu.educ_attainment}
+                              </span>
+                            )}
                             <p className="text-brand-neutral-400 text-xs mt-0.5">
-                              {formatDate(edu.start_date)} — {formatDate(edu.end_date)}
+                              {formatDate(edu.from_date)} — {formatDate(edu.to_date)}
                             </p>
                           </div>
                         ))}
@@ -321,7 +326,7 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
                               <p className="text-brand-neutral-400 text-xs">{emp.company_address}</p>
                             )}
                             <p className="text-brand-neutral-400 text-xs mt-0.5">
-                              {emp.start_date ? formatDate(emp.start_date) : '-'} — {emp.end_date ? formatDate(emp.end_date) : emp.is_current ? 'Present' : '-'}
+                              {emp.from_date ? formatDate(emp.from_date) : '-'} — {emp.to_date ? formatDate(emp.to_date) : emp.is_current ? 'Present' : '-'}
                             </p>
                           </div>
                         ))}

@@ -20,18 +20,27 @@ import { INPUT_CLASS, LABEL_CLASS } from "./constants";
 
 export type EducationEntry = {
   id: string;
+  educ_attainment: string;
   school: string;
   location: string;
-  start_date: string;
-  end_date: string;
+  from_date: string;
+  to_date: string;
 };
+
+export const EDUC_ATTAINMENT_OPTIONS = [
+  "Elementary",
+  "High School",
+  "Vocational / Technical",
+  "College",
+  "Postgraduate (Master's / Doctorate)",
+];
 
 export type EmploymentEntry = {
   id: string;
   company_name: string;
   job_title: string;
-  start_date: string;
-  end_date: string;
+  from_date: string;
+  to_date: string;
   contact_no: string;
   company_address: string;
 };
@@ -72,10 +81,11 @@ export function Step1({
   const addEducation = () => {
     const next: EducationEntry = {
       id: crypto.randomUUID(),
+      educ_attainment: "",
       school: "",
       location: "",
-      start_date: "",
-      end_date: "",
+      from_date: "",
+      to_date: "",
     };
     onChange("educations", [...data.educations, next]);
   };
@@ -105,8 +115,8 @@ export function Step1({
       id: crypto.randomUUID(),
       company_name: "",
       job_title: "",
-      start_date: "",
-      end_date: "",
+      from_date: "",
+      to_date: "",
       contact_no: "",
       company_address: "",
     };
@@ -137,10 +147,11 @@ export function Step1({
     if (data.educations.length === 0) {
       onChange("educations", [{
         id: crypto.randomUUID(),
+        educ_attainment: "",
         school: "",
         location: "",
-        start_date: "",
-        end_date: "",
+        from_date: "",
+        to_date: "",
       }]);
     }
     if (data.employments.length === 0) {
@@ -148,8 +159,8 @@ export function Step1({
         id: crypto.randomUUID(),
         company_name: "",
         job_title: "",
-        start_date: "",
-        end_date: "",
+        from_date: "",
+        to_date: "",
         contact_no: "",
         company_address: "",
       }]);
@@ -208,7 +219,7 @@ export function Step1({
         </div>
         <div>
           <Label htmlFor="middle_name" className={LABEL_CLASS}>
-            Middle Name / alias <span className="text-red-500">*</span>
+            Middle Name / alias <span className="text-neutral-400 font-normal">(Optional)</span>
           </Label>
           <Input
             id="middle_name"
@@ -480,16 +491,37 @@ export function Step1({
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="text-left text-black border-b border-neutral-200">
+                <th className="font-medium py-2 pr-3">Attainment</th>
                 <th className="font-medium py-2 pr-3">School</th>
                 <th className="font-medium py-2 pr-3">Location</th>
-                <th className="font-medium py-2 pr-3">Start Date</th>
-                <th className="font-medium py-2 pr-3">End Date</th>
+                <th className="font-medium py-2 pr-3">From Date</th>
+                <th className="font-medium py-2 pr-3">To Date</th>
                 <th className="w-8" />
               </tr>
             </thead>
             <tbody>
               {data.educations.map((entry) => (
                 <tr key={entry.id} className="border-b border-neutral-100">
+                  <td className="py-2 pr-3">
+                    <Combobox
+                      value={entry.educ_attainment}
+                      onValueChange={(v) => v && updateEducation(entry.id, "educ_attainment", v)}
+                    >
+                      <ComboboxInput
+                        placeholder="Select"
+                        className={INPUT_CLASS}
+                      />
+                      <ComboboxContent>
+                        <ComboboxList>
+                          {EDUC_ATTAINMENT_OPTIONS.map((option) => (
+                            <ComboboxItem key={option} value={option}>
+                              {option}
+                            </ComboboxItem>
+                          ))}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  </td>
                   <td className="py-2 pr-3">
                     <Input
                       placeholder="School name"
@@ -513,9 +545,9 @@ export function Step1({
                   <td className="py-2 pr-3">
                     <Input
                       type="date"
-                      value={entry.start_date}
+                      value={entry.from_date}
                       onChange={(e) =>
-                        updateEducation(entry.id, "start_date", e.target.value)
+                        updateEducation(entry.id, "from_date", e.target.value)
                       }
                       className={cn(INPUT_CLASS, "text-neutral-700")}
                     />
@@ -523,9 +555,9 @@ export function Step1({
                   <td className="py-2 pr-3">
                     <Input
                       type="date"
-                      value={entry.end_date}
+                      value={entry.to_date}
                       onChange={(e) =>
-                        updateEducation(entry.id, "end_date", e.target.value)
+                        updateEducation(entry.id, "to_date", e.target.value)
                       }
                       className={cn(INPUT_CLASS, "text-neutral-700")}
                     />
@@ -574,8 +606,8 @@ export function Step1({
                 <th className="font-medium py-2 pr-3">Job Title</th>
                 <th className="font-medium py-2 pr-3">Contact No.</th>
                 <th className="font-medium py-2 pr-3">Company Address</th>
-                <th className="font-medium py-2 pr-3">Start Date</th>
-                <th className="font-medium py-2 pr-3">End Date</th>
+                <th className="font-medium py-2 pr-3">From Date</th>
+                <th className="font-medium py-2 pr-3">To Date <span className="font-normal text-neutral-400">(Optional)</span></th>
                 <th className="w-8" />
               </tr>
             </thead>
@@ -625,9 +657,9 @@ export function Step1({
                   <td className="py-2 pr-3">
                     <Input
                       type="date"
-                      value={entry.start_date}
+                      value={entry.from_date}
                       onChange={(e) =>
-                        updateEmployment(entry.id, "start_date", e.target.value)
+                        updateEmployment(entry.id, "from_date", e.target.value)
                       }
                       className={cn(INPUT_CLASS, "text-neutral-700")}
                     />
@@ -635,9 +667,9 @@ export function Step1({
                   <td className="py-2 pr-3">
                     <Input
                       type="date"
-                      value={entry.end_date}
+                      value={entry.to_date}
                       onChange={(e) =>
-                        updateEmployment(entry.id, "end_date", e.target.value)
+                        updateEmployment(entry.id, "to_date", e.target.value)
                       }
                       className={cn(INPUT_CLASS, "text-neutral-700")}
                     />
