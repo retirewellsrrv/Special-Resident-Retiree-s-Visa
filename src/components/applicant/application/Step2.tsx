@@ -10,6 +10,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionLabel } from "./SectionLabel";
 import { INPUT_CLASS, LABEL_CLASS } from "./constants";
+import { PhoneInput } from "@/components/shared/phone-input";
 
 export type FamilyMember = {
   id: string;
@@ -177,21 +178,12 @@ export function Step2({
           <Label htmlFor="telephone_number" className={LABEL_CLASS}>
             Telephone Number
           </Label>
-          <Input
+          <PhoneInput
             id="telephone_number"
-            type="tel"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="Include country and area code"
+            placeholder="e.g. 028765432"
             value={data.telephone_number}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, "");
-              onChange("telephone_number", value);
-            }}
-            className={cn(
-              INPUT_CLASS,
-              errors.telephone_number && "border-red-500",
-            )}
+            onChange={(value) => onChange("telephone_number", value)}
+            invalid={!!errors.telephone_number}
           />
           {errors.telephone_number && (
             <p className="text-sm text-red-500 mt-1">
