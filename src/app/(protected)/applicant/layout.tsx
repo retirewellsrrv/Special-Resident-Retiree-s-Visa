@@ -3,12 +3,13 @@
 import { getSession } from '@/actions/auth'
 import { SidebarLayout } from '@/components/layout/sidebar-layout'
 import type { User } from '@supabase/supabase-js'
-import { LayoutDashboard, FileText, User as UserIcon } from 'lucide-react'
+import { LayoutDashboard, FileText, User as UserIcon, CalendarDays } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const NAV_ITEMS = [
   { href: '/applicant/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/applicant/application', label: 'Application', icon: FileText },
+  { href: '/applicant/consultation', label: 'Consultation', icon: CalendarDays },
   { href: '/applicant/profile', label: 'Profile', icon: UserIcon },
 ]
 

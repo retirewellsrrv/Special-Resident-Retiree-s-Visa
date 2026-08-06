@@ -1,9 +1,33 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserServer } from "@/utils/auth/getUser";
 import { consultationFormSchema } from "@/schemas/consultation";
+import type { Database } from "@/types/supabase";
+
+export type MyConsultation = {
+  id: number;
+  meeting_date: string;
+  mode_communication: Database["public"]["Enums"]["communication_mode"];
+  purpose: string;
+};
+
+export async function getMyConsultation(): Promise<MyConsultation | null> {
+  const user = await getUserServer();
+  if (!user) return null;
+
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("consultations")
+    .select("id, meeting_date, mode_communication, purpose")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  return data;
+}
 
 export type SubmitConsultationState = {
   error: string | null;
@@ -38,17 +62,34 @@ export async function submitConsultationAction(
     return { error: null, fieldErrors, success: false };
   }
 
-  const { error: insertError } = await supabase.from("consultations").insert({
-    user_id: user.id,
+  // Only one consultation per user: update if it already exists, otherwise insert
+  const { data: existing } = await supabase
+    .from("consultations")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const values = {
     meeting_date: parsed.data.meeting_date,
     mode_communication: parsed.data.mode_communication,
     purpose: parsed.data.purpose,
-  });
+  };
 
-  if (insertError) {
-    return { error: insertError.message, fieldErrors: null, success: false };
+  const { error: saveError } = existing
+    ? await supabase
+        .from("consultations")
+        .update(values)
+        .eq("id", existing.id)
+    : await supabase.from("consultations").insert({
+        ...values,
+        user_id: user.id,
+      });
+
+  if (saveError) {
+    return { error: saveError.message, fieldErrors: null, success: false };
   }
 
   revalidatePath("/applicant/consultation");
-  return { error: null, fieldErrors: null, success: true };
+  revalidatePath("/applicant/dashboard");
+  redirect("/applicant/dashboard?consultation=success");
 }

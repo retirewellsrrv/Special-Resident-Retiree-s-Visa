@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useActionState } from "react";
+import { Suspense, useEffect, useState, useActionState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/status-chip";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   CreditCard,
   ConciergeBell,
@@ -77,12 +79,30 @@ function documentToStatus(docStatus: string): string {
 }
 
 export default function ApplicantDashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
+  const consultationSuccess =
+    useSearchParams().get("consultation") === "success";
+  const [showConsultationAlert, setShowConsultationAlert] =
+    useState(consultationSuccess);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [retryState, retryAction, retryPending] = useActionState<
     RetryPaymentState,
     FormData
   >(retryPaymentAction, { error: null, success: false });
+
+  useEffect(() => {
+    if (!consultationSuccess) return;
+    const timer = setTimeout(() => setShowConsultationAlert(false), 5000);
+    return () => clearTimeout(timer);
+  }, [consultationSuccess]);
 
   useEffect(() => {
     getApplicantDashboard().then((result) => {
@@ -218,6 +238,17 @@ export default function ApplicantDashboardPage() {
 
   return (
     <div className="space-y-6">
+      {showConsultationAlert && (
+        <Alert className="border-green-200 bg-green-50 text-green-800">
+          <CheckCircle2 className="w-4 h-4 text-green-600" />
+          <AlertTitle>Consultation submitted successfully</AlertTitle>
+          <AlertDescription>
+            Your consultation request has been received. Our team will get back
+            to you to confirm your schedule.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div>
         <h1 className="text-2xl font-bold text-brand-neutral-800">
           Welcome back!
