@@ -149,6 +149,7 @@ export type ExistingApplicationData = {
     amount: number;
     status: string;
   } | null;
+  canRetry: boolean;
 };
 
 export async function getExistingApplication(): Promise<ExistingApplicationData | null> {
@@ -183,6 +184,16 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
         .eq("id", app.payment_id)
         .single()
     : { data: null };
+
+  const { data: allPayments } = await supabase
+    .from("payments")
+    .select("status")
+    .eq("user_id", user.id);
+
+  const canRetry =
+    allPayments !== null &&
+    allPayments.length > 0 &&
+    !allPayments.some((p) => p.status === "success");
 
   const { data: contact } = await supabase
     .from("contacts")
@@ -327,6 +338,7 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
       : null,
     documents: documents ?? [],
     payment,
+    canRetry,
   };
 }
 
