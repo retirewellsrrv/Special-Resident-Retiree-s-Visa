@@ -166,7 +166,7 @@ export type AppDetail = {
     height: number
     first_name: string
     last_name: string
-    middle_name: string
+    middle_name: string | null
     nationality: string
     place_of_birth: string
     religion: string
@@ -184,18 +184,19 @@ export type AppDetail = {
     exp_date_tourist_visa: string | null
   } | null
   educations: {
+    educ_attainment: string
     school: string
     location: string
-    start_date: string
-    end_date: string
+    from_date: string
+    to_date: string
   }[]
   employments: {
     company_name: string | null
     company_address: string | null
     contact_no: string | null
     job_title: string | null
-    start_date: string | null
-    end_date: string | null
+    from_date: string | null
+    to_date: string | null
     is_current: boolean | null
   }[]
   dependents: {
@@ -357,18 +358,19 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
         }
       : null,
     educations: (eduData.data ?? []).map((e: any) => ({
+      educ_attainment: e.educ_attainment,
       school: e.school,
       location: e.location,
-      start_date: e.start_date,
-      end_date: e.end_date,
+      from_date: e.from_date,
+      to_date: e.to_date,
     })),
     employments: (empData.data ?? []).map((e: any) => ({
       company_name: e.company_name,
       company_address: e.company_address,
       contact_no: e.contact_no,
       job_title: e.job_title,
-      start_date: e.start_date,
-      end_date: e.end_date,
+      from_date: e.from_date,
+      to_date: e.to_date,
       is_current: e.is_current,
     })),
     dependents: (depData.data ?? []).map((d: any) => ({

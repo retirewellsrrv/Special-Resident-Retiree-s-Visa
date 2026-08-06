@@ -39,38 +39,39 @@ export const applicationUpdateSchema = applicationInsertSchema
 
 const educationEntrySchema = z.object({
   id: z.string().optional(),
+  educ_attainment: z.string(),
   school: z.string(),
   location: z.string(),
-  start_date: z.string(),
-  end_date: z.string(),
+  from_date: z.string(),
+  to_date: z.string(),
 }).refine(
   (data) => {
-    const values = [data.school, data.location, data.start_date, data.end_date];
+    const values = [data.educ_attainment, data.school, data.location, data.from_date, data.to_date];
     const filled = values.filter((v) => v?.trim().length > 0).length;
-    return filled === 0 || filled === 4;
+    return filled === 0 || filled === 5;
   },
   {
     message: "All fields in this row must be filled",
   },
 ).refine(
   (data) => {
-    if (!data.start_date || !data.end_date) return true;
-    return data.start_date < data.end_date;
+    if (!data.from_date || !data.to_date) return true;
+    return data.from_date < data.to_date;
   },
   {
-    message: "Start date must be before end date",
-    path: ["start_date"],
+    message: "From date must be before to date",
+    path: ["from_date"],
   },
 ).refine(
   (data) => {
-    if (!data.end_date) return true;
+    if (!data.to_date) return true;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return new Date(data.end_date) < today;
+    return new Date(data.to_date) < today;
   },
   {
-    message: "End date cannot be in the future",
-    path: ["end_date"],
+    message: "To date cannot be in the future",
+    path: ["to_date"],
   },
 );
 
@@ -80,36 +81,36 @@ const employmentEntrySchema = z.object({
   job_title: z.string(),
   contact_no: z.string(),
   company_address: z.string(),
-  start_date: z.string(),
-  end_date: z.string(),
+  from_date: z.string(),
+  to_date: z.string(),
 }).refine(
   (data) => {
-    const values = [data.company_name, data.job_title, data.contact_no, data.company_address, data.start_date, data.end_date];
+    const values = [data.company_name, data.job_title, data.contact_no, data.company_address, data.from_date];
     const filled = values.filter((v) => v?.trim().length > 0).length;
-    return filled === 0 || filled === 6;
+    return filled === 0 || filled === 5;
   },
   {
     message: "All fields in this row must be filled",
   },
 ).refine(
   (data) => {
-    if (!data.start_date || !data.end_date) return true;
-    return data.start_date < data.end_date;
+    if (!data.from_date || !data.to_date) return true;
+    return data.from_date < data.to_date;
   },
   {
-    message: "Start date must be before end date",
-    path: ["start_date"],
+    message: "From date must be before to date",
+    path: ["from_date"],
   },
 ).refine(
   (data) => {
-    if (!data.end_date) return true;
+    if (!data.to_date) return true;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return new Date(data.end_date) < today;
+    return new Date(data.to_date) < today;
   },
   {
-    message: "End date cannot be in the future",
-    path: ["end_date"],
+    message: "To date cannot be in the future",
+    path: ["to_date"],
   },
 );
 

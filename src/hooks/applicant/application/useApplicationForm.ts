@@ -191,10 +191,11 @@ export function useSRRVApplicationForm() {
       entry_visa_other: "",
       educations: existing.educations.map((e) => ({
         id: crypto.randomUUID(),
+        educ_attainment: e.educ_attainment ?? "",
         school: e.school,
         location: e.location,
-        start_date: e.start_date,
-        end_date: e.end_date,
+        from_date: e.from_date,
+        to_date: e.to_date,
       })),
       employments: existing.employments.map((e) => ({
         id: crypto.randomUUID(),
@@ -202,8 +203,8 @@ export function useSRRVApplicationForm() {
         job_title: e.job_title ?? "",
         contact_no: e.contact_no ?? "",
         company_address: e.company_address ?? "",
-        start_date: e.start_date ?? "",
-        end_date: e.end_date ?? "",
+        from_date: e.from_date ?? "",
+        to_date: e.to_date ?? "",
       })),
     });
     setStep2Data({
@@ -573,10 +574,11 @@ export function useSRRVApplicationForm() {
     });
 
     step1Data.educations.forEach((entry, index) => {
+      fd.append(`educations[${index}].educ_attainment`, entry.educ_attainment);
       fd.append(`educations[${index}].school`, entry.school);
       fd.append(`educations[${index}].location`, entry.location);
-      fd.append(`educations[${index}].start_date`, entry.start_date);
-      fd.append(`educations[${index}].end_date`, entry.end_date);
+      fd.append(`educations[${index}].from_date`, entry.from_date);
+      fd.append(`educations[${index}].to_date`, entry.to_date);
     });
 
     step1Data.employments.forEach((entry, index) => {
@@ -584,8 +586,8 @@ export function useSRRVApplicationForm() {
       fd.append(`employments[${index}].job_title`, entry.job_title);
       fd.append(`employments[${index}].contact_no`, entry.contact_no);
       fd.append(`employments[${index}].company_address`, entry.company_address);
-      fd.append(`employments[${index}].start_date`, entry.start_date);
-      fd.append(`employments[${index}].end_date`, entry.end_date);
+      fd.append(`employments[${index}].from_date`, entry.from_date);
+      fd.append(`employments[${index}].to_date`, entry.to_date);
     });
 
     for (const [key, doc] of Object.entries(step4Data)) {
@@ -709,10 +711,11 @@ export function useSRRVApplicationForm() {
     handleStep1Change("educations", [
       {
         id: crypto.randomUUID(),
+        educ_attainment: "College",
         school: "University of the Philippines",
         location: "Quezon City",
-        start_date: eduStartStr,
-        end_date: eduEndStr,
+        from_date: eduStartStr,
+        to_date: eduEndStr,
       },
     ]);
     handleStep1Change("employments", [
@@ -722,8 +725,8 @@ export function useSRRVApplicationForm() {
         job_title: "Senior Manager",
         contact_no: "0287654321",
         company_address: "Makati City",
-        start_date: empStartStr,
-        end_date: empEndStr,
+        from_date: empStartStr,
+        to_date: empEndStr,
       },
     ]);
 
