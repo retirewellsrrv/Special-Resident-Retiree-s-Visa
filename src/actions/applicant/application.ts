@@ -636,6 +636,25 @@ export async function submitApplication(
     };
   }
 
+  // Applicants must have an accepted consultation before starting a new application
+  if (!isEditing) {
+    const { data: consultation } = await supabase
+      .from("consultations")
+      .select("id, status")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!consultation || consultation.status !== "accepted") {
+      return {
+        error:
+          "Your consultation request must be accepted before you can submit an application. Please wait for our team to approve your consultation.",
+        success: false,
+      };
+    }
+  }
+
   const futurePlan = formData.get("future_plan") as string;
   if (!futurePlan) {
     return { error: "Please select a future plan", success: false };

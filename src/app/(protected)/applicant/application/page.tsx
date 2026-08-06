@@ -3,10 +3,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, CalendarX2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 import { steps } from "@/components/applicant/application/constants";
 import { Step1 } from "@/components/applicant/application/Step1";
@@ -50,10 +51,19 @@ export default function SRRVApplicationPage() {
     cancelSubmit,
     dismissSuccess,
     isLoadingProfile,
+    isConsultationLoading,
+    consultationApproved,
+    hasConsultation,
     isSubmitting,
     existingApplication,
     startEditing,
   } = useSRRVApplicationForm();
+
+  const consultationBlocked =
+    !isLoadingProfile &&
+    !isConsultationLoading &&
+    !consultationApproved &&
+    !existingApplication;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white py-10 px-4">
@@ -62,6 +72,27 @@ export default function SRRVApplicationPage() {
         <div className="lg:col-span-3">
           <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
             <CardContent className="p-6 md:p-10">
+              {consultationBlocked ? (
+                <div className="text-center py-10 px-4">
+                  <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto">
+                    <CalendarX2 className="w-7 h-7 text-amber-500" />
+                  </div>
+                  <h2 className="text-xl font-bold text-neutral-800 mt-4">
+                    Consultation Required
+                  </h2>
+                  <p className="text-sm text-neutral-500 leading-relaxed mt-2 max-w-md mx-auto">
+                    {hasConsultation
+                      ? "Your consultation request must be accepted before you can start your SRRV application. Our team is reviewing your request and will notify you once it's approved."
+                      : "You need to request a consultation before you can start your SRRV application. Our team will review your request and notify you once it's approved."}
+                  </p>
+                  <Button asChild className="mt-6 bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-6 py-2.5 rounded-md font-semibold">
+                    <Link href="/applicant/consultation">
+                      {hasConsultation ? "View Consultation" : "Request a Consultation"}
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
               {/* Step Indicator */}
               <div className="relative mb-6">
                 <div className="absolute top-4 left-0 right-0 h-px bg-neutral-200" />
@@ -234,6 +265,8 @@ export default function SRRVApplicationPage() {
                     )}
                   </Button>
                 </div>
+              )}
+                </>
               )}
             </CardContent>
           </Card>

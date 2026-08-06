@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react'
 
 const NAV_ITEMS = [
   { href: '/applicant/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/applicant/application', label: 'Application', icon: FileText },
   { href: '/applicant/consultation', label: 'Consultation', icon: CalendarDays },
+  { href: '/applicant/application', label: 'Application', icon: FileText },
   { href: '/applicant/profile', label: 'Profile', icon: UserIcon },
 ]
 

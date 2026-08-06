@@ -5,6 +5,7 @@ import type { DocumentType } from "@/schemas/document";
 import { step4FormSchema } from "@/schemas/document";
 import { submitApplication, getExistingApplication } from "@/actions/applicant/application";
 import type { ExistingApplicationData } from "@/actions/applicant/application";
+import { getMyConsultation } from "@/actions/applicant/consultation";
 import { saveFile, loadFile, clearAllFiles } from "@/lib/file-store";
 import type { FamilyMember } from "@/components/applicant/application/Step2";
 import type { EducationEntry, EmploymentEntry } from "@/components/applicant/application/Step1";
@@ -163,6 +164,9 @@ export function useSRRVApplicationForm() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [consultationApproved, setConsultationApproved] = useState(false);
+  const [hasConsultation, setHasConsultation] = useState(false);
+  const [isConsultationLoading, setIsConsultationLoading] = useState(true);
   const [existingApplication, setExistingApplication] = useState<ExistingApplicationData | null>(null);
   const restored = useRef(false);
 
@@ -295,6 +299,23 @@ export function useSRRVApplicationForm() {
       })
       .finally(() => setIsLoadingProfile(false));
   }, []);
+
+  // ── Consultation gate: an accepted consultation is required to apply ──────
+  useEffect(() => {
+    getMyConsultation()
+      .then((consultation) => {
+        setHasConsultation(consultation !== null);
+        setConsultationApproved(consultation?.status === "accepted");
+      })
+      .finally(() => setIsConsultationLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (isLoadingProfile || isConsultationLoading) return;
+    if (!consultationApproved && !existingApplication) {
+      clearPersistedState();
+    }
+  }, [isLoadingProfile, isConsultationLoading, consultationApproved, existingApplication]);
 
   // ── Persist state to sessionStorage on every change ───────────────────────
   useEffect(() => {
@@ -786,6 +807,9 @@ export function useSRRVApplicationForm() {
       window.location.href = "/applicant/dashboard";
     },
     isLoadingProfile,
+    isConsultationLoading,
+    consultationApproved,
+    hasConsultation,
     isSubmitting,
     existingApplication,
     startEditing: handleEdit,

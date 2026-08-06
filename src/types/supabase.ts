@@ -183,6 +183,7 @@ export type Database = {
           meeting_date: string
           mode_communication: Database["public"]["Enums"]["communication_mode"]
           purpose: string
+          status: Database["public"]["Enums"]["consultation_status"]
           updated_at: string
           user_id: string
         }
@@ -192,6 +193,7 @@ export type Database = {
           meeting_date: string
           mode_communication: Database["public"]["Enums"]["communication_mode"]
           purpose: string
+          status?: Database["public"]["Enums"]["consultation_status"]
           updated_at?: string
           user_id: string
         }
@@ -201,6 +203,7 @@ export type Database = {
           meeting_date?: string
           mode_communication?: Database["public"]["Enums"]["communication_mode"]
           purpose?: string
+          status?: Database["public"]["Enums"]["consultation_status"]
           updated_at?: string
           user_id?: string
         }
@@ -707,6 +710,7 @@ export type Database = {
         | "whatsApp"
         | "face_2_face"
         | "phone_call"
+      consultation_status: "processing" | "accepted" | "rejected" | "pending"
       document_format:
         | "pdf"
         | "doc"
@@ -898,6 +902,7 @@ export const Constants = {
         "face_2_face",
         "phone_call",
       ],
+      consultation_status: ["processing", "accepted", "rejected", "pending"],
       document_format: [
         "pdf",
         "doc",

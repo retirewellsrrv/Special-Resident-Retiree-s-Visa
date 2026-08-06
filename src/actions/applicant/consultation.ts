@@ -12,6 +12,7 @@ export type MyConsultation = {
   meeting_date: string;
   mode_communication: Database["public"]["Enums"]["communication_mode"];
   purpose: string;
+  status: Database["public"]["Enums"]["consultation_status"];
 };
 
 export async function getMyConsultation(): Promise<MyConsultation | null> {
@@ -22,7 +23,7 @@ export async function getMyConsultation(): Promise<MyConsultation | null> {
 
   const { data } = await supabase
     .from("consultations")
-    .select("id, meeting_date, mode_communication, purpose")
+    .select("id, meeting_date, mode_communication, purpose, status")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -65,9 +66,21 @@ export async function submitConsultationAction(
   // Only one consultation per user: update if it already exists, otherwise insert
   const { data: existing } = await supabase
     .from("consultations")
-    .select("id")
+    .select("id, status")
     .eq("user_id", user.id)
     .maybeSingle();
+
+  if (
+    existing &&
+    (existing.status === "processing" || existing.status === "accepted")
+  ) {
+    return {
+      error:
+        "Your consultation is currently being processed and can no longer be modified.",
+      fieldErrors: null,
+      success: false,
+    };
+  }
 
   const values = {
     meeting_date: parsed.data.meeting_date,

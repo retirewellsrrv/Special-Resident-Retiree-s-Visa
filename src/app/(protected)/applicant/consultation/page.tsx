@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { ArrowRight, Loader2, Pencil } from "lucide-react";
+import { ArrowRight, Loader2, Pencil, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,9 @@ export default function ConsultationRequestPage() {
     return now.toISOString().slice(0, 10);
   })();
 
+  const isLocked =
+    existing?.status === "processing" || existing?.status === "accepted";
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white py-10 px-4">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -118,6 +121,20 @@ export default function ConsultationRequestPage() {
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-36 w-full" />
                   </div>
+                </div>
+              ) : isLocked ? (
+                <div className="text-center py-10 px-4">
+                  <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto">
+                    <Clock className="w-7 h-7 text-amber-500" />
+                  </div>
+                  <h2 className="text-xl font-bold text-neutral-800 mt-4">
+                    Consultation in Progress
+                  </h2>
+                  <p className="text-sm text-neutral-500 leading-relaxed mt-2 max-w-md mx-auto">
+                    {existing?.status === "accepted"
+                      ? "Your consultation has been accepted and can no longer be modified. Our team will reach out to you to confirm your schedule."
+                      : "Your consultation request is currently being processed and can no longer be modified. Our team will get back to you soon."}
+                  </p>
                 </div>
               ) : (
                 <>
