@@ -91,6 +91,7 @@ export type Database = {
       applications: {
         Row: {
           application_code: string
+          consultation_id: number
           created_at: string
           future_plans: string | null
           id: number
@@ -101,6 +102,7 @@ export type Database = {
         }
         Insert: {
           application_code: string
+          consultation_id: number
           created_at?: string
           future_plans?: string | null
           id?: number
@@ -111,6 +113,7 @@ export type Database = {
         }
         Update: {
           application_code?: string
+          consultation_id?: number
           created_at?: string
           future_plans?: string | null
           id?: number
@@ -120,6 +123,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "applications_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: true
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "applications_payment_id_fkey"
             columns: ["payment_id"]
@@ -165,6 +175,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      consultations: {
+        Row: {
+          created_at: string
+          id: number
+          meeting_date: string
+          mode_communication: Database["public"]["Enums"]["communication_mode"]
+          purpose: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          meeting_date: string
+          mode_communication: Database["public"]["Enums"]["communication_mode"]
+          purpose: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          meeting_date?: string
+          mode_communication?: Database["public"]["Enums"]["communication_mode"]
+          purpose?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "client_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       contacts: {
         Row: {
@@ -653,6 +701,12 @@ export type Database = {
         | "rejected"
         | "pending"
         | "payment_failed"
+      communication_mode:
+        | "zoom_meeting"
+        | "google_meet"
+        | "whatsApp"
+        | "face_2_face"
+        | "phone_call"
       document_format:
         | "pdf"
         | "doc"
@@ -836,6 +890,13 @@ export const Constants = {
         "rejected",
         "pending",
         "payment_failed",
+      ],
+      communication_mode: [
+        "zoom_meeting",
+        "google_meet",
+        "whatsApp",
+        "face_2_face",
+        "phone_call",
       ],
       document_format: [
         "pdf",

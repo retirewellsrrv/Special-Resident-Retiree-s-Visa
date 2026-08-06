@@ -726,6 +726,17 @@ export async function submitApplication(
 
   if (profileError) return { error: profileError.message, success: false };
 
+  // Look up the user's consultation to link it to the application
+  const { data: consultation } = await supabase
+    .from("consultations")
+    .select("id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const consultationId = consultation?.id;
+
   let appIdToUse: number;
 
   if (isEditing && appId) {
@@ -733,7 +744,11 @@ export async function submitApplication(
     appIdToUse = appId;
     const { error: appUpdateError } = await adminSupabase
       .from("applications")
-      .update({ future_plans: futurePlan, status: "pending" } as never)
+      .update({
+        future_plans: futurePlan,
+        status: "pending",
+        ...(consultationId ? { consultation_id: consultationId } : {}),
+      } as never)
       .eq("id", appId);
 
     if (appUpdateError) return { error: appUpdateError.message, success: false };
@@ -754,6 +769,7 @@ export async function submitApplication(
         user_id: user.id,
         future_plans: futurePlan,
         application_code: code,
+        ...(consultationId ? { consultation_id: consultationId } : {}),
       } as never)
       .select("id")
       .single();
