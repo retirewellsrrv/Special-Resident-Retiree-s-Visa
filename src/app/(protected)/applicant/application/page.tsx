@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { setNavigationLocked } from "@/lib/navigation-lock";
 
 import { steps } from "@/components/applicant/application/constants";
 import { Step1 } from "@/components/applicant/application/Step1";
@@ -64,6 +66,11 @@ export default function SRRVApplicationPage() {
     !isConsultationLoading &&
     !consultationApproved &&
     !existingApplication;
+
+  useEffect(() => {
+    setNavigationLocked(isLoadingProfile || isConsultationLoading);
+    return () => setNavigationLocked(false);
+  }, [isLoadingProfile, isConsultationLoading]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white py-10 px-4">
@@ -139,8 +146,8 @@ export default function SRRVApplicationPage() {
 
               <div className="border-t border-red-200 mb-6" />
 
-              {/* Loading state for profile data */}
-              {isLoadingProfile && (
+              {/* Loading state for profile & consultation data */}
+              {(isLoadingProfile || isConsultationLoading) && (
                 <div className="space-y-6">
                   <div className="mb-6 space-y-2">
                     <Skeleton className="h-7 w-48" />
@@ -174,24 +181,24 @@ export default function SRRVApplicationPage() {
               )}
 
               {/* Active step content */}
-              {!isLoadingProfile && currentStep === 1 && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 1 && (
                 <Step1
                   data={step1Data}
                   onChange={step1Change}
                   errors={errors}
                 />
               )}
-              {!isLoadingProfile && currentStep === 2 && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 2 && (
                 <Step2
                   data={step2Data}
                   onChange={step2Change}
                   errors={errors}
                 />
               )}
-              {!isLoadingProfile && currentStep === 3 && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 3 && (
                 <Step3 data={step4Data} onUpload={docUpload} errors={errors} />
               )}
-              {!isLoadingProfile && currentStep === 4 && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 4 && (
                 <Step4
                   step1Data={step1Data}
                   step2Data={step2Data}
@@ -200,7 +207,7 @@ export default function SRRVApplicationPage() {
                   canRetry={existingApplication?.canRetry ?? false}
                 />
               )}
-              {!isLoadingProfile && currentStep === 5 && existingApplication && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 5 && existingApplication && (
                 <Step5 data={existingApplication} onEdit={startEditing} />
               )}
 

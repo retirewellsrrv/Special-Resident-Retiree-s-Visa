@@ -17,6 +17,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { LogoutBtn } from "@/components/auth/logout-btn";
+import {
+  isNavigationLocked,
+  subscribeNavigationLock,
+} from "@/lib/navigation-lock";
 
 interface NavbarProps {
   className?: string;
@@ -33,6 +37,10 @@ const navItems = [
 
 export function Navbar({ className, user }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const isLocked = React.useSyncExternalStore(
+    subscribeNavigationLock,
+    isNavigationLocked,
+  );
 
   return (
     <header
@@ -55,7 +63,13 @@ export function Navbar({ className, user }: NavbarProps) {
                 <NavigationMenuLink asChild>
                   <Link
                     href={item.href}
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-[#81001C] focus:bg-accent focus:text-[#81001C] focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                    aria-disabled={isLocked}
+                    onClick={(e) => isLocked && e.preventDefault()}
+                    className={cn(
+                      "group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-[#81001C] focus:bg-accent focus:text-[#81001C] focus:outline-none",
+                      isLocked &&
+                        "pointer-events-none opacity-50 hover:bg-transparent hover:text-[#81001C]",
+                    )}
                   >
                     {item.title}
                   </Link>
@@ -109,8 +123,18 @@ export function Navbar({ className, user }: NavbarProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-brand-primary-50 hover:text-brand-primary-600"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      aria-disabled={isLocked}
+                      onClick={(e) => {
+                        if (isLocked) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={cn(
+                        "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-brand-primary-50 hover:text-brand-primary-600",
+                        isLocked && "pointer-events-none opacity-50",
+                      )}
                     >
                       {item.title}
                     </Link>
