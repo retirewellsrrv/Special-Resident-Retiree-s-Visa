@@ -238,7 +238,7 @@ export default function SRRVApplicationPage() {
                     <Button
                       variant="outline"
                       onClick={back}
-                      disabled={isSubmitting}
+                      disabled={isLoadingProfile || isConsultationLoading || isSubmitting}
                       className="border-neutral-300 text-neutral-600 hover:bg-neutral-50 px-6 py-2.5 rounded-md font-semibold flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" />
@@ -247,7 +247,7 @@ export default function SRRVApplicationPage() {
                   )}
                   <Button
                     onClick={next}
-                    disabled={isSubmitting}
+                    disabled={isLoadingProfile || isConsultationLoading || isSubmitting}
                     className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (

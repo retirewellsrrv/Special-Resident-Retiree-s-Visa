@@ -126,7 +126,7 @@ export function UploadRow({
         {hasFile && !displayError && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" />
-            {file?.file?.name}
+            {file?.file?.name ?? file?.name}
           </p>
         )}
       </div>
