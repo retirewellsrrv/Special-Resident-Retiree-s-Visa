@@ -74,9 +74,9 @@ function ReceiptContent() {
               Thank You
             </h1>
             <p className="text-center text-sm text-[#8A7B72] max-w-md leading-relaxed">
-              Your payment was successful. An official copy of this receipt has
-              been sent to your registered email address. Your SRRV application
-              is now officially under review by our heritage desk.
+              {receipt.serviceType === "consultation"
+                ? "Your consultation payment was successful. Our team will get back to you to confirm your schedule."
+                : "Your payment was successful. An official copy of this receipt has been sent to your registered email address. Your SRRV application is now officially under review by our heritage desk."}
             </p>
           </CardContent>
 
@@ -121,7 +121,9 @@ function ReceiptContent() {
 
             <div className="flex justify-between text-sm">
               <span className="text-[#3B2A28]">
-                SRRV Application Fee
+                {receipt.serviceType === "consultation"
+                  ? "SRRV Consultation Fee"
+                  : "SRRV Application Fee"}
               </span>
               <span className="text-[#3B2A28] font-medium">
                 ₱{Number(receipt.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
@@ -147,7 +149,7 @@ function ReceiptContent() {
               <CreditCard className="h-4 w-4 text-[#8A7B72]" />
               <span className="capitalize">{receipt.paymentMethod.replace(/_/g, " ")}</span>
             </div>
-            <span className="text-xs text-[#A89A8F]">{receipt.applicationCode}</span>
+            <span className="text-xs text-[#A89A8F]">{receipt.applicationCode ?? "—"}</span>
           </div>
         </Card>
 

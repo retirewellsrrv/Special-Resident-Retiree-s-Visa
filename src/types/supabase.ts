@@ -565,6 +565,7 @@ export type Database = {
           created_at: string
           id: number
           payment_method: Database["public"]["Enums"]["payment_methods"]
+          service_type: Database["public"]["Enums"]["service_type"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
           updated_at: string
@@ -575,6 +576,7 @@ export type Database = {
           created_at: string
           id?: number
           payment_method: Database["public"]["Enums"]["payment_methods"]
+          service_type: Database["public"]["Enums"]["service_type"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
           updated_at?: string
@@ -585,6 +587,7 @@ export type Database = {
           created_at?: string
           id?: number
           payment_method?: Database["public"]["Enums"]["payment_methods"]
+          service_type?: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["payment_status"]
           transaction_code?: string
           updated_at?: string
@@ -759,6 +762,7 @@ export type Database = {
         | "cancelled"
         | "success"
         | "failed"
+      service_type: "application" | "consultation"
       sex: "male" | "female"
     }
     CompositeTypes: {
@@ -956,6 +960,7 @@ export const Constants = {
         "success",
         "failed",
       ],
+      service_type: ["application", "consultation"],
       sex: ["male", "female"],
     },
   },
