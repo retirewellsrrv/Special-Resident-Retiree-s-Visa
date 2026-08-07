@@ -1,12 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, CalendarX2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { setNavigationLocked } from "@/lib/navigation-lock";
 
 import { steps } from "@/components/applicant/application/constants";
 import { Step1 } from "@/components/applicant/application/Step1";
@@ -50,10 +53,24 @@ export default function SRRVApplicationPage() {
     cancelSubmit,
     dismissSuccess,
     isLoadingProfile,
+    isConsultationLoading,
+    consultationApproved,
+    hasConsultation,
     isSubmitting,
     existingApplication,
     startEditing,
   } = useSRRVApplicationForm();
+
+  const consultationBlocked =
+    !isLoadingProfile &&
+    !isConsultationLoading &&
+    !consultationApproved &&
+    !existingApplication;
+
+  useEffect(() => {
+    setNavigationLocked(isLoadingProfile || isConsultationLoading);
+    return () => setNavigationLocked(false);
+  }, [isLoadingProfile, isConsultationLoading]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white py-10 px-4">
@@ -62,6 +79,27 @@ export default function SRRVApplicationPage() {
         <div className="lg:col-span-3">
           <Card className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
             <CardContent className="p-6 md:p-10">
+              {consultationBlocked ? (
+                <div className="text-center py-10 px-4">
+                  <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto">
+                    <CalendarX2 className="w-7 h-7 text-amber-500" />
+                  </div>
+                  <h2 className="text-xl font-bold text-neutral-800 mt-4">
+                    Consultation Required
+                  </h2>
+                  <p className="text-sm text-neutral-500 leading-relaxed mt-2 max-w-md mx-auto">
+                    {hasConsultation
+                      ? "Your consultation request must be accepted before you can start your SRRV application. Our team is reviewing your request and will notify you once it's approved."
+                      : "You need to request a consultation before you can start your SRRV application. Our team will review your request and notify you once it's approved."}
+                  </p>
+                  <Button asChild className="mt-6 bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-6 py-2.5 rounded-md font-semibold">
+                    <Link href="/applicant/consultation">
+                      {hasConsultation ? "View Consultation" : "Request a Consultation"}
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
               {/* Step Indicator */}
               <div className="relative mb-6">
                 <div className="absolute top-4 left-0 right-0 h-px bg-neutral-200" />
@@ -108,8 +146,8 @@ export default function SRRVApplicationPage() {
 
               <div className="border-t border-red-200 mb-6" />
 
-              {/* Loading state for profile data */}
-              {isLoadingProfile && (
+              {/* Loading state for profile & consultation data */}
+              {(isLoadingProfile || isConsultationLoading) && (
                 <div className="space-y-6">
                   <div className="mb-6 space-y-2">
                     <Skeleton className="h-7 w-48" />
@@ -143,24 +181,24 @@ export default function SRRVApplicationPage() {
               )}
 
               {/* Active step content */}
-              {!isLoadingProfile && currentStep === 1 && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 1 && (
                 <Step1
                   data={step1Data}
                   onChange={step1Change}
                   errors={errors}
                 />
               )}
-              {!isLoadingProfile && currentStep === 2 && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 2 && (
                 <Step2
                   data={step2Data}
                   onChange={step2Change}
                   errors={errors}
                 />
               )}
-              {!isLoadingProfile && currentStep === 3 && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 3 && (
                 <Step3 data={step4Data} onUpload={docUpload} errors={errors} />
               )}
-              {!isLoadingProfile && currentStep === 4 && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 4 && (
                 <Step4
                   step1Data={step1Data}
                   step2Data={step2Data}
@@ -169,7 +207,7 @@ export default function SRRVApplicationPage() {
                   canRetry={existingApplication?.canRetry ?? false}
                 />
               )}
-              {!isLoadingProfile && currentStep === 5 && existingApplication && (
+              {!isLoadingProfile && !isConsultationLoading && currentStep === 5 && existingApplication && (
                 <Step5 data={existingApplication} onEdit={startEditing} />
               )}
 
@@ -207,7 +245,7 @@ export default function SRRVApplicationPage() {
                     <Button
                       variant="outline"
                       onClick={back}
-                      disabled={isSubmitting}
+                      disabled={isLoadingProfile || isConsultationLoading || isSubmitting}
                       className="border-neutral-300 text-neutral-600 hover:bg-neutral-50 px-6 py-2.5 rounded-md font-semibold flex items-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" />
@@ -216,7 +254,7 @@ export default function SRRVApplicationPage() {
                   )}
                   <Button
                     onClick={next}
-                    disabled={isSubmitting}
+                    disabled={isLoadingProfile || isConsultationLoading || isSubmitting}
                     className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
@@ -234,6 +272,8 @@ export default function SRRVApplicationPage() {
                     )}
                   </Button>
                 </div>
+              )}
+                </>
               )}
             </CardContent>
           </Card>

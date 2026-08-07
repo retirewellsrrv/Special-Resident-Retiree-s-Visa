@@ -188,7 +188,8 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
   const { data: allPayments } = await supabase
     .from("payments")
     .select("status")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("service_type", "application");
 
   const canRetry =
     allPayments !== null &&
@@ -342,12 +343,18 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
   };
 }
 
+export type ConciergeInfo = {
+  user_id: string;
+  name: string;
+  email: string;
+};
+
 export type DashboardData = {
   application: {
     application_code: string;
     status: string;
     created_at: string;
-  };
+  } | null;
   documents: {
     type: string;
     name: string;
@@ -361,7 +368,14 @@ export type DashboardData = {
     payment_method: string;
     transaction_code: string;
   } | null;
+  consultationPayment: {
+    amount: number;
+    status: string;
+    payment_method: string;
+    transaction_code: string;
+  } | null;
   canRetry: boolean;
+  concierges: ConciergeInfo[];
 };
 
 export async function getApplicantDashboard(): Promise<DashboardData | null> {
@@ -376,18 +390,19 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!app) return null;
-
-  const { data: documents } = await supabase
-    .from("documents")
-    .select("type, name, format, status, created_at")
-    .eq("application_id", app.id)
-    .order("created_at");
+  const { data: documents } = app
+    ? await supabase
+        .from("documents")
+        .select("type, name, format, status, created_at")
+        .eq("application_id", app.id)
+        .order("created_at")
+    : { data: null };
 
   const { data: allPayments } = await supabase
     .from("payments")
     .select("amount, status, payment_method, transaction_code, created_at")
     .eq("user_id", user.id)
+    .eq("service_type", "application")
     .order("created_at", { ascending: false });
 
   let payment: DashboardData["payment"] = null;
@@ -405,15 +420,59 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
     canRetry = !allPayments.some((p) => p.status === "success");
   }
 
+  const { data: consultationRow } = await supabase
+    .from("payments")
+    .select("amount, status, payment_method, transaction_code, created_at")
+    .eq("user_id", user.id)
+    .eq("service_type", "consultation")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const consultationPayment: DashboardData["consultationPayment"] =
+    consultationRow
+      ? {
+          amount: consultationRow.amount,
+          status: consultationRow.status,
+          payment_method: consultationRow.payment_method,
+          transaction_code: consultationRow.transaction_code,
+        }
+      : null;
+
+  const adminSupabase = createAdminClient();
+
+  const { data: adminProfiles } = await adminSupabase
+    .from("admin_profiles")
+    .select("user_id, name")
+    .eq("is_active", true)
+    .order("name");
+
+  const { data: { users: adminUsers } } =
+    await adminSupabase.auth.admin.listUsers();
+
+  const adminEmailMap = new Map(
+    (adminUsers ?? []).map((u) => [u.id, u.email ?? ""])
+  );
+
+  const concierges: ConciergeInfo[] = (adminProfiles ?? []).map((p) => ({
+    user_id: p.user_id,
+    name: p.name,
+    email: adminEmailMap.get(p.user_id) ?? "",
+  }));
+
   return {
-    application: {
-      application_code: app.application_code,
-      status: app.status,
-      created_at: app.created_at,
-    },
+    application: app
+      ? {
+          application_code: app.application_code,
+          status: app.status,
+          created_at: app.created_at,
+        }
+      : null,
     documents: documents ?? [],
     payment,
+    consultationPayment,
     canRetry,
+    concierges,
   };
 }
 
@@ -423,15 +482,16 @@ export type PaymentReceiptData = {
   status: string;
   paymentMethod: string;
   createdAt: string;
-  applicationCode: string;
+  applicationCode?: string;
   clientName: string;
   clientEmail: string;
+  serviceType: "application" | "consultation";
 };
 
 export async function getPaymentReceipt(
   transactionCode: string,
 ): Promise<PaymentReceiptData | null> {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   let { data: payment, error: payErr } = await supabase
     .from("payments")
@@ -461,6 +521,26 @@ export async function getPaymentReceipt(
       return null;
     }
     payment = fallbackPayment;
+  }
+
+  // Consultation payments have no linked application
+  if (payment.service_type === "consultation") {
+    const { data: profile } = await supabase
+      .from("client_profiles")
+      .select("name")
+      .eq("user_id", payment.user_id)
+      .maybeSingle();
+
+    return {
+      transactionCode: payment.transaction_code,
+      amount: payment.amount,
+      status: payment.status,
+      paymentMethod: payment.payment_method,
+      createdAt: payment.created_at,
+      clientName: profile?.name ?? "",
+      clientEmail: payment.user_id,
+      serviceType: "consultation",
+    };
   }
 
   let { data: app, error: appErr } = await supabase
@@ -501,6 +581,7 @@ export async function getPaymentReceipt(
     applicationCode: app.application_code,
     clientName: profile?.name ?? "",
     clientEmail: payment.user_id,
+    serviceType: "application",
   };
 }
 
@@ -518,7 +599,6 @@ export async function retryPaymentAction(
   if (!user) return { error: "Unauthorized", success: false };
 
   const supabase = await createClient();
-  const adminSupabase = createAdminClient();
 
   const { data: app } = await supabase
     .from("applications")
@@ -528,12 +608,13 @@ export async function retryPaymentAction(
 
   if (!app) return { error: "No application found", success: false };
 
-  const DEFAULT_FEE = 350;
+  const DEFAULT_FEE = 300;
 
   const { data: existingSuccess } = await supabase
     .from("payments")
     .select("id")
     .eq("user_id", user.id)
+    .eq("service_type", "application")
     .eq("status", "success")
     .maybeSingle();
 
@@ -552,6 +633,7 @@ export async function retryPaymentAction(
       status: "pending",
       payment_method: paymentMethod,
       transaction_code: externalId,
+      service_type: "application",
       created_at: new Date().toISOString(),
     })
     .select("id")
@@ -564,7 +646,7 @@ export async function retryPaymentAction(
     };
   }
 
-  const { error: linkError } = await adminSupabase
+  const { error: linkError } = await supabase
     .from("applications")
     .update({ payment_id: payment.id })
     .eq("id", app.id);
@@ -588,7 +670,7 @@ export async function retryPaymentAction(
         currency: "PHP",
         metadata: {
           application_id: String(app.id),
-          service_type: "basic",
+          service_type: "application",
           retry: "true",
         },
       },
@@ -617,7 +699,6 @@ export async function submitApplication(
   if (!user) return { error: "Unauthorized", success: false };
 
   const supabase = await createClient();
-  const adminSupabase = createAdminClient();
 
   // Check if user already has an application
   const { data: existingApp } = await supabase
@@ -634,6 +715,25 @@ export async function submitApplication(
       error: "Your application cannot be modified at this stage.",
       success: false,
     };
+  }
+
+  // Applicants must have an accepted consultation before starting a new application
+  if (!isEditing) {
+    const { data: consultation } = await supabase
+      .from("consultations")
+      .select("id, status")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!consultation || consultation.status !== "accepted") {
+      return {
+        error:
+          "Your consultation request must be accepted before you can submit an application. Please wait for our team to approve your consultation.",
+        success: false,
+      };
+    }
   }
 
   const futurePlan = formData.get("future_plan") as string;
@@ -726,25 +826,40 @@ export async function submitApplication(
 
   if (profileError) return { error: profileError.message, success: false };
 
+  // Look up the user's consultation to link it to the application
+  const { data: consultation } = await supabase
+    .from("consultations")
+    .select("id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const consultationId = consultation?.id;
+
   let appIdToUse: number;
 
   if (isEditing && appId) {
-    // Update existing application (use admin client to bypass RLS)
+    // Update existing application
     appIdToUse = appId;
-    const { error: appUpdateError } = await adminSupabase
+    const { error: appUpdateError } = await supabase
       .from("applications")
-      .update({ future_plans: futurePlan, status: "pending" } as never)
+      .update({
+        future_plans: futurePlan,
+        status: "pending",
+        ...(consultationId ? { consultation_id: consultationId } : {}),
+      } as never)
       .eq("id", appId);
 
     if (appUpdateError) return { error: appUpdateError.message, success: false };
 
-    // Delete existing child records using admin client (bypass RLS)
+    // Delete existing child records
     const tables = [
       "contacts", "emergency_contacts", "applicant_profiles", "passports",
       "visa_details", "educations", "employments", "dependents", "family_backgrounds",
     ];
     for (const table of tables) {
-      await adminSupabase.from(table as never).delete().eq("application_id", appId);
+      await supabase.from(table as never).delete().eq("application_id", appId);
     }
   } else {
     // Create new application
@@ -754,6 +869,7 @@ export async function submitApplication(
         user_id: user.id,
         future_plans: futurePlan,
         application_code: code,
+        ...(consultationId ? { consultation_id: consultationId } : {}),
       } as never)
       .select("id")
       .single();
@@ -797,7 +913,7 @@ export async function submitApplication(
   }
 
   // ── Insert applicant profile ─────────────────────────────────────────
-  const { error: appProfileError } = await adminSupabase
+  const { error: appProfileError } = await supabase
     .from("applicant_profiles")
     .insert({
       application_id: appIdToUse,
@@ -1002,7 +1118,7 @@ export async function submitApplication(
     return { error: null, success: true };
   }
 
-  const DEFAULT_FEE = 350;
+  const DEFAULT_FEE = 300;
 
   // ── Create payment record ────────────────────────────────────────────────
   const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
@@ -1014,6 +1130,7 @@ export async function submitApplication(
       status: "pending",
       payment_method: paymentMethod.toLowerCase() as Database["public"]["Enums"]["payment_methods"],
       transaction_code: externalId,
+      service_type: "application",
       created_at: new Date().toISOString(),
     })
     .select("id")
@@ -1027,7 +1144,7 @@ export async function submitApplication(
   }
 
   // ── Link payment to application ──────────────────────────────────────────
-  const { error: linkError } = await adminSupabase
+  const { error: linkError } = await supabase
     .from("applications")
     .update({ payment_id: payment.id })
     .eq("id", appIdToUse);
@@ -1053,7 +1170,7 @@ export async function submitApplication(
         currency: "PHP",
         metadata: {
           application_id: String(appIdToUse),
-          service_type: "basic",
+          service_type: "application",
         },
       },
     });
