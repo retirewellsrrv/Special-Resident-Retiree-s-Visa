@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { applicationFormSchema } from "@/schemas/application";
 import {
   DocumentTypeEnum,
@@ -343,6 +343,12 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
   };
 }
 
+export type ConciergeInfo = {
+  user_id: string;
+  name: string;
+  email: string;
+};
+
 export type DashboardData = {
   application: {
     application_code: string;
@@ -369,6 +375,7 @@ export type DashboardData = {
     transaction_code: string;
   } | null;
   canRetry: boolean;
+  concierges: ConciergeInfo[];
 };
 
 export async function getApplicantDashboard(): Promise<DashboardData | null> {
@@ -432,6 +439,27 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
         }
       : null;
 
+  const adminSupabase = createAdminClient();
+
+  const { data: adminProfiles } = await adminSupabase
+    .from("admin_profiles")
+    .select("user_id, name")
+    .eq("is_active", true)
+    .order("name");
+
+  const { data: { users: adminUsers } } =
+    await adminSupabase.auth.admin.listUsers();
+
+  const adminEmailMap = new Map(
+    (adminUsers ?? []).map((u) => [u.id, u.email ?? ""])
+  );
+
+  const concierges: ConciergeInfo[] = (adminProfiles ?? []).map((p) => ({
+    user_id: p.user_id,
+    name: p.name,
+    email: adminEmailMap.get(p.user_id) ?? "",
+  }));
+
   return {
     application: app
       ? {
@@ -444,6 +472,7 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
     payment,
     consultationPayment,
     canRetry,
+    concierges,
   };
 }
 

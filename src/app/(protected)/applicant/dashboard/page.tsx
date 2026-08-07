@@ -632,9 +632,42 @@ function DashboardContent() {
           </p>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-brand-neutral-400">
-            No concierge information available yet.
-          </p>
+          {loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : data?.concierges && data.concierges.length > 0 ? (
+            <ul className="space-y-3">
+              {data.concierges.map((concierge) => (
+                <li
+                  key={concierge.user_id}
+                  className="flex items-start gap-3 rounded-lg border border-brand-neutral-100 bg-brand-neutral-50/50 p-3"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#8B1A2B]/10 text-sm font-semibold text-[#8B1A2B]">
+                    {concierge.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-brand-neutral-800">
+                      {concierge.name}
+                    </p>
+                    <p className="truncate text-sm text-brand-neutral-400">
+                      {concierge.email}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-brand-neutral-400">
+              No concierge information available yet.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
