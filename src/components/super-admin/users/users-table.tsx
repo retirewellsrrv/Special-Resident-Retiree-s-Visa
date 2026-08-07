@@ -15,6 +15,8 @@ const STATUS_STYLES: Record<string, string> = {
   approved: 'bg-green-50 text-green-700 border border-green-200',
   rejected: 'bg-red-50 text-red-700 border border-red-200',
   paused: 'bg-blue-50 text-blue-700 border border-blue-200',
+  processing: 'bg-sky-50 text-sky-700 border border-sky-200',
+  payment_failed: 'bg-orange-50 text-orange-700 border border-orange-200',
 }
 
 export function UsersTable({ users }: Props) {

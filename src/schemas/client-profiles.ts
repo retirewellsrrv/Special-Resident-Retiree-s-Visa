@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const SexEnum = z.enum(['male', 'female'])
 export const MaritalStatusEnum = z.enum(['single', 'married', 'widowed', 'divorced'])
 export const ApplicationStatusEnum = z.enum([
-  'paused', 'pending', 'processing', 'approved', 'rejected',
+  'paused', 'pending', 'processing', 'approved', 'rejected', 'payment_failed',
 ])
 export const ServiceTypeEnum = z.enum(['basic', 'premium', 'vip'])
 
