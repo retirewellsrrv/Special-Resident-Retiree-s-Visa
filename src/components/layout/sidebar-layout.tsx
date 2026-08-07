@@ -31,6 +31,7 @@ interface SidebarLayoutProps {
     role: string
     avatarUrl?: string
   }
+  notifications?: ReactNode
 }
 
 export function SidebarLayout({
@@ -40,6 +41,7 @@ export function SidebarLayout({
   ctaLabel = 'New Application',
   onCta,
   user = { name: 'Admin User', role: 'Senior Registrar' },
+  notifications,
 }: SidebarLayoutProps) {
   const initials = user.name
     .split(' ')
@@ -126,16 +128,17 @@ export function SidebarLayout({
               <SidebarTrigger className="text-brand-neutral-400 hover:text-brand-neutral-700 shrink-0" />
 
               <div className="flex items-center gap-1">
-                {/* Bell */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative text-brand-neutral-500 hover:text-brand-neutral-800 hover:bg-brand-neutral-100 rounded-full size-9"
-                  aria-label="Notifications"
-                >
-                  <Bell className="size-[18px]" />
-                  <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand-primary-500 ring-2 ring-white" />
-                </Button>
+                {notifications ?? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative text-brand-neutral-500 hover:text-brand-neutral-800 hover:bg-brand-neutral-100 rounded-full size-9"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="size-[18px]" />
+                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand-primary-500 ring-2 ring-white" />
+                  </Button>
+                )}
 
                 {/* Help */}
                 <Button
