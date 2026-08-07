@@ -12,9 +12,10 @@ type PaymentWithName = {
   transaction_code: string
   created_at: string | null
   client_name?: string
+  service_type?: string
 }
 
-type SortKey = 'client_name' | 'amount' | 'status' | 'payment_method' | 'transaction_code' | 'created_at'
+type SortKey = 'client_name' | 'amount' | 'status' | 'payment_method' | 'transaction_code' | 'created_at' | 'service_type'
 
 const fmt = (n: number) =>
   '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -32,6 +33,7 @@ const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
   { key: 'amount', label: 'Amount' },
   { key: 'status', label: 'Status' },
   { key: 'payment_method', label: 'Payment Type' },
+  { key: 'service_type', label: 'Service Type' },
   { key: 'created_at', label: 'Created At' },
 ]
 
@@ -123,6 +125,13 @@ export default function PaymentTable({ rows, total }: Props) {
               <TableCell className="font-medium">{fmt(row.amount)}</TableCell>
               <TableCell><StatusBadge status={row.status} /></TableCell>
               <TableCell className="text-brand-neutral-600 capitalize">{row.payment_method}</TableCell>
+              <TableCell>
+                <span className={
+                  row.service_type === 'application'
+                    ? 'inline-flex rounded-md bg-brand-primary-50 text-brand-primary-800 px-2 py-0.5 text-xs font-medium capitalize'
+                    : 'inline-flex rounded-md bg-violet-50 text-violet-700 px-2 py-0.5 text-xs font-medium capitalize'
+                }>{row.service_type}</span>
+              </TableCell>
               <TableCell className="text-xs text-brand-neutral-500">{fmtDate(row.created_at)}</TableCell>
             </TableRow>
           ))}

@@ -220,6 +220,14 @@ export type AppDetail = {
     transaction_code: string
     created_at: string
   } | null
+  consultation: {
+    id: number
+    status: string
+    purpose: string
+    meeting_date: string
+    mode_communication: string
+    created_at: string
+  } | null
   documents: {
     id: number
     name: string
@@ -248,7 +256,7 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
 
   if (error || !data) return null
 
-  const [docs, paymentData, contactData, emergencyData,
+  const [docs, paymentData, consultationData, contactData, emergencyData,
        appProfileData, passportData, visaData, eduData, empData, depData, famData] = await Promise.all([
     // review_note was added via migration — re-run `supabase gen types` to remove cast
     supabase
@@ -262,6 +270,14 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
     supabase
       .from("payments")
       .select("id, amount, status, payment_method, transaction_code, created_at")
+      .eq("user_id", data.user_id)
+      .eq("service_type", "application")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("consultations")
+      .select("id, status, purpose, meeting_date, mode_communication, created_at")
       .eq("user_id", data.user_id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -398,6 +414,16 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
           created_at: paymentData.data.created_at,
         }
       : null,
+    consultation: consultationData.data
+      ? {
+          id: consultationData.data.id,
+          status: consultationData.data.status,
+          purpose: consultationData.data.purpose,
+          meeting_date: consultationData.data.meeting_date,
+          mode_communication: consultationData.data.mode_communication,
+          created_at: consultationData.data.created_at,
+        }
+      : null,
     documents: (docs.data ?? []).map((d) => ({
       id: d.id,
       name: d.name,
@@ -448,11 +474,12 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
       return { error: "Cannot approve: missing required contact fields (Phone Number, Address)", success: false }
     }
 
-    // Validate payment was successful
+    // Validate payment was successful (application fee only — not the consultation fee)
     const { data: payment } = await supabase
       .from("payments")
       .select("status")
       .eq("user_id", app.user_id)
+      .eq("service_type", "application")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()

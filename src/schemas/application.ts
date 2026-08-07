@@ -9,9 +9,11 @@ export const FuturePlanEnum = z.enum(["tourism", "investment", "employment", "ot
 });
 export const ApplicationStatusEnum = z.enum([
   "paused",
+  "pending",
+  "processing",
   "approved",
   "rejected",
-  "pending",
+  "payment_failed",
 ]);
 
 // ─────────────────────────────────────────────
