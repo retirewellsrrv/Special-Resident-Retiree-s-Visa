@@ -24,12 +24,13 @@ interface Props {
   page: number
   statusFilter?: string
   methodFilter?: string
+  typeFilter?: string
   codeFilter?: string
   nameFilter?: string
   q?: string
 }
 
-export function PaymentsClient({ rows, total, stats, page, statusFilter, methodFilter, codeFilter, nameFilter, q }: Props) {
+export function PaymentsClient({ rows, total, stats, page, statusFilter, methodFilter, typeFilter, codeFilter, nameFilter, q }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -44,7 +45,7 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
   }
 
   function handleClear() {
-    navigate({ page: undefined, status: undefined, method: undefined, code: undefined, name: undefined, q: undefined })
+    navigate({ page: undefined, status: undefined, method: undefined, type: undefined, code: undefined, name: undefined, q: undefined })
   }
 
   const [isExporting, setIsExporting] = useState(false)
@@ -53,7 +54,7 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
     setIsExporting(true)
     try {
       const { rows: all } = await getPayments({ limit: 10000 })
-      const headers = ['id', 'client_name', 'amount', 'status', 'payment_method', 'transaction_code', 'created_at']
+      const headers = ['id', 'client_name', 'amount', 'status', 'service_type', 'payment_method', 'transaction_code', 'created_at']
       downloadCsv(all, headers, `payment-logs-${new Date().toISOString().slice(0, 10)}.csv`)
     } finally {
       setIsExporting(false)
@@ -89,6 +90,9 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
           <div className="min-w-0 leading-none">
             <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Revenue</p>
             <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{fmt(stats.revenue)}</p>
+            <p className="text-[10px] text-brand-neutral-400 mt-1">
+              App: {fmt(stats.revenueApplication)} · Consult: {fmt(stats.revenueConsultation)}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
@@ -173,6 +177,17 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
           onChange={(v) => navigate({ status: v !== 'all' ? v : undefined, page: '1' })}
           disabled={isPending}
         />
+        <FilterSelect
+          label="Service Type"
+          placeholder="All Services"
+          value={typeFilter}
+          options={[
+            { value: 'application', label: 'Application' },
+            { value: 'consultation', label: 'Consultation' },
+          ]}
+          onChange={(v) => navigate({ type: v !== 'all' ? v : undefined, page: '1' })}
+          disabled={isPending}
+        />
         <FilterClear onClick={handleClear} disabled={isPending} />
       </FilterBar>
 
@@ -185,7 +200,7 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                {['Client Name', 'Transaction Code', 'Amount', 'Status', 'Payment Type', 'Created At', ''].map((h) => (
+                {['Client Name', 'Transaction Code', 'Amount', 'Status', 'Payment Type', 'Service Type', 'Created At', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-brand-neutral-500 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>

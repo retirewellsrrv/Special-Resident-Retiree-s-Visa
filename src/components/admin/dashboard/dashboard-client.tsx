@@ -9,6 +9,7 @@ import {
   FileSearch,
   CheckCircle2,
   Clock,
+  CalendarClock,
   ArrowUpRight,
 } from 'lucide-react'
 import { StatusChip } from '@/components/ui/status-chip'
@@ -111,6 +112,14 @@ export function DashboardClient({ stats }: Props) {
       href: '/admin/documents',
       sub: `${stats.documents.total} total documents`,
     },
+    {
+      label: 'Consultations Pending',
+      value: stats.consultations.pending + stats.consultations.processing,
+      icon: CalendarClock,
+      color: 'text-teal-600 bg-teal-50',
+      href: '/admin/consultations',
+      sub: `${stats.consultations.total} total requests`,
+    },
   ]
 
   const revenueData = stats.monthlyRevenue.map((m) => ({
@@ -131,7 +140,7 @@ export function DashboardClient({ stats }: Props) {
       <PageHeader title="Admin Dashboard" />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {kpis.map((kpi) => {
           const Icon = kpi.icon
           return (
@@ -239,7 +248,7 @@ export function DashboardClient({ stats }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Applications */}
         <div className="rounded-xl border border-brand-neutral-200 bg-white overflow-hidden">
           <button
@@ -306,6 +315,43 @@ export function DashboardClient({ stats }: Props) {
                   <span className="text-xs text-brand-neutral-400">
                     {new Date(doc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-300 shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent Consultation Requests */}
+        <div className="rounded-xl border border-brand-neutral-200 bg-white overflow-hidden">
+          <button
+            onClick={() => startTransition(() => router.push('/admin/consultations'))}
+            disabled={isPending}
+            className="w-full flex items-center justify-between px-5 py-4 border-b border-brand-neutral-100 text-left transition-colors hover:bg-brand-neutral-50 disabled:opacity-50"
+          >
+            <h3 className="text-sm font-semibold text-brand-neutral-900">Consultation Requests</h3>
+            <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-400" />
+          </button>
+          {stats.recentConsultations.length === 0 ? (
+            <p className="text-sm text-brand-neutral-400 px-5 py-8 text-center">No consultation requests yet.</p>
+          ) : (
+            <div className="divide-y divide-brand-neutral-50">
+              {stats.recentConsultations.map((cons) => (
+                <button
+                  type="button"
+                  key={cons.id}
+                  onClick={() => startTransition(() => router.push('/admin/consultations'))}
+                  disabled={isPending}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-brand-neutral-50 disabled:opacity-50"
+                >
+                  <div className="flex size-8 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+                    <CalendarClock className="size-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-brand-neutral-900 truncate">{cons.applicant_name}</p>
+                    <p className="text-xs text-brand-neutral-400 truncate mt-0.5">{cons.purpose}</p>
+                  </div>
+                  <StatusChip status={cons.status} />
                   <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-300 shrink-0" />
                 </button>
               ))}

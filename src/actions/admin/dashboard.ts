@@ -23,6 +23,13 @@ export type DashboardStats = {
     pendingReview: number
     total: number
   }
+  consultations: {
+    total: number
+    pending: number
+    processing: number
+    accepted: number
+    rejected: number
+  }
   users: {
     total: number
   }
@@ -40,6 +47,14 @@ export type DashboardStats = {
     id: number
     applicant_name: string
     doc_type: string
+    created_at: string
+  }[]
+  recentConsultations: {
+    id: number
+    applicant_name: string
+    purpose: string
+    meeting_date: string
+    status: string
     created_at: string
   }[]
 }
@@ -63,6 +78,11 @@ export const getDashboardStats = unstable_cache(
     { count: docPending },
     { count: docProcessing },
     { count: usersTotal },
+    { count: consTotal },
+    { count: consPending },
+    { count: consProcessing },
+    { count: consAccepted },
+    { count: consRejected },
   ] = await Promise.all([
     supabase.from("applications").select("*", { count: "exact", head: true }),
     supabase.from("applications").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -77,10 +97,15 @@ export const getDashboardStats = unstable_cache(
     supabase.from("documents").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("documents").select("*", { count: "exact", head: true }).eq("status", "processing"),
     supabase.from("client_profiles").select("*", { count: "exact", head: true }),
+    supabase.from("consultations").select("*", { count: "exact", head: true }),
+    supabase.from("consultations").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("consultations").select("*", { count: "exact", head: true }).eq("status", "processing"),
+    supabase.from("consultations").select("*", { count: "exact", head: true }).eq("status", "accepted"),
+    supabase.from("consultations").select("*", { count: "exact", head: true }).eq("status", "rejected"),
   ]);
 
   // ── Revenue: only fetch amount column, only for successful/cancelled rows ──
-  const [paySuccessData, payCancelledData, monthlyPayments, recentApps, pendingDocs] =
+  const [paySuccessData, payCancelledData, monthlyPayments, recentApps, pendingDocs, recentCons] =
     await Promise.all([
       supabase.from("payments").select("amount").eq("status", "success"),
       supabase.from("payments").select("amount").eq("status", "cancelled"),
@@ -112,6 +137,18 @@ export const getDashboardStats = unstable_cache(
           )
         `)
         .in("status", ["pending", "processing"])
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabase
+        .from("consultations")
+        .select(`
+          id,
+          purpose,
+          meeting_date,
+          status,
+          created_at,
+          client_profiles!consultation_user_id_fkey (name)
+        `)
         .order("created_at", { ascending: false })
         .limit(5),
     ]);
@@ -147,6 +184,16 @@ export const getDashboardStats = unstable_cache(
     created_at: d.created_at,
   }));
 
+  // ── Recent consultation requests (already limited to 5) ──
+  const recentConsultations = ((recentCons.data ?? []) as any[]).map((c) => ({
+    id: c.id,
+    applicant_name: c.client_profiles?.name ?? "Unknown",
+    purpose: c.purpose,
+    meeting_date: c.meeting_date,
+    status: c.status,
+    created_at: c.created_at,
+  }));
+
   return {
     applications: {
       total: appTotal ?? 0,
@@ -167,6 +214,13 @@ export const getDashboardStats = unstable_cache(
       pendingReview: (docPending ?? 0) + (docProcessing ?? 0),
       total: docTotal ?? 0,
     },
+    consultations: {
+      total: consTotal ?? 0,
+      pending: consPending ?? 0,
+      processing: consProcessing ?? 0,
+      accepted: consAccepted ?? 0,
+      rejected: consRejected ?? 0,
+    },
     users: {
       total: usersTotal ?? 0,
     },
@@ -180,6 +234,7 @@ export const getDashboardStats = unstable_cache(
     ].filter((s) => s.count > 0),
     recentApplications,
     pendingDocuments,
+    recentConsultations,
   };
 },
   ["admin-dashboard"],

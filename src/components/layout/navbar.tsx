@@ -40,6 +40,7 @@ export function Navbar({ className, user }: NavbarProps) {
   const isLocked = React.useSyncExternalStore(
     subscribeNavigationLock,
     isNavigationLocked,
+    () => false, // getServerSnapshot: the lock is a client-only concern, so SSR always renders unlocked
   );
 
   return (

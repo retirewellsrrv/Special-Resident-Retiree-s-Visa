@@ -210,6 +210,34 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
             </section>
           )}
 
+          {/* ── Consultation ── */}
+          {detail.consultation && (
+            <section className="px-5 py-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold text-brand-neutral-400 uppercase tracking-wider">Consultation</h4>
+                <a
+                  href="/admin/consultations"
+                  className="inline-flex items-center gap-1.5 text-brand-primary-600 hover:text-brand-primary-800 text-sm font-medium transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View Consultations
+                </a>
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                <InfoRow label="Status" value={detail.consultation.status} className="capitalize" />
+                <InfoRow label="Purpose" value={detail.consultation.purpose} />
+                <InfoRow label="Meeting Date" value={detail.consultation.meeting_date} />
+                <InfoRow label="Mode" value={detail.consultation.mode_communication} className="capitalize" />
+                <InfoRow
+                  label="Requested At"
+                  value={new Date(detail.consultation.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                  })}
+                />
+              </div>
+            </section>
+          )}
+
           {/* ── Documents ── */}
           <section className="px-5 py-4 space-y-3">
             <div className="flex items-center justify-between">

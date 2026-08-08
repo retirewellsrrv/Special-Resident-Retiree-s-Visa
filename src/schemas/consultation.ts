@@ -7,6 +7,13 @@ export const CommunicationModeEnum = z.enum(
   },
 );
 
+export const ConsultationStatusEnum = z.enum([
+  "processing",
+  "accepted",
+  "rejected",
+  "pending",
+]);
+
 export const consultationFormSchema = z.object({
   meeting_date: z
     .string()

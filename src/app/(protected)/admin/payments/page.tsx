@@ -6,19 +6,20 @@ import { PaymentsClient } from '@/components/admin/payments/payments-client'
 export default async function PaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; status?: string; method?: string; code?: string; name?: string; q?: string }>
+  searchParams: Promise<{ page?: string; status?: string; method?: string; type?: string; code?: string; name?: string; q?: string }>
 }) {
   const resolvedParams = await searchParams
   const page = Number(resolvedParams.page ?? 1)
   const status = resolvedParams.status
   const method = resolvedParams.method
+  const type = resolvedParams.type
   const code = resolvedParams.code
   const name = resolvedParams.name
   const q = resolvedParams.q
 
   const [stats, { rows, total }] = await Promise.all([
     getPaymentStats(),
-    getPayments({ page, limit: 10, status, method, code, name, search: q }),
+    getPayments({ page, limit: 10, status, method, type, code, name, search: q }),
   ])
 
   return (
@@ -29,6 +30,7 @@ export default async function PaymentsPage({
       page={page}
       statusFilter={status}
       methodFilter={method}
+      typeFilter={type}
       codeFilter={code}
       nameFilter={name}
       q={q}
