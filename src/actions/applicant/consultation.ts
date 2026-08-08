@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserServer } from "@/utils/auth/getUser";
 import { consultationFormSchema } from "@/schemas/consultation";
 import xenditClient from "@/lib/xendit";
+import { sendConsultationEmailToAdmin } from "@/lib/mailer";
 import type { Database } from "@/types/supabase";
 
 export type MyConsultation = {
@@ -139,6 +140,25 @@ export async function submitConsultationAction(
       fieldErrors: null,
       success: false,
     };
+  }
+
+  const { data: clientProfile } = await supabase
+    .from("client_profiles")
+    .select("name")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  try {
+    await sendConsultationEmailToAdmin({
+      applicantEmail: user.email ?? "",
+      applicantName: clientProfile?.name ?? "",
+      meetingDate: parsed.data.meeting_date,
+      mode: parsed.data.mode_communication,
+      purpose: parsed.data.purpose,
+      isUpdate: Boolean(existing),
+    });
+  } catch (emailError) {
+    console.error("sendConsultationEmailToAdmin error:", emailError);
   }
 
   revalidatePath("/applicant/consultation");

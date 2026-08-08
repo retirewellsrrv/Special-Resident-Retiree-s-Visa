@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { mapPaymentMethod } from "@/lib/xendit";
+import { sendConsultationPaymentEmailToAdmin } from "@/lib/mailer";
 
 const WEBHOOK_TOKEN = process.env.XENDIT_WEBHOOK_TOKEN;
 
@@ -36,14 +37,56 @@ export async function POST(request: Request) {
     const paymentMethod = mapPaymentMethod(
       (payload.payment_method ?? payload.paymentMethod) as string | undefined,
     );
-    await supabase
+
+    const { data: payment } = await supabase
       .from("payments")
       .update({
         status: "success",
         payment_method: paymentMethod,
         updated_at: new Date().toISOString(),
       })
-      .eq("transaction_code", externalId);
+      .eq("transaction_code", externalId)
+      .select("user_id, amount, status, payment_method, transaction_code, service_type")
+      .maybeSingle();
+
+    if (payment?.service_type === "consultation") {
+      try {
+        const [{ data: consultation }, { data: clientProfile }] =
+          await Promise.all([
+            supabase
+              .from("consultations")
+              .select("meeting_date, mode_communication, purpose")
+              .eq("user_id", payment.user_id)
+              .maybeSingle(),
+            supabase
+              .from("client_profiles")
+              .select("name")
+              .eq("user_id", payment.user_id)
+              .maybeSingle(),
+          ]);
+
+        if (consultation) {
+          const { data: { user } } =
+            await supabase.auth.admin.getUserById(payment.user_id);
+
+          await sendConsultationPaymentEmailToAdmin({
+            applicantEmail: user?.email ?? "",
+            applicantName: clientProfile?.name ?? "",
+            meetingDate: consultation.meeting_date,
+            mode: consultation.mode_communication,
+            purpose: consultation.purpose,
+            payment: {
+              amount: payment.amount,
+              status: payment.status,
+              paymentMethod: payment.payment_method,
+              transactionCode: payment.transaction_code,
+            },
+          });
+        }
+      } catch (emailError) {
+        console.error("sendConsultationPaymentEmailToAdmin error:", emailError);
+      }
+    }
   }
 
   return NextResponse.json({ received: true });
