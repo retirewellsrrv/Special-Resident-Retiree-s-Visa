@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { SidebarLayout } from '@/components/layout/sidebar-layout'
+import { AdminNotificationBell } from '@/components/admin/notification-bell'
 import { LayoutDashboard, Users, Package2, FileText, Wallet, FileSearch, CalendarClock } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
@@ -30,7 +31,7 @@ export default function AdminLayout({
   const role = user?.user_metadata.role;
   const userName = user?.user_metadata.name
   return (
-    <SidebarLayout navItems={NAV_ITEMS} title="Admin" user={{ name: userName || 'Admin User', role: role || 'Admin' }}>
+    <SidebarLayout navItems={NAV_ITEMS} title="Admin" user={{ name: userName || 'Admin User', role: role || 'Admin' }} notifications={<AdminNotificationBell />}>
       {children}
     </SidebarLayout>
   )

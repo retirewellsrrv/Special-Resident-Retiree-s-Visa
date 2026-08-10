@@ -5,17 +5,17 @@ import { useRouter } from 'next/navigation'
 import { Bell, CheckCheck, Loader2, Inbox, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  getMyNotifications,
-  markNotificationsReadAction,
-  markNotificationRead,
-} from '@/actions/applicant/notifications'
-import type { NotificationItem } from '@/actions/applicant/notifications'
+  getAdminNotifications,
+  markAdminNotificationsReadAction,
+  markAdminNotificationRead,
+} from '@/actions/admin/notifications'
+import type { AdminNotificationItem } from '@/actions/admin/notifications'
 import { formatRelativeTime } from '@/lib/format-time'
 import { cn } from '@/lib/utils'
 
-export function NotificationBell() {
+export function AdminNotificationBell() {
   const router = useRouter()
-  const [items, setItems] = useState<NotificationItem[]>([])
+  const [items, setItems] = useState<AdminNotificationItem[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [marking, setMarking] = useState(false)
@@ -25,7 +25,7 @@ export function NotificationBell() {
 
   useEffect(() => {
     let active = true
-    getMyNotifications().then((res) => {
+    getAdminNotifications().then((res) => {
       if (!active) return
       setItems(res.items)
       setLoading(false)
@@ -49,16 +49,16 @@ export function NotificationBell() {
 
   async function handleMarkAllRead() {
     setMarking(true)
-    await markNotificationsReadAction()
+    await markAdminNotificationsReadAction()
     setItems((prev) => prev.map((n) => ({ ...n, is_read: true })))
     setMarking(false)
   }
 
-  function handleOpenNotification(item: NotificationItem) {
+  function handleOpenNotification(item: AdminNotificationItem) {
     if (!item.link) return
     if (!item.is_read) {
       setItems((prev) => prev.map((n) => (n.id === item.id ? { ...n, is_read: true } : n)))
-      markNotificationRead(item.id)
+      markAdminNotificationRead(item.id)
     }
     setOpen(false)
     router.push(item.link)
@@ -70,7 +70,7 @@ export function NotificationBell() {
         variant="ghost"
         size="icon"
         className="relative text-brand-neutral-500 hover:text-brand-neutral-800 hover:bg-brand-neutral-100 rounded-full size-9"
-        aria-label="Notifications"
+        aria-label="Admin notifications"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
@@ -85,7 +85,7 @@ export function NotificationBell() {
       {open && (
         <div className="absolute right-0 top-11 z-50 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-brand-neutral-200 bg-white shadow-lg">
           <div className="flex items-center justify-between border-b border-brand-neutral-100 px-4 py-2.5">
-            <p className="text-sm font-semibold text-brand-neutral-800">Notifications</p>
+            <p className="text-sm font-semibold text-brand-neutral-800">Admin Notifications</p>
             {unread > 0 && (
               <button
                 onClick={handleMarkAllRead}
