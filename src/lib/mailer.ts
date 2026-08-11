@@ -19,6 +19,25 @@ export type ConsultationPaymentEmailData = ConsultationEmailData & {
   };
 };
 
+export type ApplicationSubmissionEmailData = {
+  applicantEmail: string;
+  applicantName: string;
+  applicationCode: string;
+};
+
+export type ApplicationStatusEmailData = {
+  applicantEmail: string;
+  applicantName: string;
+  applicationCode: string;
+  status: "paused" | "pending" | "processing" | "approved" | "rejected" | "payment_failed";
+};
+
+export type ConsultationStatusEmailData = {
+  applicantEmail: string;
+  applicantName: string;
+  status: "processing" | "accepted" | "rejected" | "pending";
+};
+
 const MODE_LABELS: Record<string, string> = {
   zoom_meeting: "Video Call (Zoom)",
   google_meet: "Video Call (Google Meet)",
@@ -123,6 +142,131 @@ function consultationBody(data: ConsultationEmailData): string {
   </div>`;
 }
 
+function applicationSubmissionBody(data: ApplicationSubmissionEmailData): string {
+  return `
+  <div style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
+    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">
+      <div style="background-color: #8B1A2B; padding: 24px 28px;">
+        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">New SRRV Application Submitted</h1>
+      </div>
+      <div style="padding: 28px;">
+        <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
+          An applicant has submitted a new SRRV application. Please review the details below.
+        </p>
+        <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
+          ${wrapTableRows([
+            { label: "Name", value: data.applicantName || "—" },
+            { label: "Email", value: data.applicantEmail },
+            { label: "Application Code", value: data.applicationCode },
+          ])}
+        </table>
+        <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
+          Sent automatically from the SRRV applicant portal.
+        </p>
+      </div>
+    </div>
+  </div>`;
+}
+
+const APPLICATION_STATUS_LABELS: Record<ApplicationStatusEmailData["status"], string> = {
+  approved: "Approved",
+  rejected: "Rejected",
+  processing: "In Processing",
+  paused: "Paused",
+  payment_failed: "Payment Failed",
+  pending: "Pending Review",
+};
+
+function applicationStatusMessage(status: ApplicationStatusEmailData["status"]): string {
+  switch (status) {
+    case "approved":
+      return "Congratulations! Your SRRV application has been approved. Our team will contact you with the next steps for the issuance of your SRRV.";
+    case "rejected":
+      return "Unfortunately, your SRRV application was not approved. Please sign in to the portal to review the notes and update your details to re-submit.";
+    case "processing":
+      return "Your SRRV application is now being processed by our team.";
+    case "paused":
+      return "Your SRRV application has been paused. Please sign in to the portal to check for any required updates.";
+    case "payment_failed":
+      return "Your payment for the SRRV application failed. Please sign in to the portal to try paying again.";
+    case "pending":
+      return "Your SRRV application is back to pending and will be reviewed shortly.";
+  }
+}
+
+function applicationStatusBody(data: ApplicationStatusEmailData): string {
+  return `
+  <div style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
+    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">
+      <div style="background-color: #8B1A2B; padding: 24px 28px;">
+        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">Application Status Update</h1>
+      </div>
+      <div style="padding: 28px;">
+        <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
+          ${applicationStatusMessage(data.status)}
+        </p>
+        <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
+          ${wrapTableRows([
+            { label: "Name", value: data.applicantName || "—" },
+            { label: "Email", value: data.applicantEmail },
+            { label: "Application Code", value: data.applicationCode },
+            { label: "Status", value: APPLICATION_STATUS_LABELS[data.status] },
+          ])}
+        </table>
+        <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
+          Sent automatically from the SRRV applicant portal.
+        </p>
+      </div>
+    </div>
+  </div>`;
+}
+
+const CONSULTATION_STATUS_LABELS: Record<ConsultationStatusEmailData["status"], string> = {
+  accepted: "Accepted",
+  rejected: "Rejected",
+  processing: "In Processing",
+  pending: "Pending",
+};
+
+function consultationStatusMessage(status: ConsultationStatusEmailData["status"]): string {
+  switch (status) {
+    case "accepted":
+      return "Great news! Your consultation request has been accepted. You can now proceed with submitting your SRRV application.";
+    case "rejected":
+      return "Your consultation request was not approved. Please contact our team for more details or submit a new request.";
+    case "processing":
+      return "Your consultation request is now being processed by our team.";
+    case "pending":
+      return "Your consultation request is now pending review.";
+  }
+}
+
+function consultationStatusBody(data: ConsultationStatusEmailData): string {
+  return `
+  <div style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
+    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">
+      <div style="background-color: #8B1A2B; padding: 24px 28px;">
+        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">Consultation Request Update</h1>
+      </div>
+      <div style="padding: 28px;">
+        <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
+          ${consultationStatusMessage(data.status)}
+        </p>
+        <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
+          ${wrapTableRows([
+            { label: "Name", value: data.applicantName || "—" },
+            { label: "Email", value: data.applicantEmail },
+            { label: "Status", value: CONSULTATION_STATUS_LABELS[data.status] },
+          ])}
+        </table>
+        <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
+          Sent automatically from the SRRV applicant portal.
+        </p>
+      </div>
+    </div>
+  </div>`;
+}
+
 function paymentBody(data: ConsultationPaymentEmailData): string {
   const total = new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -181,5 +325,41 @@ export async function sendConsultationPaymentEmailToAdmin(
     replyTo: data.applicantEmail,
     subject: `Consultation Fee Paid — ${data.applicantName || data.applicantEmail}`,
     html: paymentBody(data),
+  });
+}
+
+export async function sendApplicationSubmissionEmailToAdmin(
+  data: ApplicationSubmissionEmailData,
+): Promise<void> {
+  await sendEmail({
+    from: `Retire Well SRRV <${ADMIN_EMAIL}>`,
+    to: ADMIN_EMAIL,
+    replyTo: data.applicantEmail,
+    subject: `New SRRV Application — ${data.applicantName || data.applicantEmail}`,
+    html: applicationSubmissionBody(data),
+  });
+}
+
+export async function sendApplicationStatusEmailToApplicant(
+  data: ApplicationStatusEmailData,
+): Promise<void> {
+  await sendEmail({
+    from: `Retire Well SRRV <${ADMIN_EMAIL}>`,
+    to: data.applicantEmail,
+    replyTo: ADMIN_EMAIL,
+    subject: `Application ${APPLICATION_STATUS_LABELS[data.status]} — ${data.applicationCode}`,
+    html: applicationStatusBody(data),
+  });
+}
+
+export async function sendConsultationStatusEmailToApplicant(
+  data: ConsultationStatusEmailData,
+): Promise<void> {
+  await sendEmail({
+    from: `Retire Well SRRV <${ADMIN_EMAIL}>`,
+    to: data.applicantEmail,
+    replyTo: ADMIN_EMAIL,
+    subject: `Consultation Request ${CONSULTATION_STATUS_LABELS[data.status]}`,
+    html: consultationStatusBody(data),
   });
 }

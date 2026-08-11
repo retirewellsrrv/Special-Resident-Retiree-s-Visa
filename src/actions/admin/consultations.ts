@@ -6,6 +6,7 @@ import { ConsultationStatusEnum } from "@/schemas/consultation";
 import { withAdmin } from "@/utils/auth/with-admin";
 import { requireAdmin } from "@/utils/auth/getUser";
 import type { Database } from "@/types/supabase";
+import { sendConsultationStatusEmailToApplicant } from "@/lib/mailer";
 
 /** Throws when the caller is not an admin / super_admin (defense-in-depth). */
 async function assertAdmin() {
@@ -295,6 +296,25 @@ export const updateConsultationStatus = withAdmin(async function updateConsultat
     return { error: null, success: true };
   }
 
+  // A consultation can only be accepted once the consultation fee is paid
+  if (parsed.data === "accepted") {
+    const { data: payment } = await supabase
+      .from("payments")
+      .select("status")
+      .eq("user_id", consultation.user_id)
+      .eq("service_type", "consultation")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!payment || payment.status !== "success") {
+      return {
+        error: "Cannot accept: the consultation fee has not been paid yet.",
+        success: false,
+      };
+    }
+  }
+
   const { error } = await supabase
     .from("consultations")
     .update({
@@ -316,7 +336,31 @@ export const updateConsultationStatus = withAdmin(async function updateConsultat
     user_id: consultation.user_id,
     notification: `Your consultation request has been ${label}.`,
     is_read: false,
+    type: "consultation_status",
+    link: "/applicant/consultation",
+    created_at: new Date().toISOString(),
   });
+
+  // Email the applicant so they're informed outside the portal too
+  try {
+    const [{ data: clientProfile }, { data: { user: applicantUser } }] =
+      await Promise.all([
+        supabase
+          .from("client_profiles")
+          .select("name")
+          .eq("user_id", consultation.user_id)
+          .maybeSingle(),
+        supabase.auth.admin.getUserById(consultation.user_id),
+      ]);
+
+    await sendConsultationStatusEmailToApplicant({
+      applicantEmail: applicantUser?.email ?? "",
+      applicantName: clientProfile?.name ?? "",
+      status: parsed.data,
+    });
+  } catch (emailError) {
+    console.error("sendConsultationStatusEmailToApplicant error:", emailError);
+  }
 
   revalidatePath("/admin/consultations");
   revalidatePath("/applicant/consultation");

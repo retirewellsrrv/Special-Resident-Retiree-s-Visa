@@ -1,10 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { randomUUID } from "crypto";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUserServer } from "@/utils/auth/getUser";
 import { consultationFormSchema } from "@/schemas/consultation";
 import xenditClient from "@/lib/xendit";
@@ -161,8 +161,40 @@ export async function submitConsultationAction(
     console.error("sendConsultationEmailToAdmin error:", emailError);
   }
 
+  // Ping active admins (in-app) so the request doesn't sit unseen
+  try {
+    const adminSupabase = createAdminClient();
+    const { data: admins } = await adminSupabase
+      .from("admin_profiles")
+      .select("user_id")
+      .eq("is_active", true);
+
+    const applicantName = clientProfile?.name ?? "";
+    const applicantLabel = applicantName || user.email || "an applicant";
+    const notification = existing
+      ? `Consultation request updated by ${applicantLabel}.`
+      : `New consultation request submitted by ${applicantLabel}.`;
+
+    if (admins && admins.length > 0) {
+      await adminSupabase.from("admin_notifications").insert(
+        admins.map((a) => ({
+          admin_user_id: a.user_id,
+          notification,
+          is_read: false,
+          type: "new_consultation",
+          link: "/admin/consultations",
+          created_at: new Date().toISOString(),
+        })),
+      );
+    }
+  } catch (notifyError) {
+    console.error("Admin consultation notification error:", notifyError);
+  }
+
   revalidatePath("/applicant/consultation");
   revalidatePath("/applicant/dashboard");
+  revalidatePath("/admin/consultations");
+  revalidateTag("admin-consultations", "seconds");
 
   // Updates don't create a new payment
   if (existing) {

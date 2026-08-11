@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import { ApplicationStatusEnum } from "@/schemas/client-profiles";
 import { withAdmin } from "@/utils/auth/with-admin";
+import { sendApplicationStatusEmailToApplicant } from "@/lib/mailer";
 
 export type AppRow = {
     id: number
@@ -25,6 +26,28 @@ export type AppStats = {
 };
 
 export type ActionState = { error: string | null; success: boolean };
+
+type ApplicationStatus = "paused" | "pending" | "processing" | "approved" | "rejected" | "payment_failed";
+
+function applicationStatusMessage(
+  applicationCode: string,
+  status: ApplicationStatus,
+): string {
+  switch (status) {
+    case "approved":
+      return `Congratulations! Your application (${applicationCode}) has been approved.`;
+    case "rejected":
+      return `Your application (${applicationCode}) has been rejected. Please review the notes and update your details to re-submit.`;
+    case "processing":
+      return `Your application (${applicationCode}) is now being processed.`;
+    case "paused":
+      return `Your application (${applicationCode}) has been paused. Please check for any required updates.`;
+    case "payment_failed":
+      return `Your payment for application (${applicationCode}) failed. Please try paying again.`;
+    case "pending":
+      return `Your application (${applicationCode}) is back to pending for review.`;
+  }
+}
 
 export const getApplicationStats = unstable_cache(
   async (): Promise<AppStats> => {
@@ -462,6 +485,12 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
 
   const target = parsed.data
 
+  // Nothing to do if the status is not actually changing — avoids redundant
+  // writes and duplicate notifications to the applicant.
+  if (app.status === target) {
+    return { error: null, success: true };
+  }
+
   if (target === 'approved') {
     // Validate contact fields exist
     const { data: contactCheck } = await supabase
@@ -537,7 +566,41 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
 
   if (error) return { error: error.message, success: false };
 
+  // Notify the applicant about the status change so their dashboard reflects it
+  await supabase.from("notifications").insert({
+    user_id: app.user_id,
+    notification: applicationStatusMessage(app.application_code, target),
+    is_read: false,
+    type: "application_status",
+    link: "/applicant/application",
+    created_at: new Date().toISOString(),
+  });
+
+  // Email the applicant so they're informed outside the portal too
+  try {
+    const [{ data: clientProfile }, { data: { user: applicantUser } }] =
+      await Promise.all([
+        supabase
+          .from("client_profiles")
+          .select("name")
+          .eq("user_id", app.user_id)
+          .maybeSingle(),
+        supabase.auth.admin.getUserById(app.user_id),
+      ]);
+
+    await sendApplicationStatusEmailToApplicant({
+      applicantEmail: applicantUser?.email ?? "",
+      applicantName: clientProfile?.name ?? "",
+      applicationCode: app.application_code,
+      status: target,
+    });
+  } catch (emailError) {
+    console.error("sendApplicationStatusEmailToApplicant error:", emailError);
+  }
+
   revalidatePath("/admin/applications");
+  revalidatePath("/applicant/dashboard");
+  revalidatePath("/applicant/application");
   revalidateTag("admin-applications", 'seconds');
   return { error: null, success: true };
 });

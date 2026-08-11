@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { getUserServer } from "@/utils/auth/getUser";
 
-export type NotificationItem = {
+export type AdminNotificationItem = {
   id: number;
   notification: string;
   is_read: boolean;
@@ -12,25 +12,25 @@ export type NotificationItem = {
   created_at: string | null;
 };
 
-export type NotificationsResult = {
+export type AdminNotificationsResult = {
   unread: number;
-  items: NotificationItem[];
+  items: AdminNotificationItem[];
 };
 
-export async function getMyNotifications(): Promise<NotificationsResult> {
+export async function getAdminNotifications(): Promise<AdminNotificationsResult> {
   const user = await getUserServer();
   if (!user) return { unread: 0, items: [] };
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data } = await supabase
-    .from("notifications")
+    .from("admin_notifications")
     .select("id, notification, is_read, type, link, created_at")
-    .eq("user_id", user.id)
+    .eq("admin_user_id", user.id)
     .order("id", { ascending: false })
     .limit(20);
 
-  const items = (data ?? []) as NotificationItem[];
+  const items = (data ?? []) as AdminNotificationItem[];
 
   return {
     unread: items.filter((n) => !n.is_read).length,
@@ -38,32 +38,32 @@ export async function getMyNotifications(): Promise<NotificationsResult> {
   };
 }
 
-export async function markNotificationsReadAction(): Promise<{ success: boolean }> {
+export async function markAdminNotificationsReadAction(): Promise<{ success: boolean }> {
   const user = await getUserServer();
   if (!user) return { success: false };
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
-    .from("notifications")
+    .from("admin_notifications")
     .update({ is_read: true })
-    .eq("user_id", user.id)
+    .eq("admin_user_id", user.id)
     .eq("is_read", false);
 
   return { success: !error };
 }
 
-export async function markNotificationRead(id: number): Promise<{ success: boolean }> {
+export async function markAdminNotificationRead(id: number): Promise<{ success: boolean }> {
   const user = await getUserServer();
   if (!user) return { success: false };
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
-    .from("notifications")
+    .from("admin_notifications")
     .update({ is_read: true })
     .eq("id", id)
-    .eq("user_id", user.id);
+    .eq("admin_user_id", user.id);
 
   return { success: !error };
 }

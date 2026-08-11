@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { applicationFormSchema } from "@/schemas/application";
@@ -12,6 +12,7 @@ import {
 import type { Database } from "@/types/supabase";
 import { getUserServer } from "@/utils/auth/getUser";
 import xenditClient from "@/lib/xendit";
+import { sendApplicationSubmissionEmailToAdmin } from "@/lib/mailer";
 import { randomUUID } from "crypto";
 
 export type ApplicantProfile = {
@@ -880,6 +881,45 @@ export async function submitApplication(
         success: false,
       };
     appIdToUse = app.id;
+
+    // Notify active admins (in-app + email) so the new submission isn't missed
+    try {
+      const adminSupabase = createAdminClient();
+      const [profileResult, adminsResult] = await Promise.all([
+        adminSupabase
+          .from("client_profiles")
+          .select("name")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        adminSupabase.from("admin_profiles").select("user_id").eq("is_active", true),
+      ]);
+
+      const applicantName = profileResult.data?.name ?? "";
+
+      const adminUserIds = (adminsResult.data ?? []).map((a) => a.user_id);
+      if (adminUserIds.length > 0) {
+        await adminSupabase.from("admin_notifications").insert(
+          adminUserIds.map((adminUserId) => ({
+            admin_user_id: adminUserId,
+            notification: `New application ${code} submitted by ${applicantName || user.email || "an applicant"}.`,
+            is_read: false,
+            type: "new_application",
+            link: `/admin/applications?userId=${user.id}`,
+          })),
+        );
+      }
+
+      await sendApplicationSubmissionEmailToAdmin({
+        applicantEmail: user.email ?? "",
+        applicantName,
+        applicationCode: code,
+      });
+    } catch (notifyError) {
+      console.error("Admin submission notification error:", notifyError);
+    }
+
+    revalidatePath("/admin/applications");
+    revalidateTag("admin-applications", "seconds");
   }
 
   // ── Insert contact info ──────────────────────────────────────────────
