@@ -32,7 +32,7 @@ export function EligibilitySection() {
   return (
     <section className="py-20 bg-brand-tertiary-500">
       <div className="max-w-ht-content mx-auto px-ht-margin-mobile md:px-ht-margin-desktop">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
           {/* Left copy */}
           <div>
             <h2 className="text-ht-headline-lg font-display text-brand-secondary-500 mb-4">
@@ -43,12 +43,12 @@ export function EligibilitySection() {
               life. Our team ensures you meet all criteria before submission.
             </p>
             <blockquote className="border-l-4 border-brand-primary-500 pl-4 text-brand-neutral-600 italic text-ht-body-md bg-brand-primary-50 py-3 pr-3 rounded-r">
-We make retirement in the Philippines easier by guiding you through requirements, documentation, and procedures with confidence.
+              We make retirement in the Philippines easier by guiding you through requirements, documentation, and procedures with confidence.
             </blockquote>
           </div>
 
           {/* General Requirements */}
-          <Card className="rounded-lg border border-ht-outline-variant shadow-ht-card">
+          <Card className="rounded-lg border border-ht-outline-variant shadow-ht-card h-full flex flex-col">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2 text-brand-primary-500 mb-1">
                 <Shield className="w-4 h-4" />
@@ -57,13 +57,13 @@ We make retirement in the Philippines easier by guiding you through requirements
                 </span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               <CheckList items={generalReqs} />
             </CardContent>
           </Card>
 
           {/* Required Documents */}
-          <Card className="rounded-lg border border-ht-outline-variant shadow-ht-card">
+          <Card className="rounded-lg border border-ht-outline-variant shadow-ht-card h-full flex flex-col">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2 text-brand-primary-500 mb-1">
                 <FileText className="w-4 h-4" />
@@ -72,7 +72,7 @@ We make retirement in the Philippines easier by guiding you through requirements
                 </span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               <CheckList items={requiredDocs} />
             </CardContent>
           </Card>
