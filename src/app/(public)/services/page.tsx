@@ -80,7 +80,7 @@ export default function Services() {
                     <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">
                         What is the Special Resident Retiree&apos;s Visa (SRRV)?
                     </h2>
-                    <div className="space-y-4 text-white/90 text-center leading-relaxed max-w-4xl mx-auto">
+                    <div className="space-y-4 text-white/90 text-justify leading-relaxed max-w-4xl mx-auto">
                         <p>
                             The Special Resident Retiree&apos;s Visa (SRRV) is a special non-immigrant visa program that allows eligible foreign nationals to live in the Philippines on a long-term basis. Designed for retirees and qualified individuals, the SRRV offers a convenient pathway for those who wish to make the Philippines their second home, enjoy retirement, or establish an investment base in the country.
                         </p>
@@ -205,7 +205,7 @@ export default function Services() {
                             Get Started
                         </button>
                         <button
-                            onClick={() => router.push('/consult')}
+                            onClick={() => router.push('/contact')}
                             className="px-6 py-3 border border-white/40 text-white text-sm font-semibold rounded hover:bg-white/10 transition whitespace-nowrap"
                         >
                             Contact Us

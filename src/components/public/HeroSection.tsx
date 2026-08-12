@@ -21,7 +21,7 @@ export function HeroSection() {
             Premier SRRV Consulting
           </Badge>
 
-          <h1 className="w-[650px] text-[36px] font-bold font-display text-brand-secondary-500 mb-4 leading-tight">
+          <h1 className="w-full max-w-[650px] text-[26px] sm:text-[32px] md:text-[36px] font-bold font-display text-brand-secondary-500 mb-4 leading-tight">
             Your Trusted Partner for a Seamless Retirement in the Philippines
           </h1>
 
