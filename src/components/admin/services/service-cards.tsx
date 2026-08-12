@@ -7,29 +7,11 @@ import type { ServicePlan } from '@/types/services'
 import { setFeaturedService, updateServicePlan } from '@/actions/admin/service'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 
-type ServiceType = 'basic' | 'premium' | 'vip'
-
-function TypeBadge({ type }: { type: string }) {
-  if (type === 'vip') {
-    return (
-      <span className="inline-flex items-center gap-1 bg-brand-primary-50 text-brand-primary-700 rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize tracking-wide">
-        <span className="w-1.5 h-1.5 rounded-full bg-brand-primary-500" />
-        {type}
-      </span>
-    )
-  }
-  if (type === 'premium') {
-    return (
-      <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-50 to-brand-primary-50 text-amber-700 rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize tracking-wide">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-        {type}
-      </span>
-    )
-  }
+function TypeBadge({ name }: { name: string }) {
   return (
     <span className="inline-flex items-center gap-1 bg-brand-neutral-50 text-brand-neutral-500 rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize tracking-wide">
       <span className="w-1.5 h-1.5 rounded-full bg-brand-neutral-400" />
-      {type}
+      {name}
     </span>
   )
 }
@@ -51,11 +33,9 @@ export function ServiceCards({ services }: Props) {
   const [, startTransition] = useTransition()
   const [featuringIds, setFeaturingIds] = useState<Set<number>>(new Set())
 
-  const TYPE_ORDER = { basic: 0, premium: 1, vip: 2 }
-
   const visible = useMemo(() => {
     return [...services]
-      .sort((a, b) => (TYPE_ORDER[a.type] ?? 0) - (TYPE_ORDER[b.type] ?? 0))
+      .sort((a, b) => a.id - b.id)
       .slice(0, 3)
   }, [services])
 
@@ -91,7 +71,7 @@ export function ServiceCards({ services }: Props) {
             }`}
         >
           <CardContent className="flex items-center justify-between">
-            <TypeBadge type={s.type} />
+            <TypeBadge name={s.name} />
             <AvailabilityDot active={s.is_available} />
           </CardContent>
 
@@ -133,7 +113,7 @@ export function ServiceCards({ services }: Props) {
               disabled={featuringIds.has(s.id)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all duration-150 disabled:opacity-50 ${s.highlighted
                 ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:border-amber-300'
-                : 'text-brand-neutral-500 hover:text-brand-neutral-700 hover:bg-brand-neutral-50'
+                : 'border border-brand-neutral-200 text-brand-neutral-600 hover:text-brand-neutral-800 hover:bg-brand-neutral-50 hover:border-brand-neutral-300'
                 }`}
             >
               {featuringIds.has(s.id)

@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Plus, Bell, HelpCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
-import logo from '@/assets/images/logo.png'
+import logo from '@/assets/images/logo.jpg'
 
 interface SidebarLayoutProps {
   children: ReactNode
@@ -31,6 +31,7 @@ interface SidebarLayoutProps {
     role: string
     avatarUrl?: string
   }
+  notifications?: ReactNode
 }
 
 export function SidebarLayout({
@@ -40,6 +41,7 @@ export function SidebarLayout({
   ctaLabel = 'New Application',
   onCta,
   user = { name: 'Admin User', role: 'Senior Registrar' },
+  notifications,
 }: SidebarLayoutProps) {
   const initials = user.name
     .split(' ')
@@ -71,8 +73,8 @@ export function SidebarLayout({
                   <Image
                     src={logo}
                     alt="Retire Well SRRV"
-                    width={160}
-                    height={52}
+                    width={200}
+                    height={64}
                     className="object-contain w-full h-auto max-h-12"
                     priority
                   />
@@ -119,23 +121,24 @@ export function SidebarLayout({
           </Sidebar>
 
           {/* ── Main content area ── */}
-          <SidebarInset className="flex flex-col flex-1 min-w-0 min-h-svh bg-white">
+          <SidebarInset className="flex flex-col flex-1 min-w-0 max-h-svh bg-white">
 
             {/* ── Top header ── */}
-            <header className="flex h-14 shrink-0 items-center justify-between border-b border-brand-neutral-200 bg-white px-4 gap-4">
+            <header className="flex h-14 shrink-0 items-center justify-between border-b border-brand-neutral-200 bg-white px-4 gap-4 sticky top-0 z-10">
               <SidebarTrigger className="text-brand-neutral-400 hover:text-brand-neutral-700 shrink-0" />
 
               <div className="flex items-center gap-1">
-                {/* Bell */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative text-brand-neutral-500 hover:text-brand-neutral-800 hover:bg-brand-neutral-100 rounded-full size-9"
-                  aria-label="Notifications"
-                >
-                  <Bell className="size-[18px]" />
-                  <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand-primary-500 ring-2 ring-white" />
-                </Button>
+                {notifications ?? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative text-brand-neutral-500 hover:text-brand-neutral-800 hover:bg-brand-neutral-100 rounded-full size-9"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="size-[18px]" />
+                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand-primary-500 ring-2 ring-white" />
+                  </Button>
+                )}
 
                 {/* Help */}
                 <Button
@@ -171,7 +174,7 @@ export function SidebarLayout({
               </div>
             </header>
 
-            <main className="flex-1 overflow-auto p-6">{children}</main>
+            <main className="flex-1 overflow-auto p-6 animate-in fade-in duration-300">{children}</main>
           </SidebarInset>
         </div>
       </SidebarProvider>

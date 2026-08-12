@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import { applicationFormSchema, ServiceTypeEnum } from "@/schemas/application";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { applicationFormSchema } from "@/schemas/application";
 import {
   DocumentTypeEnum,
   DocumentFormatEnum,
@@ -12,6 +12,8 @@ import {
 import type { Database } from "@/types/supabase";
 import { getUserServer } from "@/utils/auth/getUser";
 import xenditClient from "@/lib/xendit";
+import { assertPaymentRedirectsReady } from "@/lib/payment-redirect-check";
+import { sendApplicationSubmissionEmailToAdmin } from "@/lib/mailer";
 import { randomUUID } from "crypto";
 
 export type ApplicantProfile = {
@@ -30,7 +32,7 @@ export type SubmitState = {
   invoiceUrl?: string;
 };
 
-const DOC_TYPES = ["passport", "visa", "nbi", "pension", "medical"] as const;
+const DOC_TYPES = DocumentTypeEnum.options;
 
 export async function getApplicantProfile(): Promise<ApplicantProfile | null> {
   const user = await getUserServer();
@@ -61,16 +63,19 @@ export type ExistingApplicationData = {
   application: {
     id: number;
     application_code: string;
-    service_type: string;
     status: string;
     created_at: string;
+    future_plans: string | null;
     phone_number: string;
+    tel_no: string | null;
+    fax_no: string | null;
     street: string;
     city: string;
     state: string;
     zip: string;
     country: string;
     ph_address: string | null;
+    ph_secondary_address: string | null;
     emergency_name: string | null;
     emergency_phone: string | null;
     emergency_relationship: string | null;
@@ -83,6 +88,59 @@ export type ExistingApplicationData = {
     marital_status: string;
     email: string;
   };
+    applicant_profile: {
+    civil_status: string;
+    date_of_birth: string;
+    gender: string;
+    height: number;
+    first_name: string;
+    last_name: string;
+    middle_name: string | null;
+    nationality: string;
+    place_of_birth: string;
+    religion: string;
+    weight: number;
+  } | null;
+  passport: {
+    date_of_issue: string;
+    expiration: string;
+    passport_number: string;
+    place_of_issue: string;
+  } | null;
+  visa_details: {
+    date_of_arrival: string | null;
+    entry_visa_type: string | null;
+    exp_date_tourist_visa: string | null;
+  } | null;
+  educations: {
+    educ_attainment: string;
+    to_date: string;
+    location: string;
+    school: string;
+    from_date: string;
+  }[];
+  employments: {
+    company_address: string | null;
+    company_name: string | null;
+    contact_no: string | null;
+    to_date: string | null;
+    is_current: boolean | null;
+    job_title: string | null;
+    from_date: string | null;
+  }[];
+  dependents: {
+    age: number;
+    is_included: boolean;
+    name: string;
+    passport_no: string;
+    relationship: string;
+  }[];
+  family_backgrounds: {
+    father_age: number | null;
+    father_name: string;
+    mother_age: number | null;
+    mother_name: string;
+  } | null;
   documents: {
     type: string;
     name: string;
@@ -93,6 +151,7 @@ export type ExistingApplicationData = {
     amount: number;
     status: string;
   } | null;
+  canRetry: boolean;
 };
 
 export async function getExistingApplication(): Promise<ExistingApplicationData | null> {
@@ -128,23 +187,88 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
         .single()
     : { data: null };
 
+  const { data: allPayments } = await supabase
+    .from("payments")
+    .select("status")
+    .eq("user_id", user.id)
+    .eq("service_type", "application");
+
+  const canRetry =
+    allPayments !== null &&
+    allPayments.length > 0 &&
+    !allPayments.some((p) => p.status === "success");
+
+  const { data: contact } = await supabase
+    .from("contacts")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: emergency } = await supabase
+    .from("emergency_contacts")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: applicantProfile } = await supabase
+    .from("applicant_profiles")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: passport } = await supabase
+    .from("passports")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: visa } = await supabase
+    .from("visa_details")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
+  const { data: educations } = await supabase
+    .from("educations")
+    .select("*")
+    .eq("application_id", app.id);
+
+  const { data: employments } = await supabase
+    .from("employments")
+    .select("*")
+    .eq("application_id", app.id);
+
+  const { data: dependents } = await supabase
+    .from("dependents")
+    .select("*")
+    .eq("application_id", app.id);
+
+  const { data: familyBg } = await supabase
+    .from("family_backgrounds")
+    .select("*")
+    .eq("application_id", app.id)
+    .maybeSingle();
+
   return {
     application: {
       id: app.id,
       application_code: app.application_code,
-      service_type: app.service_type,
       status: app.status,
       created_at: app.created_at,
-      phone_number: app.phone_number,
-      street: app.street,
-      city: app.city,
-      state: app.state,
-      zip: app.zip,
-      country: app.country,
-      ph_address: app.ph_address,
-      emergency_name: app.emergency_name,
-      emergency_phone: app.emergency_phone,
-      emergency_relationship: app.emergency_relationship,
+      future_plans: app.future_plans,
+      phone_number: contact?.mobile_no ?? "",
+      tel_no: contact?.tel_no ?? null,
+      fax_no: contact?.fax_no ?? null,
+      street: contact?.home_country_address ?? "",
+      city: "",
+      state: "",
+      zip: "",
+      country: "",
+      ph_address: contact?.primary_address_ph ?? null,
+      ph_secondary_address: contact?.secondary_address_ph ?? null,
+      emergency_name: emergency?.name ?? null,
+      emergency_phone: emergency?.phone_no ?? null,
+      emergency_relationship: emergency?.relationship ?? null,
     },
     profile: {
       name: profile?.name ?? "",
@@ -154,18 +278,85 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
       marital_status: profile?.marital_status ?? "",
       email: user.email ?? "",
     },
+    applicant_profile: applicantProfile
+      ? {
+          civil_status: applicantProfile.civil_status,
+          date_of_birth: applicantProfile.date_of_birth,
+          gender: applicantProfile.gender,
+          height: applicantProfile.height,
+          first_name: applicantProfile.first_name,
+          last_name: applicantProfile.last_name,
+          middle_name: applicantProfile.middle_name,
+          nationality: applicantProfile.nationality,
+          place_of_birth: applicantProfile.place_of_birth,
+          religion: applicantProfile.religion,
+          weight: applicantProfile.weight,
+        }
+      : null,
+    passport: passport
+      ? {
+          date_of_issue: passport.date_of_issue,
+          expiration: passport.expiration,
+          passport_number: passport.passport_number,
+          place_of_issue: passport.place_of_issue,
+        }
+      : null,
+    visa_details: visa
+      ? {
+          date_of_arrival: visa.date_of_arrival,
+          entry_visa_type: visa.entry_visa_type,
+          exp_date_tourist_visa: visa.exp_date_tourist_visa,
+        }
+      : null,
+    educations: (educations ?? []).map((e) => ({
+      educ_attainment: e.educ_attainment,
+      to_date: e.to_date,
+      location: e.location,
+      school: e.school,
+      from_date: e.from_date,
+    })),
+    employments: (employments ?? []).map((e) => ({
+      company_address: e.company_address,
+      company_name: e.company_name,
+      contact_no: e.contact_no,
+      to_date: e.to_date,
+      is_current: e.is_current,
+      job_title: e.job_title,
+      from_date: e.from_date,
+    })),
+    dependents: (dependents ?? []).map((d) => ({
+      age: d.age,
+      is_included: d.is_included,
+      name: d.name,
+      passport_no: d.passport_no,
+      relationship: d.relationship,
+    })),
+    family_backgrounds: familyBg
+      ? {
+          father_age: familyBg.father_age,
+          father_name: familyBg.father_name,
+          mother_age: familyBg.mother_age,
+          mother_name: familyBg.mother_name,
+        }
+      : null,
     documents: documents ?? [],
     payment,
+    canRetry,
   };
 }
+
+export type ConciergeInfo = {
+  user_id: string;
+  name: string;
+  email: string;
+};
 
 export type DashboardData = {
   application: {
     application_code: string;
     status: string;
-    service_type: string;
     created_at: string;
-  };
+  } | null;
   documents: {
     type: string;
     name: string;
@@ -179,6 +370,14 @@ export type DashboardData = {
     payment_method: string;
     transaction_code: string;
   } | null;
+  consultationPayment: {
+    amount: number;
+    status: string;
+    payment_method: string;
+    transaction_code: string;
+  } | null;
+  canRetry: boolean;
+  concierges: ConciergeInfo[];
 };
 
 export async function getApplicantDashboard(): Promise<DashboardData | null> {
@@ -189,44 +388,93 @@ export async function getApplicantDashboard(): Promise<DashboardData | null> {
 
   const { data: app } = await supabase
     .from("applications")
-    .select("id, application_code, status, service_type, created_at, payment_id")
+    .select("id, application_code, status, created_at, payment_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!app) return null;
+  const { data: documents } = app
+    ? await supabase
+        .from("documents")
+        .select("type, name, format, status, created_at")
+        .eq("application_id", app.id)
+        .order("created_at")
+    : { data: null };
 
-  const { data: documents } = await supabase
-    .from("documents")
-    .select("type, name, format, status, created_at")
-    .eq("application_id", app.id)
-    .order("created_at");
+  const { data: allPayments } = await supabase
+    .from("payments")
+    .select("amount, status, payment_method, transaction_code, created_at")
+    .eq("user_id", user.id)
+    .eq("service_type", "application")
+    .order("created_at", { ascending: false });
 
   let payment: DashboardData["payment"] = null;
-  if (app.payment_id) {
-    const { data: pmt } = await supabase
-      .from("payments")
-      .select("amount, status, payment_method, transaction_code")
-      .eq("id", app.payment_id)
-      .single();
-    if (pmt) {
-      payment = {
-        amount: pmt.amount,
-        status: pmt.status,
-        payment_method: pmt.payment_method,
-        transaction_code: pmt.transaction_code,
-      };
-    }
+  let canRetry = false;
+
+  if (allPayments && allPayments.length > 0) {
+    const successPayment = allPayments.find((p) => p.status === "success");
+    const displayPayment = successPayment ?? allPayments[0];
+    payment = {
+      amount: displayPayment.amount,
+      status: displayPayment.status,
+      payment_method: displayPayment.payment_method,
+      transaction_code: displayPayment.transaction_code,
+    };
+    canRetry = !allPayments.some((p) => p.status === "success");
   }
 
+  const { data: consultationRow } = await supabase
+    .from("payments")
+    .select("amount, status, payment_method, transaction_code, created_at")
+    .eq("user_id", user.id)
+    .eq("service_type", "consultation")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const consultationPayment: DashboardData["consultationPayment"] =
+    consultationRow
+      ? {
+          amount: consultationRow.amount,
+          status: consultationRow.status,
+          payment_method: consultationRow.payment_method,
+          transaction_code: consultationRow.transaction_code,
+        }
+      : null;
+
+  const adminSupabase = createAdminClient();
+
+  const { data: adminProfiles } = await adminSupabase
+    .from("admin_profiles")
+    .select("user_id, name")
+    .eq("is_active", true)
+    .order("name");
+
+  const { data: { users: adminUsers } } =
+    await adminSupabase.auth.admin.listUsers();
+
+  const adminEmailMap = new Map(
+    (adminUsers ?? []).map((u) => [u.id, u.email ?? ""])
+  );
+
+  const concierges: ConciergeInfo[] = (adminProfiles ?? []).map((p) => ({
+    user_id: p.user_id,
+    name: p.name,
+    email: adminEmailMap.get(p.user_id) ?? "",
+  }));
+
   return {
-    application: {
-      application_code: app.application_code,
-      status: app.status,
-      service_type: app.service_type,
-      created_at: app.created_at,
-    },
+    application: app
+      ? {
+          application_code: app.application_code,
+          status: app.status,
+          created_at: app.created_at,
+        }
+      : null,
     documents: documents ?? [],
     payment,
+    consultationPayment,
+    canRetry,
+    concierges,
   };
 }
 
@@ -236,10 +484,10 @@ export type PaymentReceiptData = {
   status: string;
   paymentMethod: string;
   createdAt: string;
-  applicationCode: string;
-  serviceType: string;
+  applicationCode?: string;
   clientName: string;
   clientEmail: string;
+  serviceType: "application" | "consultation";
 };
 
 export async function getPaymentReceipt(
@@ -247,27 +495,84 @@ export async function getPaymentReceipt(
 ): Promise<PaymentReceiptData | null> {
   const supabase = await createClient();
 
-  const { data: payment } = await supabase
+  let { data: payment, error: payErr } = await supabase
     .from("payments")
     .select("*")
     .eq("transaction_code", transactionCode)
-    .single();
+    .maybeSingle();
 
-  if (!payment) return null;
+  if (payErr) {
+    console.error("getPaymentReceipt: payments query error", payErr);
+  }
 
-  const { data: app } = await supabase
+  if (!payment) {
+    const user = await getUserServer();
+    if (!user) {
+      console.error("getPaymentReceipt: no payment found for", transactionCode);
+      return null;
+    }
+    const { data: fallbackPayment } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    if (!fallbackPayment) {
+      console.error("getPaymentReceipt: no payment found for user", user.id);
+      return null;
+    }
+    payment = fallbackPayment;
+  }
+
+  // Consultation payments have no linked application
+  if (payment.service_type === "consultation") {
+    const { data: profile } = await supabase
+      .from("client_profiles")
+      .select("name")
+      .eq("user_id", payment.user_id)
+      .maybeSingle();
+
+    return {
+      transactionCode: payment.transaction_code,
+      amount: payment.amount,
+      status: payment.status,
+      paymentMethod: payment.payment_method,
+      createdAt: payment.created_at,
+      clientName: profile?.name ?? "",
+      clientEmail: payment.user_id,
+      serviceType: "consultation",
+    };
+  }
+
+  let { data: app, error: appErr } = await supabase
     .from("applications")
-    .select("application_code, service_type, user_id")
+    .select("application_code, user_id")
     .eq("payment_id", payment.id)
-    .single();
+    .maybeSingle();
 
-  if (!app) return null;
+  if (appErr) {
+    console.error("getPaymentReceipt: applications query error", appErr);
+  }
+
+  if (!app) {
+    const { data: fallbackApp } = await supabase
+      .from("applications")
+      .select("application_code, user_id")
+      .eq("user_id", payment.user_id)
+      .maybeSingle();
+    if (!fallbackApp) {
+      console.error("getPaymentReceipt: no application for user_id", payment.user_id);
+      return null;
+    }
+    app = fallbackApp;
+  }
 
   const { data: profile } = await supabase
     .from("client_profiles")
     .select("name")
     .eq("user_id", app.user_id)
-    .single();
+    .maybeSingle();
 
   return {
     transactionCode: payment.transaction_code,
@@ -276,10 +581,119 @@ export async function getPaymentReceipt(
     paymentMethod: payment.payment_method,
     createdAt: payment.created_at,
     applicationCode: app.application_code,
-    serviceType: app.service_type,
     clientName: profile?.name ?? "",
     clientEmail: payment.user_id,
+    serviceType: "application",
   };
+}
+
+export type RetryPaymentState = {
+  error: string | null;
+  success: boolean;
+  invoiceUrl?: string;
+};
+
+export async function retryPaymentAction(
+  _prev: RetryPaymentState,
+  _formData: FormData,
+): Promise<RetryPaymentState> {
+  const user = await getUserServer();
+  if (!user) return { error: "Unauthorized", success: false };
+
+  const paymentErrorMsg = await assertPaymentRedirectsReady();
+  if (paymentErrorMsg) return { error: paymentErrorMsg, success: false };
+
+  const supabase = await createClient();
+
+  const { data: app } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!app) return { error: "No application found", success: false };
+
+  const DEFAULT_FEE = 300;
+
+  const { data: existingSuccess } = await supabase
+    .from("payments")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("service_type", "application")
+    .eq("status", "success")
+    .maybeSingle();
+
+  if (existingSuccess) {
+    return { error: "Payment has already been completed", success: false };
+  }
+
+  const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
+  const paymentMethod = "ewallet" as Database["public"]["Enums"]["payment_methods"];
+
+  const { data: payment, error: paymentError } = await supabase
+    .from("payments")
+    .insert({
+      user_id: user.id,
+      amount: DEFAULT_FEE,
+      status: "pending",
+      payment_method: paymentMethod,
+      transaction_code: externalId,
+      service_type: "application",
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (paymentError || !payment) {
+    return {
+      error: paymentError?.message ?? "Failed to create payment",
+      success: false,
+    };
+  }
+
+  const { error: linkError } = await supabase
+    .from("applications")
+    .update({ payment_id: payment.id })
+    .eq("id", app.id);
+
+  if (linkError) {
+    return { error: linkError.message, success: false };
+  }
+
+  const headersList = await headers();
+  const origin = headersList.get("origin") ?? "http://localhost:3000";
+
+  try {
+    const invoice = await xenditClient.Invoice.createInvoice({
+      data: {
+        externalId,
+        amount: DEFAULT_FEE,
+        description: `SRRV application fee`,
+        payerEmail: user.email ?? undefined,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=PHP`,
+        failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
+        currency: "PHP",
+        metadata: {
+          application_id: String(app.id),
+          service_type: "application",
+          retry: "true",
+        },
+      },
+    });
+
+    revalidatePath("/applicant/dashboard");
+    return { error: null, success: true, invoiceUrl: invoice.invoiceUrl! };
+  } catch (xenditError) {
+    console.error(
+      "Xendit retry error:",
+      JSON.stringify(xenditError, Object.getOwnPropertyNames(xenditError)),
+    );
+    const message =
+      xenditError instanceof Error
+        ? xenditError.message
+        : "Failed to create payment invoice";
+    return { error: message, success: false };
+  }
 }
 
 export async function submitApplication(
@@ -289,46 +703,100 @@ export async function submitApplication(
   const user = await getUserServer();
   if (!user) return { error: "Unauthorized", success: false };
 
+  const paymentErrorMsg = await assertPaymentRedirectsReady();
+  if (paymentErrorMsg) return { error: paymentErrorMsg, success: false };
+
   const supabase = await createClient();
 
   // Check if user already has an application
   const { data: existingApp } = await supabase
     .from("applications")
-    .select("id")
+    .select("id, status")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (existingApp) {
+  const isEditing = existingApp && (existingApp.status === "pending" || existingApp.status === "rejected");
+  const appId = existingApp?.id;
+
+  if (existingApp && !isEditing) {
     return {
-      error: "You already have an existing application. Only one application per user is allowed.",
+      error: "Your application cannot be modified at this stage.",
       success: false,
     };
   }
 
-  const serviceType = formData.get("service_type") as string;
-  const parsedServiceType = ServiceTypeEnum.safeParse(serviceType);
-  if (!parsedServiceType.success) {
-    return { error: "Please select a service plan", success: false };
+  // Applicants must have an accepted consultation before starting a new application
+  if (!isEditing) {
+    const { data: consultation } = await supabase
+      .from("consultations")
+      .select("id, status")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!consultation || consultation.status !== "accepted") {
+      return {
+        error:
+          "Your consultation request must be accepted before you can submit an application. Please wait for our team to approve your consultation.",
+        success: false,
+      };
+    }
+  }
+
+  const futurePlan = formData.get("future_plan") as string;
+  if (!futurePlan) {
+    return { error: "Please select a future plan", success: false };
+  }
+
+  const paymentMethod = (formData.get("payment_method") as string) || "CREDIT_CARD";
+
+  // Parse family members from form data
+  const familyMembers: { full_name: string; relationship: string; age: string; passport_no: string; include: boolean }[] = [];
+  let idx = 0;
+  while (formData.get(`family_members[${idx}].full_name`)) {
+    familyMembers.push({
+      full_name: formData.get(`family_members[${idx}].full_name`) as string,
+      relationship: (formData.get(`family_members[${idx}].relationship`) as string) ?? "",
+      age: (formData.get(`family_members[${idx}].age`) as string) ?? "",
+      passport_no: (formData.get(`family_members[${idx}].passport_no`) as string) ?? "",
+      include: formData.get(`family_members[${idx}].include`) !== "false",
+    });
+    idx++;
   }
 
   const formRaw = {
-    name: formData.get("name"),
+    last_name: formData.get("last_name"),
+    first_name: formData.get("first_name"),
+    middle_name: formData.get("middle_name") || "",
     birthday: formData.get("birthday"),
+    place_of_birth: formData.get("place_of_birth"),
     sex: formData.get("sex"),
+    religion: formData.get("religion"),
     nationality: formData.get("nationality"),
     marital_status: formData.get("marital_status"),
+    height: formData.get("height"),
+    weight: formData.get("weight"),
+    passport_number: formData.get("passport_number"),
+    passport_place_of_issue: formData.get("passport_place_of_issue"),
+    passport_date_of_issue: formData.get("passport_date_of_issue"),
+    passport_valid_until: formData.get("passport_valid_until"),
     email: formData.get("email"),
-    phone_number: formData.get("phone_number"),
-    street: formData.get("street"),
-    city: formData.get("city"),
-    state: formData.get("state"),
-    zip: formData.get("zip"),
-    country: formData.get("country"),
-    ph_address: formData.get("ph_address"),
-    emergency_name: formData.get("emergency_name"),
-    emergency_relationship: formData.get("emergency_relationship"),
-    emergency_phone: formData.get("emergency_phone"),
-    service_type: serviceType,
+    mobile_number: formData.get("mobile_number"),
+    telephone_number: formData.get("telephone_number") || null,
+    fax_number: formData.get("fax_number") || null,
+    home_country_address: formData.get("home_country_address"),
+    ph_primary_address: formData.get("ph_primary_address") || null,
+    ph_secondary_address: formData.get("ph_secondary_address") || null,
+    father_name: formData.get("father_name") || null,
+    father_age: formData.get("father_age") || null,
+    mother_name: formData.get("mother_name") || null,
+    mother_age: formData.get("mother_age") || null,
+    family_members: familyMembers,
+    emergency_name: formData.get("emergency_name") || null,
+    emergency_relationship: formData.get("emergency_relationship") || null,
+    emergency_phone: formData.get("emergency_phone") || null,
+    future_plan: futurePlan,
   };
   const parsed = applicationFormSchema.safeParse(formRaw);
   if (!parsed.success) {
@@ -341,10 +809,14 @@ export async function submitApplication(
   // Generate application code
   const code = `SRRV-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
+  const fullName = [parsed.data.last_name, parsed.data.first_name, parsed.data.middle_name]
+    .filter(Boolean)
+    .join(" ");
+
   const { error: profileError } = await supabase.from("client_profiles").upsert(
     {
       user_id: user.id,
-      name: parsed.data.name,
+      name: fullName,
       sex: parsed.data.sex,
       birthday: parsed.data.birthday,
       nationality: parsed.data.nationality,
@@ -362,31 +834,250 @@ export async function submitApplication(
 
   if (profileError) return { error: profileError.message, success: false };
 
-  const { data: app, error: appError } = await supabase
-    .from("applications")
-    .insert({
-      user_id: user.id,
-      service_type: serviceType as Database["public"]["Enums"]["service_type"],
-      application_code: code,
-      city: parsed.data.city,
-      country: parsed.data.country,
-      state: parsed.data.state,
-      street: parsed.data.street,
-      zip: parsed.data.zip,
-      phone_number: parsed.data.phone_number,
-      ph_address: parsed.data.ph_address,
-      emergency_name: parsed.data.emergency_name,
-      emergency_phone: parsed.data.emergency_phone,
-      emergency_relationship: parsed.data.emergency_relationship,
-    })
+  // Look up the user's consultation to link it to the application
+  const { data: consultation } = await supabase
+    .from("consultations")
     .select("id")
-    .single();
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  if (appError || !app)
-    return {
-      error: appError?.message ?? "Failed to create application",
-      success: false,
-    };
+  const consultationId = consultation?.id;
+
+  let appIdToUse: number;
+
+  if (isEditing && appId) {
+    // Update existing application
+    appIdToUse = appId;
+    const { error: appUpdateError } = await supabase
+      .from("applications")
+      .update({
+        future_plans: futurePlan,
+        status: "pending",
+        ...(consultationId ? { consultation_id: consultationId } : {}),
+      } as never)
+      .eq("id", appId);
+
+    if (appUpdateError) return { error: appUpdateError.message, success: false };
+
+    // Delete existing child records
+    const tables = [
+      "contacts", "emergency_contacts", "applicant_profiles", "passports",
+      "visa_details", "educations", "employments", "dependents", "family_backgrounds",
+    ];
+    for (const table of tables) {
+      await supabase.from(table as never).delete().eq("application_id", appId);
+    }
+  } else {
+    // Create new application
+    const { data: app, error: appError } = await supabase
+      .from("applications")
+      .insert({
+        user_id: user.id,
+        future_plans: futurePlan,
+        application_code: code,
+        ...(consultationId ? { consultation_id: consultationId } : {}),
+      } as never)
+      .select("id")
+      .single();
+
+    if (appError || !app)
+      return {
+        error: appError?.message ?? "Failed to create application",
+        success: false,
+      };
+    appIdToUse = app.id;
+
+    // Notify active admins (in-app + email) so the new submission isn't missed
+    try {
+      const adminSupabase = createAdminClient();
+      const [profileResult, adminsResult] = await Promise.all([
+        adminSupabase
+          .from("client_profiles")
+          .select("name")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        adminSupabase.from("admin_profiles").select("user_id").eq("is_active", true),
+      ]);
+
+      const applicantName = profileResult.data?.name ?? "";
+
+      const adminUserIds = (adminsResult.data ?? []).map((a) => a.user_id);
+      if (adminUserIds.length > 0) {
+        await adminSupabase.from("admin_notifications").insert(
+          adminUserIds.map((adminUserId) => ({
+            admin_user_id: adminUserId,
+            notification: `New application ${code} submitted by ${applicantName || user.email || "an applicant"}.`,
+            is_read: false,
+            type: "new_application",
+            link: `/admin/applications?userId=${user.id}`,
+          })),
+        );
+      }
+
+      await sendApplicationSubmissionEmailToAdmin({
+        applicantEmail: user.email ?? "",
+        applicantName,
+        applicationCode: code,
+      });
+    } catch (notifyError) {
+      console.error("Admin submission notification error:", notifyError);
+    }
+
+    revalidatePath("/admin/applications");
+    revalidateTag("admin-applications", "seconds");
+  }
+
+  // ── Insert contact info ──────────────────────────────────────────────
+  const { error: contactError } = await supabase
+    .from("contacts")
+    .insert({
+      application_id: appIdToUse,
+      email: parsed.data.email,
+      mobile_no: parsed.data.mobile_number,
+      tel_no: parsed.data.telephone_number,
+      fax_no: parsed.data.fax_number,
+      home_country_address: parsed.data.home_country_address,
+      primary_address_ph: parsed.data.ph_primary_address,
+      secondary_address_ph: parsed.data.ph_secondary_address,
+    } as never);
+
+  if (contactError) return { error: contactError.message, success: false };
+
+  // ── Insert emergency contact ─────────────────────────────────────────
+  if (parsed.data.emergency_name) {
+    const { error: emergencyError } = await supabase
+      .from("emergency_contacts")
+      .insert({
+        application_id: appIdToUse,
+        name: parsed.data.emergency_name,
+        phone_no: parsed.data.emergency_phone ?? "",
+        relationship: parsed.data.emergency_relationship ?? "",
+      } as never);
+
+    if (emergencyError) return { error: emergencyError.message, success: false };
+  }
+
+  // ── Insert applicant profile ─────────────────────────────────────────
+  const { error: appProfileError } = await supabase
+    .from("applicant_profiles")
+    .insert({
+      application_id: appIdToUse,
+      civil_status: parsed.data.marital_status as Database["public"]["Enums"]["marital_status"],
+      date_of_birth: parsed.data.birthday,
+      gender: parsed.data.sex as Database["public"]["Enums"]["sex"],
+      height: Number(parsed.data.height) || 0,
+      first_name: parsed.data.first_name,
+      last_name: parsed.data.last_name,
+      middle_name: parsed.data.middle_name ?? "",
+      nationality: parsed.data.nationality,
+      place_of_birth: parsed.data.place_of_birth,
+      religion: parsed.data.religion,
+      weight: Number(parsed.data.weight) || 0,
+    } as never);
+
+  if (appProfileError) return { error: appProfileError.message, success: false };
+
+  // ── Insert passport info (if provided) ───────────────────────────────
+  const passportNumber = formData.get("passport_number") as string | null;
+  if (passportNumber) {
+    const { error: passportError } = await supabase
+      .from("passports")
+      .insert({
+        application_id: appIdToUse,
+        passport_number: passportNumber,
+        date_of_issue: parsed.data.passport_date_of_issue,
+        expiration: parsed.data.passport_valid_until,
+        place_of_issue: parsed.data.passport_place_of_issue,
+      } as never);
+
+    if (passportError) return { error: passportError.message, success: false };
+  }
+
+  // ── Insert visa details (if provided) ─────────────────────────────────
+  const entryVisaType = formData.get("entry_visa_type") as string | null;
+  if (entryVisaType) {
+    const { error: visaError } = await supabase
+      .from("visa_details")
+      .insert({
+        application_id: appIdToUse,
+        entry_visa_type: entryVisaType,
+        date_of_arrival: (formData.get("date_of_arrival") as string) ?? null,
+        exp_date_tourist_visa: (formData.get("exp_date_tourist_visa") as string) ?? null,
+      } as never);
+
+    if (visaError) return { error: visaError.message, success: false };
+  }
+
+  // ── Insert education records (if provided) ────────────────────────────
+  let eduIdx = 0;
+  while (formData.get(`educations[${eduIdx}].school`)) {
+    const { error: eduError } = await supabase
+      .from("educations")
+      .insert({
+        application_id: appIdToUse,
+        educ_attainment: (formData.get(`educations[${eduIdx}].educ_attainment`) as string) ?? "",
+        school: formData.get(`educations[${eduIdx}].school`) as string,
+        location: (formData.get(`educations[${eduIdx}].location`) as string) ?? "",
+        from_date: (formData.get(`educations[${eduIdx}].from_date`) as string) ?? "",
+        to_date: (formData.get(`educations[${eduIdx}].to_date`) as string) ?? "",
+      } as never);
+
+    if (eduError) return { error: eduError.message, success: false };
+    eduIdx++;
+  }
+
+  // ── Insert employment records (if provided) ───────────────────────────
+  let empIdx = 0;
+  while (formData.get(`employments[${empIdx}].company_name`)) {
+    const { error: empError } = await supabase
+      .from("employments")
+      .insert({
+        application_id: appIdToUse,
+        company_name: formData.get(`employments[${empIdx}].company_name`) as string,
+        job_title: (formData.get(`employments[${empIdx}].job_title`) as string) ?? null,
+        contact_no: (formData.get(`employments[${empIdx}].contact_no`) as string) ?? null,
+        company_address: (formData.get(`employments[${empIdx}].company_address`) as string) ?? null,
+        from_date: (formData.get(`employments[${empIdx}].from_date`) as string) ?? null,
+        to_date: (formData.get(`employments[${empIdx}].to_date`) as string) ?? null,
+      } as never);
+
+    if (empError) return { error: empError.message, success: false };
+    empIdx++;
+  }
+
+  // ── Insert dependents (if provided, Step 2) ────────────────────────────
+  for (const member of parsed.data.family_members) {
+    if (!member.full_name) continue;
+    const { error: depError } = await supabase
+      .from("dependents")
+      .insert({
+        application_id: appIdToUse,
+        name: member.full_name,
+        age: Number(member.age) || 0,
+        passport_no: member.passport_no,
+        relationship: member.relationship,
+        is_included: member.include,
+      } as never);
+
+    if (depError) return { error: depError.message, success: false };
+  }
+
+  // ── Insert family background (if provided, Step 2) ─────────────────────
+  if (parsed.data.father_name) {
+    const { error: famError } = await supabase
+      .from("family_backgrounds")
+      .insert({
+        application_id: appIdToUse,
+        father_name: parsed.data.father_name,
+        father_age: Number(parsed.data.father_age) || null,
+        mother_name: parsed.data.mother_name ?? "",
+        mother_age: Number(parsed.data.mother_age) || null,
+      } as never);
+
+    if (famError) return { error: famError.message, success: false };
+  }
 
   // ── Upload documents to Supabase Storage & insert DB records ──────────────
   const docErrors: string[] = [];
@@ -396,6 +1087,21 @@ export async function submitApplication(
     const file = formData.get(`doc_${docType}_file`) as File | null;
     const name = formData.get(`doc_${docType}_name`) as string | null;
     const formatRaw = formData.get(`doc_${docType}_format`) as string | null;
+
+    // When editing, remove existing document of this type before re-uploading
+    if (isEditing && file && name) {
+      const { data: existingDocs } = await supabase
+        .from("documents")
+        .select("path")
+        .eq("application_id", appIdToUse)
+        .eq("type", docType);
+      if (existingDocs && existingDocs.length > 0) {
+        for (const doc of existingDocs) {
+          await supabase.storage.from(BUCKET).remove([doc.path]);
+        }
+        await supabase.from("documents").delete().eq("application_id", appIdToUse).eq("type", docType);
+      }
+    }
 
     if (!file || !name) continue;
 
@@ -411,7 +1117,7 @@ export async function submitApplication(
       continue;
     }
 
-    const storagePath = `${user.id}/${app.id}/${docType}/${name}`;
+    const storagePath = `${user.id}/${appIdToUse}/${docType}/${name}`;
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
@@ -426,7 +1132,7 @@ export async function submitApplication(
     }
 
     const docInsert = {
-      application_id: app.id,
+      application_id: appIdToUse,
       format: formatParsed.data,
       name,
       path: storagePath,
@@ -453,16 +1159,13 @@ export async function submitApplication(
     return { error: docErrors.join("; "), success: false };
   }
 
-  // ── Get price from service_plans ─────────────────────────────────────────
-  const { data: plan } = await supabase
-    .from("service_plans")
-    .select("price")
-    .eq("type", serviceType as Database["public"]["Enums"]["service_type"])
-    .single();
-
-  if (!plan) {
-    return { error: "Service plan not found", success: false };
+  // If editing, don't create a new payment — keep existing payment
+  if (isEditing) {
+    revalidatePath("/applicant/application");
+    return { error: null, success: true };
   }
+
+  const DEFAULT_FEE = 300;
 
   // ── Create payment record ────────────────────────────────────────────────
   const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
@@ -470,10 +1173,11 @@ export async function submitApplication(
     .from("payments")
     .insert({
       user_id: user.id,
-      amount: plan.price,
+      amount: DEFAULT_FEE,
       status: "pending",
-      payment_method: "ewallet",
+      payment_method: paymentMethod.toLowerCase() as Database["public"]["Enums"]["payment_methods"],
       transaction_code: externalId,
+      service_type: "application",
       created_at: new Date().toISOString(),
     })
     .select("id")
@@ -490,7 +1194,7 @@ export async function submitApplication(
   const { error: linkError } = await supabase
     .from("applications")
     .update({ payment_id: payment.id })
-    .eq("id", app.id);
+    .eq("id", appIdToUse);
 
   if (linkError) {
     return { error: linkError.message, success: false };
@@ -505,20 +1209,21 @@ export async function submitApplication(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: plan.price,
-        description: `SRRV ${serviceType} application fee`,
+        amount: DEFAULT_FEE,
+        description: `SRRV application fee`,
         payerEmail: parsed.data.email,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${plan.price}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=PHP`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
         currency: "PHP",
         metadata: {
-          application_id: String(app.id),
-          service_type: serviceType,
+          application_id: String(appIdToUse),
+          service_type: "application",
         },
       },
     });
     invoiceUrl = invoice.invoiceUrl!;
   } catch (xenditError) {
+    console.error("Xendit createInvoice error:", JSON.stringify(xenditError, Object.getOwnPropertyNames(xenditError)));
     const message =
       xenditError instanceof Error
         ? xenditError.message

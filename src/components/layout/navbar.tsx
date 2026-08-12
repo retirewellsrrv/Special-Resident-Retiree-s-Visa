@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import Image from "next/image";
-import logo from "@/assets/images/logo.png";
+import logo from "@/assets/images/logo.jpg";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { User } from "@supabase/supabase-js";
 import { LogoutBtn } from "@/components/auth/logout-btn";
+import {
+  isNavigationLocked,
+  subscribeNavigationLock,
+} from "@/lib/navigation-lock";
 
 interface NavbarProps {
   className?: string;
@@ -25,6 +29,7 @@ interface NavbarProps {
 
 const navItems = [
   { title: "Services", href: "/services" },
+  { title: "Packages", href: "/packages" },
   { title: "Contact", href: "/contact" },
   { title: "FAQs", href: "/faqs" },
   { title: "About Us", href: "/about" },
@@ -32,6 +37,11 @@ const navItems = [
 
 export function Navbar({ className, user }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const isLocked = React.useSyncExternalStore(
+    subscribeNavigationLock,
+    isNavigationLocked,
+    () => false, // getServerSnapshot: the lock is a client-only concern, so SSR always renders unlocked
+  );
 
   return (
     <header
@@ -43,24 +53,29 @@ export function Navbar({ className, user }: NavbarProps) {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="mr-6 flex items-center space-x-2">
-          <Image src={logo} alt="SRRV" className="h-12 w-auto" />
+          <Image src={logo} alt="SRRV" className="h-14 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}
         <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList className='gap-x-8 pr-4'>
+          <NavigationMenuList className="gap-x-8 pr-4">
             {navItems.map((item) => (
-              
               <NavigationMenuItem key={item.href}>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href={item.href}
-                      className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-[#81001C] focus:bg-accent focus:text-[#81001C] focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      {item.title}
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    href={item.href}
+                    aria-disabled={isLocked}
+                    onClick={(e) => isLocked && e.preventDefault()}
+                    className={cn(
+                      "group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-[#81001C] focus:bg-accent focus:text-[#81001C] focus:outline-none",
+                      isLocked &&
+                        "pointer-events-none opacity-50 hover:bg-transparent hover:text-[#81001C]",
+                    )}
+                  >
+                    {item.title}
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
             ))}
           </NavigationMenuList>
         </NavigationMenu>
@@ -95,7 +110,7 @@ export function Navbar({ className, user }: NavbarProps) {
               {/* Brand header */}
               <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Image src={logo} alt="SRRV" className="h-10 w-auto" />
+                  <Image src={logo} alt="SRRV" className="h-12 w-auto" />
                 </Link>
               </div>
 
@@ -109,8 +124,18 @@ export function Navbar({ className, user }: NavbarProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-brand-primary-50 hover:text-brand-primary-600"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      aria-disabled={isLocked}
+                      onClick={(e) => {
+                        if (isLocked) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={cn(
+                        "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-brand-primary-50 hover:text-brand-primary-600",
+                        isLocked && "pointer-events-none opacity-50",
+                      )}
                     >
                       {item.title}
                     </Link>

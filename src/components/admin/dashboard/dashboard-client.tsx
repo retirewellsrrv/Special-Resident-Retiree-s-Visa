@@ -9,10 +9,8 @@ import {
   FileSearch,
   CheckCircle2,
   Clock,
-  XCircle,
-  PauseCircle,
+  CalendarClock,
   ArrowUpRight,
-  Loader2,
 } from 'lucide-react'
 import { StatusChip } from '@/components/ui/status-chip'
 import { PageHeader } from '@/components/admin/shared/page-header'
@@ -114,6 +112,14 @@ export function DashboardClient({ stats }: Props) {
       href: '/admin/documents',
       sub: `${stats.documents.total} total documents`,
     },
+    {
+      label: 'Consultations Pending',
+      value: stats.consultations.pending + stats.consultations.processing,
+      icon: CalendarClock,
+      color: 'text-teal-600 bg-teal-50',
+      href: '/admin/consultations',
+      sub: `${stats.consultations.total} total requests`,
+    },
   ]
 
   const revenueData = stats.monthlyRevenue.map((m) => ({
@@ -131,13 +137,10 @@ export function DashboardClient({ stats }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description="Overview of SRRV application activity, revenue, and pending tasks."
-      />
+      <PageHeader title="Admin Dashboard" />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {kpis.map((kpi) => {
           const Icon = kpi.icon
           return (
@@ -245,19 +248,17 @@ export function DashboardClient({ stats }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Applications */}
         <div className="rounded-xl border border-brand-neutral-200 bg-white overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-brand-neutral-100">
+          <button
+            onClick={() => startTransition(() => router.push('/admin/applications'))}
+            disabled={isPending}
+            className="w-full flex items-center justify-between px-5 py-4 border-b border-brand-neutral-100 text-left transition-colors hover:bg-brand-neutral-50 disabled:opacity-50"
+          >
             <h3 className="text-sm font-semibold text-brand-neutral-900">Recent Applications</h3>
-            <button
-              onClick={() => startTransition(() => router.push('/admin/applications'))}
-              disabled={isPending}
-              className="text-xs font-medium text-brand-primary-600 hover:text-brand-primary-800 disabled:opacity-50"
-            >
-              View all
-            </button>
-          </div>
+            <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-400" />
+          </button>
           {stats.recentApplications.length === 0 ? (
             <p className="text-sm text-brand-neutral-400 px-5 py-8 text-center">No applications yet.</p>
           ) : (
@@ -274,7 +275,6 @@ export function DashboardClient({ stats }: Props) {
                     <p className="text-sm font-medium text-brand-neutral-900 truncate">{app.applicant_name}</p>
                     <p className="text-xs text-brand-neutral-400 truncate mt-0.5">{app.application_code}</p>
                   </div>
-                  <span className="text-xs text-brand-neutral-400 capitalize">{app.service_type}</span>
                   <StatusChip status={app.status} />
                   <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-300 shrink-0" />
                 </button>
@@ -285,16 +285,14 @@ export function DashboardClient({ stats }: Props) {
 
         {/* Pending Documents */}
         <div className="rounded-xl border border-brand-neutral-200 bg-white overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-brand-neutral-100">
+          <button
+            onClick={() => startTransition(() => router.push('/admin/documents'))}
+            disabled={isPending}
+            className="w-full flex items-center justify-between px-5 py-4 border-b border-brand-neutral-100 text-left transition-colors hover:bg-brand-neutral-50 disabled:opacity-50"
+          >
             <h3 className="text-sm font-semibold text-brand-neutral-900">Documents Pending Review</h3>
-            <button
-              onClick={() => startTransition(() => router.push('/admin/documents'))}
-              disabled={isPending}
-              className="text-xs font-medium text-brand-primary-600 hover:text-brand-primary-800 disabled:opacity-50"
-            >
-              View all
-            </button>
-          </div>
+            <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-400" />
+          </button>
           {stats.pendingDocuments.length === 0 ? (
             <p className="text-sm text-brand-neutral-400 px-5 py-8 text-center">All documents reviewed.</p>
           ) : (
@@ -323,113 +321,47 @@ export function DashboardClient({ stats }: Props) {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Service Plan Distribution + Quick Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-brand-neutral-200 bg-white p-5">
-          <h3 className="text-sm font-semibold text-brand-neutral-900 mb-4">Service Plans</h3>
-          {stats.appsByService.length === 0 ? (
-            <p className="text-sm text-brand-neutral-400 py-4 text-center">No applications yet.</p>
+        {/* Recent Consultation Requests */}
+        <div className="rounded-xl border border-brand-neutral-200 bg-white overflow-hidden">
+          <button
+            onClick={() => startTransition(() => router.push('/admin/consultations'))}
+            disabled={isPending}
+            className="w-full flex items-center justify-between px-5 py-4 border-b border-brand-neutral-100 text-left transition-colors hover:bg-brand-neutral-50 disabled:opacity-50"
+          >
+            <h3 className="text-sm font-semibold text-brand-neutral-900">Consultation Requests</h3>
+            <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-400" />
+          </button>
+          {stats.recentConsultations.length === 0 ? (
+            <p className="text-sm text-brand-neutral-400 px-5 py-8 text-center">No consultation requests yet.</p>
           ) : (
-            <div className="space-y-3">
-              {stats.appsByService.map((item) => {
-                const pct = stats.applications.total ? (item.count / stats.applications.total) * 100 : 0
-                return (
-                  <div key={item.label}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-brand-neutral-700 capitalize">{item.label}</span>
-                      <span className="text-sm font-medium text-brand-neutral-900">{item.count}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-brand-neutral-100 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-brand-secondary-500 transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+            <div className="divide-y divide-brand-neutral-50">
+              {stats.recentConsultations.map((cons) => (
+                <button
+                  type="button"
+                  key={cons.id}
+                  onClick={() => startTransition(() => router.push('/admin/consultations'))}
+                  disabled={isPending}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-brand-neutral-50 disabled:opacity-50"
+                >
+                  <div className="flex size-8 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+                    <CalendarClock className="size-4" />
                   </div>
-                )
-              })}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-brand-neutral-900 truncate">{cons.applicant_name}</p>
+                    <p className="text-xs text-brand-neutral-400 truncate mt-0.5">{cons.purpose}</p>
+                  </div>
+                  <StatusChip status={cons.status} />
+                  <ArrowUpRight className="h-3.5 w-3.5 text-brand-neutral-300 shrink-0" />
+                </button>
+              ))}
             </div>
           )}
         </div>
-
-        <div className="rounded-xl border border-brand-neutral-200 bg-white p-5 lg:col-span-2">
-          <h3 className="text-sm font-semibold text-brand-neutral-900 mb-3">Quick Summary</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <SummaryCard
-              icon={CheckCircle2}
-              label="Approved"
-              value={stats.applications.approved}
-              color="text-green-600"
-            />
-            <SummaryCard
-              icon={Clock}
-              label="Pending"
-              value={stats.applications.pending}
-              color="text-amber-600"
-            />
-            <SummaryCard
-              icon={Loader2}
-              label="Processing"
-              value={stats.applications.processing}
-              color="text-blue-600"
-            />
-            <SummaryCard
-              icon={XCircle}
-              label="Rejected"
-              value={stats.applications.rejected}
-              color="text-red-600"
-            />
-            <SummaryCard
-              icon={PauseCircle}
-              label="Paused"
-              value={stats.applications.paused}
-              color="text-gray-600"
-            />
-            <SummaryCard
-              icon={Wallet}
-              label="Revenue"
-              value={fmtMoney(stats.payments.revenue)}
-              color="text-green-600"
-            />
-            <SummaryCard
-              icon={FileSearch}
-              label="Docs Pending"
-              value={stats.documents.pendingReview}
-              color="text-amber-600"
-            />
-            <SummaryCard
-              icon={Users}
-              label="Users"
-              value={stats.users.total}
-              color="text-violet-600"
-            />
-          </div>
-        </div>
       </div>
+
     </div>
   )
 }
 
-function SummaryCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value: string | number
-  color: string
-}) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-100 p-3">
-      <Icon className={`size-5 shrink-0 ${color}`} />
-      <div className="min-w-0">
-        <p className="text-xs text-brand-neutral-400 truncate">{label}</p>
-        <p className="text-sm font-semibold text-brand-neutral-900">{value}</p>
-      </div>
-    </div>
-  )
-}
+

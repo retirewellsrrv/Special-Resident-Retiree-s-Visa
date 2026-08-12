@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ArrowUpDown, ArrowUp, ArrowDown, Eye, Pencil } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Inbox, ExternalLink } from 'lucide-react'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import StatusBadge from './payments-status-badge'
 type PaymentWithName = {
@@ -12,9 +12,10 @@ type PaymentWithName = {
   transaction_code: string
   created_at: string | null
   client_name?: string
+  service_type?: string
 }
 
-type SortKey = 'client_name' | 'amount' | 'status' | 'payment_method' | 'transaction_code' | 'created_at'
+type SortKey = 'client_name' | 'amount' | 'status' | 'payment_method' | 'transaction_code' | 'created_at' | 'service_type'
 
 const fmt = (n: number) =>
   '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -32,17 +33,16 @@ const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
   { key: 'amount', label: 'Amount' },
   { key: 'status', label: 'Status' },
   { key: 'payment_method', label: 'Payment Type' },
+  { key: 'service_type', label: 'Service Type' },
   { key: 'created_at', label: 'Created At' },
 ]
 
 interface Props {
   rows: PaymentWithName[]
   total: number
-  onView?: (row: PaymentWithName) => void
-  onEdit?: (row: PaymentWithName) => void
 }
 
-export default function PaymentTable({ rows, total, onView, onEdit }: Props) {
+export default function PaymentTable({ rows, total }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('created_at')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
@@ -83,9 +83,8 @@ export default function PaymentTable({ rows, total, onView, onEdit }: Props) {
 
   return (
     <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-brand-neutral-100">
+      <div className="px-4 py-3 border-b border-brand-neutral-100">
         <span className="text-sm font-medium text-brand-neutral-900">Recent Transactions</span>
-        <span className="text-xs text-brand-neutral-500">{rows.length} of {total} records</span>
       </div>
 
       <Table>
@@ -101,14 +100,22 @@ export default function PaymentTable({ rows, total, onView, onEdit }: Props) {
                 <SortIcon column={c.key} />
               </TableHead>
             ))}
-            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sorted.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={COLUMNS.length + 1} className="text-center text-brand-neutral-400 py-12">
-                No transactions found
+              <TableCell colSpan={COLUMNS.length} className="text-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <Inbox className="size-10 text-brand-neutral-300" />
+                  <p className="text-sm text-brand-neutral-400">No transactions found</p>
+                  <a
+                    href="/admin/applications"
+                    className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4" /> View Applications
+                  </a>
+                </div>
               </TableCell>
             </TableRow>
           ) : sorted.map((row) => (
@@ -118,25 +125,14 @@ export default function PaymentTable({ rows, total, onView, onEdit }: Props) {
               <TableCell className="font-medium">{fmt(row.amount)}</TableCell>
               <TableCell><StatusBadge status={row.status} /></TableCell>
               <TableCell className="text-brand-neutral-600 capitalize">{row.payment_method}</TableCell>
-              <TableCell className="text-xs text-brand-neutral-500">{fmtDate(row.created_at)}</TableCell>
               <TableCell>
-                <div className="flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => onView?.(row)}
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-brand-neutral-200 text-brand-neutral-500 hover:bg-brand-neutral-50 hover:text-brand-neutral-700 transition-colors"
-                    title="View"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    onClick={() => onEdit?.(row)}
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-brand-neutral-200 text-brand-neutral-500 hover:bg-brand-neutral-50 hover:text-brand-neutral-700 transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                <span className={
+                  row.service_type === 'application'
+                    ? 'inline-flex rounded-md bg-brand-primary-50 text-brand-primary-800 px-2 py-0.5 text-xs font-medium capitalize'
+                    : 'inline-flex rounded-md bg-violet-50 text-violet-700 px-2 py-0.5 text-xs font-medium capitalize'
+                }>{row.service_type}</span>
               </TableCell>
+              <TableCell className="text-xs text-brand-neutral-500">{fmtDate(row.created_at)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

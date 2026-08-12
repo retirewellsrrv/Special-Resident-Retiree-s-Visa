@@ -1,135 +1,192 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-    ShieldCheck,
-    Smile,
-    HeartHandshake,
-    Award,
-    Compass
-} from 'lucide-react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
-import ServiceCard from '@/components/services/service-card';
 import Hero from '@/components/public/Hero';
-import { createClient } from '@/lib/supabase/client';
-import { Database } from '@/types/supabase';
-import { LucideIcon } from 'lucide-react';
 
-const supabase = createClient();
+type PlanTier = {
+    ageRange: string;
+    pensioner: string;
+    nonPensioner?: string; // omit if same rate applies to both
+};
 
-type Service = {
-    created_at: string;
+type PlanCardProps = {
+    title: React.ReactNode;
     description: string;
-    highlighted: boolean;
-    id: number;
-    is_available: boolean;
-    name: string;
-    price: number;
-    price_note: string | null;
-    subtitle: string;
-    tags: string[];
-    type: Database["public"]["Enums"]["service_type"];
-    updated_at: string;
+    tiers: PlanTier[];
 };
 
-const iconMap: Record<string, LucideIcon> = {
-    'SRRV Classic': ShieldCheck,
-    'SRRV Smile': Smile,
-    'SRRV Human Touch': HeartHandshake,
-    'SRRV Courtesy': Award,
-};
+function PlanCard({ title, description, tiers }: PlanCardProps) {
+    return (
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col h-full">
+            <h3 className="text-lg font-bold text-[#0F172A] mb-3 text-center leading-snug">
+                {title}
+            </h3>
+            <p className="text-sm text-gray-500 mb-6 leading-relaxed text-center">
+                {description}
+            </p>
+
+            <div className="mt-auto pt-6 border-t border-gray-100 space-y-5">
+                <h4 className="text-xs font-bold text-[#9E1B32] tracking-wide uppercase">
+                    Visa Deposit
+                </h4>
+                {tiers.map((tier) => (
+                    <div key={tier.ageRange}>
+                        <p className="text-xs font-semibold text-gray-400 mb-1.5">
+                            {tier.ageRange}
+                        </p>
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">
+                                    {tier.nonPensioner ? 'Pensioner' : 'Pensioner / Non-pensioner'}
+                                </span>
+                                <span className="font-semibold text-[#0F172A]">{tier.pensioner}</span>
+                            </div>
+                            {tier.nonPensioner && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-600">Non-pensioner</span>
+                                    <span className="font-semibold text-[#0F172A]">{tier.nonPensioner}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 export default function Services() {
-    const [plans, setPlans] = useState<Service[]>([]);
-    const [loading, setLoading] = useState(true);
-
     const router = useRouter();
 
     const handleGetStarted = () => {
         router.push('/register');
     };
 
-    useEffect(() => {
-        async function fetchServices() {
-            const { data, error } = await supabase.from('service_plans').select('*');
-
-            if (error) {
-                console.error('Error fetching services:', error);
-            } else if (data) {
-                setPlans(data as Service[]);
-            }
-            setLoading(false);
-            console.log('Fetched data:', data);
-        }
-
-        fetchServices();
-    }, []);
-
-        return (
+    return (
         <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-800 flex flex-col">
 
             {/* Hero Section */}
-            <Hero title="Our Retirement Services" description="Explore our tailored visa pathways and concierge programs designed to make your transition to retiring in the Philippines entirely seamless."/>
+            <Hero
+                title="Our Retirement Services"
+                description="Discover personalized SRRV solutions and dedicated concierge programs designed to simplify your retirement journey in the Philippines. From initial consultation to application support, we provide professional guidance every step of the way to help you transition with confidence and ease."
+            />
 
-            {/* Services Grid & CTA */}
             <section className="max-w-6xl mx-auto w-full px-6 py-16 flex-grow">
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-                    {loading ? (
-                        /* Skeleton Loading State */
-                        Array.from({ length: 3 }).map((_, index) => (
-                            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col h-full animate-pulse">
-                                {/* Icon & Title Skeleton */}
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                                    <div className="flex-1">
-                                        <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
-                                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                    </div>
+                {/* What is SRRV? */}
+                <div className="bg-[#9E1B32] rounded-2xl p-8 md:p-12 text-white mb-12 shadow-md">
+                    <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">
+                        What is the Special Resident Retiree&apos;s Visa (SRRV)?
+                    </h2>
+                    <div className="space-y-4 text-white/90 text-center leading-relaxed max-w-4xl mx-auto">
+                        <p>
+                            The Special Resident Retiree&apos;s Visa (SRRV) is a special non-immigrant visa program that allows eligible foreign nationals to live in the Philippines on a long-term basis. Designed for retirees and qualified individuals, the SRRV offers a convenient pathway for those who wish to make the Philippines their second home, enjoy retirement, or establish an investment base in the country.
+                        </p>
+                        <p>
+                            The program is administered by the Philippine Retirement Authority (PRA) and offers several SRRV categories to accommodate different applicant profiles, including retirees with pensions, former Filipino citizens, and other qualified foreign nationals.
+                        </p>
+                        <p>
+                            Effective September 2025, the minimum qualifying age for eligible SRRV applicants is 40 years old, subject to the applicable PRA guidelines and requirements.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Categories Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-16">
+                    <PlanCard
+                        title="SRRV Classic"
+                        description="Ideal for both pensioners and non-pensioners, with the option to convert the required SRRV time deposit into eligible PRA-approved investments."
+                        tiers={[
+                            { ageRange: '50 years old and above', pensioner: '$15,000', nonPensioner: '$30,000' },
+                            { ageRange: '40–49 years old', pensioner: '$25,000', nonPensioner: '$50,000' },
+                        ]}
+                    />
+                    <PlanCard
+                        title={<>SRRV Courtesy<br />(Foreign Nationals)</>}
+                        description="Designed for qualified foreign nationals, including former diplomats, retired military personnel, officials of international organizations, and individuals with outstanding achievements in business, academics, arts, culture, music, sports, or philanthropy."
+                        tiers={[
+                            { ageRange: '50 years old and above', pensioner: '$1,500' },
+                            { ageRange: '40–49 years old', pensioner: '$3,000', nonPensioner: '$6,000' },
+                        ]}
+                    />
+                    <PlanCard
+                        title={<>SRRV Courtesy<br />(Former Filipinos)</>}
+                        description="Designed for former Filipino citizens who have become naturalized in another country and have not reacquired Philippine citizenship."
+                        tiers={[
+                            { ageRange: '50 years old and above', pensioner: '$1,500' },
+                            { ageRange: '40–49 years old', pensioner: '$3,000' },
+                        ]}
+                    />
+                </div>
+
+                {/* Fees Section */}
+                <div className="max-w-5xl mx-auto bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+
+                        {/* Processing Fee */}
+                        <div>
+                            <h3 className="text-xl font-bold text-[#0F172A] mb-6">
+                                PRA Processing / Service Fee{' '}
+                                <span className="text-base font-normal text-gray-500">(one time)</span>
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                                    <span className="text-gray-700">Principal:</span>
+                                    <span className="font-bold text-[#0F172A]">USD 1,500.00</span>
                                 </div>
-                                {/* Description Skeleton */}
-                                <div className="space-y-2 mb-6 flex-grow">
-                                    <div className="h-4 bg-gray-200 rounded w-full"></div>
-                                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
-                                </div>
-                                {/* Tags Skeleton */}
-                                <div className="flex gap-2 mb-6">
-                                    <div className="h-6 w-16 bg-gray-200 rounded-full"></div>
-                                    <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
-                                </div>
-                                {/* Price & Button Skeleton */}
-                                <div className="mt-auto border-t border-gray-100 pt-4">
-                                    <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                                    <div className="h-10 bg-gray-200 rounded w-full"></div>
+                                <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                                    <span className="text-gray-700">Dependent:</span>
+                                    <span className="font-bold text-[#0F172A]">
+                                        USD 300.00{' '}
+                                        <span className="text-sm font-normal text-gray-500">each dependent</span>
+                                    </span>
                                 </div>
                             </div>
-                        ))
-                    ) : plans.length === 0 ? (
-                        <div className="col-span-full text-center py-12 text-gray-500">
-                            No services available at the moment.
                         </div>
-                    ) : (
-                        plans.map((service) => {
-                            const IconComponent = iconMap[service.name] || Compass;
 
-                            return (
-                                <ServiceCard
-                                    key={service.id}
-                                    id={service.id}
-                                    name={service.name}
-                                    subtitle={service.subtitle}
-                                    description={service.description}
-                                    price={service.price}
-                                    price_note={service.price_note}
-                                    tags={service.tags}
-                                    icon={<IconComponent className="w-6 h-6 text-[#9E1B32]" />}
-                                    onConsultClick={() => router.push('/consult')}
-                                />
-                            );
-                        })
-                    )}
+                        {/* Annual Fee */}
+                        <div>
+                            <h3 className="text-xl font-bold text-[#0F172A] mb-6">PRA Annual Fee</h3>
+                            <div className="space-y-5">
+                                <div className="flex items-start gap-3">
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
+                                    <div>
+                                        <p className="text-gray-900">
+                                            <span className="font-bold">SRRV Classic</span> — USD 360.00
+                                        </p>
+                                        <p className="text-sm text-gray-500 italic">
+                                            (Additional USD 100.00 for each dependent in excess of two)
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
+                                    <div>
+                                        <p className="text-gray-900">
+                                            <span className="font-bold">SRRV Courtesy for Foreign Nationals</span> — USD 100.00
+                                        </p>
+                                        <p className="text-sm text-gray-500 italic">
+                                            (Additional USD 10.00 for each dependent in excess of two)
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
+                                    <div>
+                                        <p className="text-gray-900">
+                                            <span className="font-bold">SRRV Courtesy for Former Filipinos</span> — USD 50.00
+                                        </p>
+                                        <p className="text-sm text-gray-500 italic">
+                                            (Additional USD 10.00 for each dependent in excess of two)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 {/* Dynamic CTA Banner */}
@@ -156,104 +213,6 @@ export default function Services() {
                     </div>
                 </div>
 
-            </section>
-
-            {/* Section 2: The Visa Deposit Framework */}
-            <section className="max-w-6xl mx-auto w-full px-6 py-16">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl font-serif text-[#0F172A] mb-4">The Visa Deposit Framework</h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">
-                        The deposit requirement depends entirely on your age and whether you have a guaranteed lifetime pension.
-                    </p>
-                </div>
-
-                <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-[#0F172A] text-white">
-                                <th className="px-5 py-4 text-left font-semibold">Category</th>
-                                <th className="px-5 py-4 text-left font-semibold">Age Bracket</th>
-                                <th className="px-5 py-4 text-left font-semibold">With Qualifying Pension*</th>
-                                <th className="px-5 py-4 text-left font-semibold">Without Pension</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {[
-                                ['SRRV Classic', '50+ years old', '$15,000', '$30,000'],
-                                ['SRRV Classic', '40–49 years old', '$25,000', '$50,000'],
-                                ['SRRV Courtesy (Former Filipinos)', '40+ years old', '$1,500 to $3,000', '$1,500 to $3,000'],
-                                ['SRRV Courtesy (Foreign Diplomats/Military)', '40+ years old', '$1,500 to $3,000', '$1,500 to $6,000'],
-                            ].map((row, i) => (
-                                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                                    {row.map((cell, j) => (
-                                        <td key={j} className="px-5 py-4 text-gray-700 whitespace-nowrap">
-                                            {cell}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <p className="mt-4 text-xs text-gray-500 italic">
-                    *Qualifying Pension: Must be a lifetime monthly benefit of at least $800 for single applicants, or $1,000 for couples.
-                </p>
-            </section>
-
-            {/* Section 3: Mandatory Government & Processing Fees */}
-            <section className="max-w-6xl mx-auto w-full px-6 py-16 border-t border-gray-200">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl font-serif text-[#0F172A] mb-4">Mandatory Government &amp; Processing Fees</h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">
-                        The following fees are required by the Philippine Retirement Authority (PRA) for processing your SRRV application.
-                    </p>
-                </div>
-
-                <div className="max-w-3xl mx-auto space-y-8">
-                    {/* PRA Processing Fee */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                        <h3 className="text-xl font-serif text-[#0F172A] mb-4">PRA Processing Fee (One-Time Payment)</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-gray-700">Principal Applicant</span>
-                                <span className="font-semibold text-[#0F172A]">$1,500</span>
-                            </div>
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-gray-700">Dependent (Spouse or Child)</span>
-                                <span className="font-semibold text-[#0F172A]">$300 per person</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* PRA Annual Fee */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                        <h3 className="text-xl font-serif text-[#0F172A] mb-4">PRA Annual Fee</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-gray-700">Principal + up to 2 dependents</span>
-                                <span className="font-semibold text-[#0F172A]">$360 per year</span>
-                            </div>
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-gray-700">Additional dependents (beyond first two)</span>
-                                <span className="font-semibold text-[#0F172A]">$100 per year</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Advisory Callout */}
-                <div className="max-w-3xl mx-auto mt-10 bg-amber-50 border border-amber-200 rounded-xl p-6 flex items-start gap-4">
-                    <span className="text-2xl shrink-0 mt-0.5">🛠️</span>
-                    <div>
-                        <h4 className="font-bold text-[#0F172A] mb-1">Let Retire Well Review Your Case</h4>
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                            Before you wire a single dollar, the team at Retire Well pre-vets your financial and pension documents
-                            to ensure they meet strict Philippine Retirement Authority (PRA) standards, protecting you from costly
-                            processing delays.
-                        </p>
-                    </div>
-                </div>
             </section>
 
             <Footer />

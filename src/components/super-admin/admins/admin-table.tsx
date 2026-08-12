@@ -2,14 +2,12 @@
 
 import { useState, useTransition, useMemo } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, Loader2, Ban, CheckCircle, Shield, Mail, MailX, Search, X } from 'lucide-react'
+import { Plus, Trash2, Loader2, Ban, CheckCircle, Shield, Mail, MailX, Inbox, SearchX } from 'lucide-react'
 import type { AdminWithUser } from '@/actions/admin/admins'
 import { createAdmin, toggleAdminActive, deleteAdmin } from '@/actions/admin/admins'
 import { Input } from '@/components/ui/input'
-import { useDebounce } from '@/hooks/use-debounce'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { FilterBar, FilterInput, FilterSelect, FilterClear } from '@/components/admin/shared/filters'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription,
@@ -78,54 +76,46 @@ export function AdminTable({ admins }: Props) {
   }
 
   const [searchQuery, setSearchQuery] = useState('')
-  const debouncedSearch = useDebounce(searchQuery, 300)
   const [statusFilter, setStatusFilter] = useState('all')
 
   const filteredAdmins = useMemo(() => {
     return admins.filter((admin) => {
-      const matchesSearch = !debouncedSearch ||
-        admin.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        admin.email.toLowerCase().includes(debouncedSearch.toLowerCase())
+      const matchesSearch = !searchQuery ||
+        admin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        admin.email.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === 'all' ||
         (statusFilter === 'active' && admin.is_active) ||
         (statusFilter === 'inactive' && !admin.is_active)
       return matchesSearch && matchesStatus
     })
-  }, [admins, debouncedSearch, statusFilter])
+  }, [admins, searchQuery, statusFilter])
+
+  function handleClear() {
+    setSearchQuery('')
+    setStatusFilter('all')
+  }
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-neutral-400" />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 w-full pl-8 pr-8 rounded-lg border border-brand-neutral-200 bg-white text-sm text-brand-neutral-900 outline-none focus:border-brand-primary-600 focus:ring-2 focus:ring-brand-primary-600/10 transition-all placeholder:text-brand-neutral-300"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-neutral-400 hover:text-brand-neutral-600"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-9 w-36 rounded-lg border-brand-neutral-200">
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterBar>
+        <FilterInput
+          label="Search"
+          placeholder="Search by name or email..."
+          defaultValue={searchQuery}
+          onChange={setSearchQuery}
+        />
+        <FilterSelect
+          label="Status"
+          placeholder="All Status"
+          value={statusFilter}
+          options={[
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+          ]}
+          onChange={setStatusFilter}
+        />
+        <FilterClear onClick={handleClear} />
+      </FilterBar>
 
       {/* Create dialog */}
       <div className="flex justify-end">
@@ -196,40 +186,53 @@ export function AdminTable({ admins }: Props) {
 
       {/* Table */}
       <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="bg-brand-neutral-50 border-b border-brand-neutral-200">
-              <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Admin</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Email</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Email Verified</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Created</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-brand-neutral-100">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-brand-neutral-100">
+          <span className="text-sm font-medium text-brand-neutral-900">Admin Accounts</span>
+          <span className="text-xs text-brand-neutral-500">{filteredAdmins.length} of {admins.length} records</span>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-brand-neutral-50 border-b border-brand-neutral-200">
+              <TableHead className="text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Admin</TableHead>
+              <TableHead className="text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Email</TableHead>
+              <TableHead className="text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Status</TableHead>
+              <TableHead className="text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Email Verified</TableHead>
+              <TableHead className="text-xs font-medium text-brand-neutral-400 uppercase tracking-wider">Created</TableHead>
+              <TableHead className="text-xs font-medium text-brand-neutral-400 uppercase tracking-wider text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filteredAdmins.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-sm text-brand-neutral-400">
-                  {searchQuery || statusFilter !== 'all' ? 'No admins match your filters.' : 'No admin accounts yet. Click "Add Admin" to create one.'}
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-2">
+                    {searchQuery || statusFilter !== 'all' ? (
+                      <SearchX className="size-8 text-brand-neutral-300" />
+                    ) : (
+                      <Inbox className="size-8 text-brand-neutral-300" />
+                    )}
+                    <p className="text-sm text-brand-neutral-400">
+                      {searchQuery || statusFilter !== 'all' ? 'No admins match your filters.' : 'No admin accounts yet. Click "Add Admin" to create one.'}
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
             ) : (
               filteredAdmins.map((admin) => {
                 const isBusy = deletingId === admin.user_id || togglingId === admin.user_id
 
                 return (
-                  <tr key={admin.user_id} className={`${deletingId === admin.user_id ? 'opacity-40' : ''} hover:bg-brand-neutral-50/50 transition-colors`}>
-                    <td className="px-4 py-3">
+                  <TableRow key={admin.user_id} className={`${deletingId === admin.user_id ? 'opacity-40' : ''} [&>td]:px-4 [&>td]:py-3`}>
+                    <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex size-8 items-center justify-center rounded-full bg-brand-primary-50 text-brand-primary-700">
                           <Shield className="size-4" />
                         </div>
                         <span className="font-medium text-brand-neutral-900">{admin.name}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-brand-neutral-500">{admin.email}</td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="text-brand-neutral-500">{admin.email}</TableCell>
+                    <TableCell>
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
                           admin.is_active
@@ -240,8 +243,8 @@ export function AdminTable({ admins }: Props) {
                         <span className={`size-1.5 rounded-full ${admin.is_active ? 'bg-green-500' : 'bg-brand-neutral-300'}`} />
                         {admin.is_active ? 'Active' : 'Inactive'}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       {admin.email_confirmed ? (
                         <span className="inline-flex items-center gap-1.5 text-xs text-green-600">
                           <Mail className="size-3.5" />
@@ -253,13 +256,13 @@ export function AdminTable({ admins }: Props) {
                           Pending
                         </span>
                       )}
-                    </td>
-                    <td className="px-4 py-3 text-brand-neutral-400 text-xs">
+                    </TableCell>
+                    <TableCell className="text-brand-neutral-400 text-xs">
                       {new Date(admin.created_at).toLocaleDateString('en-US', {
                         year: 'numeric', month: 'short', day: 'numeric',
                       })}
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleToggle(admin.user_id, admin.is_active)}
@@ -302,13 +305,13 @@ export function AdminTable({ admins }: Props) {
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   )

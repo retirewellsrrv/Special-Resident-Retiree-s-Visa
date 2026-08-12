@@ -11,6 +11,7 @@ export type PaymentRow = {
   status: string
   payment_method: string
   transaction_code: string
+  service_type: string
   created_at: string
 }
 
@@ -21,14 +22,16 @@ export type PaymentStats = {
   refunded: number
   refundAmt: number
   total: number
+  revenueApplication: number
+  revenueConsultation: number
 }
 
 export const getPaymentStats = unstable_cache(
   async (): Promise<PaymentStats> => {
   const supabase = createAdminClient();
 
-  const { data } = await supabase.from("payments").select("status, amount");
-  const all = (data ?? []) as { status: string; amount: number }[];
+  const { data } = await supabase.from("payments").select("status, amount, service_type");
+  const all = (data ?? []) as { status: string; amount: number; service_type: string }[];
   const completed = all.filter((r) => r.status === "success");
   const refunded = all.filter((r) => r.status === "cancelled");
 
@@ -39,6 +42,12 @@ export const getPaymentStats = unstable_cache(
     refunded: refunded.length,
     refundAmt: refunded.reduce((a, r) => a + Number(r.amount), 0),
     total: all.length,
+    revenueApplication: completed
+      .filter((r) => r.service_type === "application")
+      .reduce((a, r) => a + Number(r.amount), 0),
+    revenueConsultation: completed
+      .filter((r) => r.service_type === "consultation")
+      .reduce((a, r) => a + Number(r.amount), 0),
   };
 },
   ["admin-payments-stats"],
@@ -54,6 +63,7 @@ export async function getPayments({
   limit = 10,
   status,
   method,
+  type,
   code,
   name,
   search,
@@ -62,6 +72,7 @@ export async function getPayments({
   limit?: number
   status?: string
   method?: string
+  type?: string
   code?: string
   name?: string
   search?: string
@@ -72,13 +83,16 @@ export async function getPayments({
 
   let query = supabase
     .from("payments")
-    .select("id, amount, status, payment_method, transaction_code, created_at, user_id", { count: "exact" })
+    .select("id, amount, status, payment_method, transaction_code, service_type, created_at, user_id", { count: "exact" })
 
   if (status && status !== "all") {
     query = query.eq("status", status as Database["public"]["Enums"]["payment_status"])
   }
   if (method && method !== "all") {
     query = query.eq("payment_method", method as Database["public"]["Enums"]["payment_methods"])
+  }
+  if (type && type !== "all") {
+    query = query.eq("service_type", type as Database["public"]["Enums"]["service_type"])
   }
   if (code) {
     query = query.ilike("transaction_code", `%${escapeSearch(code)}%`)
@@ -135,6 +149,7 @@ export async function getPayments({
     status: r.status,
     payment_method: r.payment_method,
     transaction_code: r.transaction_code,
+    service_type: r.service_type,
     created_at: r.created_at,
   }));
 

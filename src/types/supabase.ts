@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          admin_user_id: string
+          created_at: string
+          id: number
+          is_read: boolean
+          link: string | null
+          notification: string
+          type: string | null
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string
+          id?: never
+          is_read?: boolean
+          link?: string | null
+          notification: string
+          type?: string | null
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string
+          id?: never
+          is_read?: boolean
+          link?: string | null
+          notification?: string
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notifications_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       admin_profiles: {
         Row: {
           is_active: boolean | null
@@ -32,81 +70,110 @@ export type Database = {
         }
         Relationships: []
       }
+      applicant_profiles: {
+        Row: {
+          application_id: number | null
+          civil_status: Database["public"]["Enums"]["marital_status"]
+          date_of_birth: string
+          first_name: string
+          gender: Database["public"]["Enums"]["sex"]
+          height: number
+          id: number
+          last_name: string
+          middle_name: string | null
+          nationality: string
+          place_of_birth: string
+          religion: string
+          weight: number
+        }
+        Insert: {
+          application_id?: number | null
+          civil_status: Database["public"]["Enums"]["marital_status"]
+          date_of_birth: string
+          first_name: string
+          gender: Database["public"]["Enums"]["sex"]
+          height: number
+          id?: number
+          last_name: string
+          middle_name?: string | null
+          nationality: string
+          place_of_birth: string
+          religion: string
+          weight: number
+        }
+        Update: {
+          application_id?: number | null
+          civil_status?: Database["public"]["Enums"]["marital_status"]
+          date_of_birth?: string
+          first_name?: string
+          gender?: Database["public"]["Enums"]["sex"]
+          height?: number
+          id?: number
+          last_name?: string
+          middle_name?: string | null
+          nationality?: string
+          place_of_birth?: string
+          religion?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_profiles_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_code: string
-          city: string
-          country: string
+          consultation_id: number
           created_at: string
-          emergency_name: string | null
-          emergency_phone: string | null
-          emergency_relationship: string | null
+          future_plans: string | null
           id: number
           payment_id: number | null
-          ph_address: string | null
-          phone_number: string
-          service_type: Database["public"]["Enums"]["service_type"]
-          state: string
           status: Database["public"]["Enums"]["application_status"]
-          street: string
           updated_at: string
           user_id: string
-          zip: string
         }
         Insert: {
           application_code: string
-          city: string
-          country: string
+          consultation_id: number
           created_at?: string
-          emergency_name?: string | null
-          emergency_phone?: string | null
-          emergency_relationship?: string | null
+          future_plans?: string | null
           id?: number
           payment_id?: number | null
-          ph_address?: string | null
-          phone_number: string
-          service_type: Database["public"]["Enums"]["service_type"]
-          state: string
           status?: Database["public"]["Enums"]["application_status"]
-          street: string
           updated_at?: string
           user_id: string
-          zip: string
         }
         Update: {
           application_code?: string
-          city?: string
-          country?: string
+          consultation_id?: number
           created_at?: string
-          emergency_name?: string | null
-          emergency_phone?: string | null
-          emergency_relationship?: string | null
+          future_plans?: string | null
           id?: number
           payment_id?: number | null
-          ph_address?: string | null
-          phone_number?: string
-          service_type?: Database["public"]["Enums"]["service_type"]
-          state?: string
           status?: Database["public"]["Enums"]["application_status"]
-          street?: string
           updated_at?: string
           user_id?: string
-          zip?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "applications_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: true
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "applications_payment_id_fkey"
             columns: ["payment_id"]
             isOneToOne: false
             referencedRelation: "payments"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "applications_service_type_fkey"
-            columns: ["service_type"]
-            isOneToOne: false
-            referencedRelation: "service_plans"
-            referencedColumns: ["type"]
           },
           {
             foreignKeyName: "applications_user_id_fkey"
@@ -146,6 +213,139 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      consultations: {
+        Row: {
+          created_at: string
+          id: number
+          meeting_date: string
+          mode_communication: Database["public"]["Enums"]["communication_mode"]
+          payment_id: number | null
+          purpose: string
+          status: Database["public"]["Enums"]["consultation_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          meeting_date: string
+          mode_communication: Database["public"]["Enums"]["communication_mode"]
+          payment_id?: number | null
+          purpose: string
+          status?: Database["public"]["Enums"]["consultation_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          meeting_date?: string
+          mode_communication?: Database["public"]["Enums"]["communication_mode"]
+          payment_id?: number | null
+          purpose?: string
+          status?: Database["public"]["Enums"]["consultation_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "client_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "consultations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          application_id: number | null
+          email: string
+          fax_no: string | null
+          home_country_address: string
+          id: number
+          mobile_no: string
+          primary_address_ph: string | null
+          secondary_address_ph: string | null
+          tel_no: string | null
+        }
+        Insert: {
+          application_id?: number | null
+          email: string
+          fax_no?: string | null
+          home_country_address: string
+          id?: number
+          mobile_no: string
+          primary_address_ph?: string | null
+          secondary_address_ph?: string | null
+          tel_no?: string | null
+        }
+        Update: {
+          application_id?: number | null
+          email?: string
+          fax_no?: string | null
+          home_country_address?: string
+          id?: number
+          mobile_no?: string
+          primary_address_ph?: string | null
+          secondary_address_ph?: string | null
+          tel_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dependents: {
+        Row: {
+          age: number
+          application_id: number | null
+          id: number
+          is_included: boolean
+          name: string
+          passport_no: string
+          relationship: string
+        }
+        Insert: {
+          age: number
+          application_id?: number | null
+          id?: number
+          is_included?: boolean
+          name: string
+          passport_no: string
+          relationship: string
+        }
+        Update: {
+          age?: number
+          application_id?: number | null
+          id?: number
+          is_included?: boolean
+          name?: string
+          passport_no?: string
+          relationship?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dependents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -194,23 +394,181 @@ export type Database = {
           },
         ]
       }
+      educations: {
+        Row: {
+          application_id: number | null
+          educ_attainment: string
+          from_date: string
+          id: number
+          location: string
+          school: string
+          to_date: string
+        }
+        Insert: {
+          application_id?: number | null
+          educ_attainment: string
+          from_date: string
+          id?: number
+          location: string
+          school: string
+          to_date: string
+        }
+        Update: {
+          application_id?: number | null
+          educ_attainment?: string
+          from_date?: string
+          id?: number
+          location?: string
+          school?: string
+          to_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "educations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_contacts: {
+        Row: {
+          application_id: number | null
+          id: number
+          name: string
+          phone_no: string
+          relationship: string
+        }
+        Insert: {
+          application_id?: number | null
+          id?: number
+          name: string
+          phone_no: string
+          relationship: string
+        }
+        Update: {
+          application_id?: number | null
+          id?: number
+          name?: string
+          phone_no?: string
+          relationship?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employments: {
+        Row: {
+          application_id: number | null
+          company_address: string | null
+          company_name: string | null
+          contact_no: string | null
+          from_date: string | null
+          id: number
+          is_current: boolean | null
+          job_title: string | null
+          to_date: string | null
+        }
+        Insert: {
+          application_id?: number | null
+          company_address?: string | null
+          company_name?: string | null
+          contact_no?: string | null
+          from_date?: string | null
+          id?: number
+          is_current?: boolean | null
+          job_title?: string | null
+          to_date?: string | null
+        }
+        Update: {
+          application_id?: number | null
+          company_address?: string | null
+          company_name?: string | null
+          contact_no?: string | null
+          from_date?: string | null
+          id?: number
+          is_current?: boolean | null
+          job_title?: string | null
+          to_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employments_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_backgrounds: {
+        Row: {
+          application_id: number | null
+          father_age: number | null
+          father_name: string
+          id: number
+          mother_age: number | null
+          mother_name: string
+        }
+        Insert: {
+          application_id?: number | null
+          father_age?: number | null
+          father_name: string
+          id?: number
+          mother_age?: number | null
+          mother_name: string
+        }
+        Update: {
+          application_id?: number | null
+          father_age?: number | null
+          father_name?: string
+          id?: number
+          mother_age?: number | null
+          mother_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_backgrounds_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
+          created_at: string
           id: number
           is_read: boolean
+          link: string | null
           notification: string
+          type: string | null
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: number
           is_read?: boolean
+          link?: string | null
           notification: string
+          type?: string | null
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: number
           is_read?: boolean
+          link?: string | null
           notification?: string
+          type?: string | null
           user_id?: string
         }
         Relationships: [
@@ -223,12 +581,48 @@ export type Database = {
           },
         ]
       }
+      passports: {
+        Row: {
+          application_id: number | null
+          date_of_issue: string
+          expiration: string
+          id: number
+          passport_number: string
+          place_of_issue: string
+        }
+        Insert: {
+          application_id?: number | null
+          date_of_issue: string
+          expiration: string
+          id?: number
+          passport_number: string
+          place_of_issue: string
+        }
+        Update: {
+          application_id?: number | null
+          date_of_issue?: string
+          expiration?: string
+          id?: number
+          passport_number?: string
+          place_of_issue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passports_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
           created_at: string
           id: number
           payment_method: Database["public"]["Enums"]["payment_methods"]
+          service_type: Database["public"]["Enums"]["service_type"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
           updated_at: string
@@ -239,6 +633,7 @@ export type Database = {
           created_at: string
           id?: number
           payment_method: Database["public"]["Enums"]["payment_methods"]
+          service_type: Database["public"]["Enums"]["service_type"]
           status: Database["public"]["Enums"]["payment_status"]
           transaction_code: string
           updated_at?: string
@@ -249,6 +644,7 @@ export type Database = {
           created_at?: string
           id?: number
           payment_method?: Database["public"]["Enums"]["payment_methods"]
+          service_type?: Database["public"]["Enums"]["service_type"]
           status?: Database["public"]["Enums"]["payment_status"]
           transaction_code?: string
           updated_at?: string
@@ -276,7 +672,6 @@ export type Database = {
           price_note: string | null
           subtitle: string
           tags: string[]
-          type: Database["public"]["Enums"]["service_type"]
           updated_at: string
         }
         Insert: {
@@ -290,7 +685,6 @@ export type Database = {
           price_note?: string | null
           subtitle: string
           tags?: string[]
-          type: Database["public"]["Enums"]["service_type"]
           updated_at?: string
         }
         Update: {
@@ -304,7 +698,6 @@ export type Database = {
           price_note?: string | null
           subtitle?: string
           tags?: string[]
-          type?: Database["public"]["Enums"]["service_type"]
           updated_at?: string
         }
         Relationships: []
@@ -324,6 +717,38 @@ export type Database = {
         }
         Relationships: []
       }
+      visa_details: {
+        Row: {
+          application_id: number | null
+          date_of_arrival: string | null
+          entry_visa_type: string | null
+          exp_date_tourist_visa: string | null
+          id: number
+        }
+        Insert: {
+          application_id?: number | null
+          date_of_arrival?: string | null
+          entry_visa_type?: string | null
+          exp_date_tourist_visa?: string | null
+          id?: number
+        }
+        Update: {
+          application_id?: number | null
+          date_of_arrival?: string | null
+          entry_visa_type?: string | null
+          exp_date_tourist_visa?: string | null
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_details_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -338,6 +763,14 @@ export type Database = {
         | "approved"
         | "rejected"
         | "pending"
+        | "payment_failed"
+      communication_mode:
+        | "zoom_meeting"
+        | "google_meet"
+        | "whatsApp"
+        | "face_2_face"
+        | "phone_call"
+      consultation_status: "processing" | "accepted" | "rejected" | "pending"
       document_format:
         | "pdf"
         | "doc"
@@ -356,7 +789,17 @@ export type Database = {
         | "rejected"
         | "action need"
         | "pending"
-      document_type: "passport" | "visa" | "nbi" | "pension" | "medical"
+      document_type:
+        | "passport"
+        | "photo_2x2"
+        | "pra_application"
+        | "police"
+        | "medical"
+        | "bicc"
+        | "bank_cert"
+        | "proof_payment"
+        | "proof_pension"
+        | "proof_relationship"
       marital_status: "single" | "married" | "widowed" | "divorced"
       payment_methods:
         | "pool"
@@ -376,7 +819,7 @@ export type Database = {
         | "cancelled"
         | "success"
         | "failed"
-      service_type: "basic" | "premium" | "vip"
+      service_type: "application" | "consultation"
       sex: "male" | "female"
     }
     CompositeTypes: {
@@ -511,7 +954,16 @@ export const Constants = {
         "approved",
         "rejected",
         "pending",
+        "payment_failed",
       ],
+      communication_mode: [
+        "zoom_meeting",
+        "google_meet",
+        "whatsApp",
+        "face_2_face",
+        "phone_call",
+      ],
+      consultation_status: ["processing", "accepted", "rejected", "pending"],
       document_format: [
         "pdf",
         "doc",
@@ -532,7 +984,18 @@ export const Constants = {
         "action need",
         "pending",
       ],
-      document_type: ["passport", "visa", "nbi", "pension", "medical"],
+      document_type: [
+        "passport",
+        "photo_2x2",
+        "pra_application",
+        "police",
+        "medical",
+        "bicc",
+        "bank_cert",
+        "proof_payment",
+        "proof_pension",
+        "proof_relationship",
+      ],
       marital_status: ["single", "married", "widowed", "divorced"],
       payment_methods: [
         "pool",
@@ -554,7 +1017,7 @@ export const Constants = {
         "success",
         "failed",
       ],
-      service_type: ["basic", "premium", "vip"],
+      service_type: ["application", "consultation"],
       sex: ["male", "female"],
     },
   },

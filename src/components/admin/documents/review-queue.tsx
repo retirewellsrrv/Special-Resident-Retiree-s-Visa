@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, FileIcon } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileIcon, Inbox, Plus, MessageSquare } from 'lucide-react'
+import Link from 'next/link'
 import { StatusChip } from '@/components/ui/status-chip'
 import type { DocumentForReview, ReviewStats } from '@/actions/admin/documents'
 
@@ -110,8 +111,15 @@ export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortCha
 
       <div className="flex-1 overflow-y-auto divide-y divide-brand-neutral-50">
         {docs.length === 0 ? (
-          <div className="px-4 py-12 text-center text-sm text-brand-neutral-400">
-            No documents to review.
+          <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
+            <Inbox className="size-10 text-brand-neutral-300" />
+            <p className="text-sm text-brand-neutral-400">No documents to review.</p>
+            <Link
+              href="/admin/dashboard"
+              className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+            >
+              <Plus className="h-4 w-4" /> Back to Dashboard
+            </Link>
           </div>
         ) : (
           grouped.map(([userId, group]) => {
@@ -167,7 +175,12 @@ export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortCha
                         <p className="text-[11px] text-brand-neutral-400 truncate mt-0.5">{doc.name}</p>
                         <p className="text-[10px] text-brand-neutral-300 truncate mt-0.5">{doc.application_code}</p>
                       </div>
-                      <StatusChip status={doc.status} className="shrink-0" />
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {doc.review_note && doc.review_note.length > 0 && (
+                          <MessageSquare className="h-3 w-3 text-amber-500" />
+                        )}
+                        <StatusChip status={doc.status} />
+                      </div>
                     </button>
                   )
                 })}

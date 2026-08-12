@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 export const servicePlanSchema = z.object({
-  type: z.enum(['basic', 'premium', 'vip']),
   name: z.string().min(1, 'Name is required').max(100),
   subtitle: z.string().min(1, 'Subtitle is required').max(200),
   price: z.coerce
