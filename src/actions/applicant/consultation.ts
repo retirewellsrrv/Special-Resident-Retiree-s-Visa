@@ -8,6 +8,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUserServer } from "@/utils/auth/getUser";
 import { consultationFormSchema } from "@/schemas/consultation";
 import xenditClient from "@/lib/xendit";
+import { assertPaymentRedirectsReady } from "@/lib/payment-redirect-check";
 import { sendConsultationEmailToAdmin } from "@/lib/mailer";
 import type { Database } from "@/types/supabase";
 
@@ -73,6 +74,11 @@ export async function submitConsultationAction(
   const user = await getUserServer();
   if (!user) {
     return { error: "Unauthorized", fieldErrors: null, success: false };
+  }
+
+  const paymentErrorMsg = await assertPaymentRedirectsReady();
+  if (paymentErrorMsg) {
+    return { error: paymentErrorMsg, fieldErrors: null, success: false };
   }
 
   const supabase = await createClient();
@@ -227,6 +233,15 @@ export async function submitConsultationAction(
     };
   }
 
+  const { error: linkError } = await supabase
+    .from("consultations")
+    .update({ payment_id: payment.id })
+    .eq("id", savedConsultation.id);
+
+  if (linkError) {
+    return { error: linkError.message, fieldErrors: null, success: false };
+  }
+
   // ── Create Xendit invoice ───────────────────────────────────────────────
   const headersList = await headers();
   const origin = headersList.get("origin") ?? "http://localhost:3000";
@@ -277,6 +292,9 @@ export async function retryConsultationPaymentAction(
   const user = await getUserServer();
   if (!user) return { error: "Unauthorized", success: false };
 
+  const paymentErrorMsg = await assertPaymentRedirectsReady();
+  if (paymentErrorMsg) return { error: paymentErrorMsg, success: false };
+
   const supabase = await createClient();
 
   const { data: consultation } = await supabase
@@ -321,6 +339,15 @@ export async function retryConsultationPaymentAction(
       error: paymentError?.message ?? "Failed to create payment",
       success: false,
     };
+  }
+
+  const { error: linkError } = await supabase
+    .from("consultations")
+    .update({ payment_id: payment.id })
+    .eq("id", consultation.id);
+
+  if (linkError) {
+    return { error: linkError.message, success: false };
   }
 
   const headersList = await headers();
