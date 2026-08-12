@@ -12,6 +12,7 @@ import {
 import type { Database } from "@/types/supabase";
 import { getUserServer } from "@/utils/auth/getUser";
 import xenditClient from "@/lib/xendit";
+import { assertPaymentRedirectsReady } from "@/lib/payment-redirect-check";
 import { sendApplicationSubmissionEmailToAdmin } from "@/lib/mailer";
 import { randomUUID } from "crypto";
 
@@ -599,6 +600,9 @@ export async function retryPaymentAction(
   const user = await getUserServer();
   if (!user) return { error: "Unauthorized", success: false };
 
+  const paymentErrorMsg = await assertPaymentRedirectsReady();
+  if (paymentErrorMsg) return { error: paymentErrorMsg, success: false };
+
   const supabase = await createClient();
 
   const { data: app } = await supabase
@@ -698,6 +702,9 @@ export async function submitApplication(
 ): Promise<SubmitState> {
   const user = await getUserServer();
   if (!user) return { error: "Unauthorized", success: false };
+
+  const paymentErrorMsg = await assertPaymentRedirectsReady();
+  if (paymentErrorMsg) return { error: paymentErrorMsg, success: false };
 
   const supabase = await createClient();
 
