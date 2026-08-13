@@ -6,6 +6,7 @@ import type { Database } from "@/types/supabase";
 import { ApplicationStatusEnum } from "@/schemas/client-profiles";
 import { withAdmin } from "@/utils/auth/with-admin";
 import { sendApplicationStatusEmailToApplicant } from "@/lib/mailer";
+import type { NotificationType } from "@/lib/notification-types";
 
 export type AppRow = {
     id: number
@@ -571,7 +572,7 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
     user_id: app.user_id,
     notification: applicationStatusMessage(app.application_code, target),
     is_read: false,
-    type: "application_status",
+    type: "application_status" satisfies NotificationType,
     link: "/applicant/application",
     created_at: new Date().toISOString(),
   });

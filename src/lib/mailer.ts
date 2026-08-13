@@ -78,24 +78,46 @@ async function sendEmail({
     return;
   }
 
-  const res = await fetch(RESEND_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      reply_to: replyTo,
-      subject,
-      html,
-    }),
-  });
+  // Best-effort with a single retry on transient failures (network errors,
+  // 5xx, 429). Never throws — callers must not be blocked by email problems.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(RESEND_API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to,
+          reply_to: replyTo,
+          subject,
+          html,
+        }),
+      });
 
-  if (!res.ok) {
-    const body = await res.text();
-    console.error("[mailer] Failed to send email:", res.status, body);
+      if (res.ok) return;
+
+      const body = await res.text();
+      console.error(
+        `[mailer] Failed to send email (attempt ${attempt}/2):`,
+        res.status,
+        body,
+      );
+
+      // Non-transient errors won't improve on retry.
+      if (res.status < 500 && res.status !== 429) return;
+    } catch (err) {
+      console.error(
+        `[mailer] Email request error (attempt ${attempt}/2):`,
+        err,
+      );
+    }
+
+    if (attempt === 1) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
   }
 }
 

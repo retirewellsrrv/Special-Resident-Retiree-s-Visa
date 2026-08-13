@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, CheckCheck, Loader2, Inbox, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
+import { Bell, CheckCheck, Loader2, Inbox, ExternalLink, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   getMyNotifications,
@@ -10,10 +11,11 @@ import {
   markNotificationRead,
 } from '@/actions/applicant/notifications'
 import type { NotificationItem } from '@/actions/applicant/notifications'
+import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications'
 import { formatRelativeTime } from '@/lib/format-time'
 import { cn } from '@/lib/utils'
 
-export function NotificationBell() {
+export function NotificationBell({ userId }: { userId?: string | null }) {
   const router = useRouter()
   const [items, setItems] = useState<NotificationItem[]>([])
   const [open, setOpen] = useState(false)
@@ -23,6 +25,13 @@ export function NotificationBell() {
 
   const unread = items.filter((n) => !n.is_read).length
 
+  async function load() {
+    const res = await getMyNotifications()
+    setItems(res.items)
+    setLoading(false)
+  }
+
+  // Refresh when opening the dropdown (fallback for missed/offline events)
   useEffect(() => {
     let active = true
     getMyNotifications().then((res) => {
@@ -34,6 +43,14 @@ export function NotificationBell() {
       active = false
     }
   }, [open])
+
+  // Live badge: refetch whenever a new notification is inserted
+  useRealtimeNotifications({
+    userId,
+    table: 'notifications',
+    filterColumn: 'user_id',
+    onEvent: load,
+  })
 
   // Close the dropdown when clicking outside
   useEffect(() => {
@@ -147,6 +164,15 @@ export function NotificationBell() {
               </ul>
             )}
           </div>
+
+          <Link
+            href="/applicant/notifications"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center gap-1 border-t border-brand-neutral-100 px-4 py-2.5 text-xs font-medium text-brand-primary-700 hover:bg-brand-neutral-50"
+          >
+            View all notifications
+            <ArrowRight className="size-3.5" />
+          </Link>
         </div>
       )}
     </div>

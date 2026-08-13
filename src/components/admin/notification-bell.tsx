@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, CheckCheck, Loader2, Inbox, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
+import { Bell, CheckCheck, Loader2, Inbox, ExternalLink, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   getAdminNotifications,
@@ -10,10 +11,11 @@ import {
   markAdminNotificationRead,
 } from '@/actions/admin/notifications'
 import type { AdminNotificationItem } from '@/actions/admin/notifications'
+import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications'
 import { formatRelativeTime } from '@/lib/format-time'
 import { cn } from '@/lib/utils'
 
-export function AdminNotificationBell() {
+export function AdminNotificationBell({ userId }: { userId?: string | null }) {
   const router = useRouter()
   const [items, setItems] = useState<AdminNotificationItem[]>([])
   const [open, setOpen] = useState(false)
@@ -23,6 +25,13 @@ export function AdminNotificationBell() {
 
   const unread = items.filter((n) => !n.is_read).length
 
+  async function load() {
+    const res = await getAdminNotifications()
+    setItems(res.items)
+    setLoading(false)
+  }
+
+  // Refresh when opening the dropdown (fallback for missed/offline events)
   useEffect(() => {
     let active = true
     getAdminNotifications().then((res) => {
@@ -34,6 +43,14 @@ export function AdminNotificationBell() {
       active = false
     }
   }, [open])
+
+  // Live badge: refetch whenever a new notification is inserted
+  useRealtimeNotifications({
+    userId,
+    table: 'admin_notifications',
+    filterColumn: 'admin_user_id',
+    onEvent: load,
+  })
 
   // Close the dropdown when clicking outside
   useEffect(() => {
@@ -147,6 +164,15 @@ export function AdminNotificationBell() {
               </ul>
             )}
           </div>
+
+          <Link
+            href="/admin/notifications"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center gap-1 border-t border-brand-neutral-100 px-4 py-2.5 text-xs font-medium text-brand-primary-700 hover:bg-brand-neutral-50"
+          >
+            View all notifications
+            <ArrowRight className="size-3.5" />
+          </Link>
         </div>
       )}
     </div>

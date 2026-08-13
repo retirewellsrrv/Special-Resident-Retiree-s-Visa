@@ -7,6 +7,7 @@ import { withAdmin } from "@/utils/auth/with-admin";
 import { requireAdmin } from "@/utils/auth/getUser";
 import type { Database } from "@/types/supabase";
 import { sendConsultationStatusEmailToApplicant } from "@/lib/mailer";
+import type { NotificationType } from "@/lib/notification-types";
 
 /** Throws when the caller is not an admin / super_admin (defense-in-depth). */
 async function assertAdmin() {
@@ -336,7 +337,7 @@ export const updateConsultationStatus = withAdmin(async function updateConsultat
     user_id: consultation.user_id,
     notification: `Your consultation request has been ${label}.`,
     is_read: false,
-    type: "consultation_status",
+    type: "consultation_status" satisfies NotificationType,
     link: "/applicant/consultation",
     created_at: new Date().toISOString(),
   });
