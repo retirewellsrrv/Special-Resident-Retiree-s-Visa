@@ -57,7 +57,7 @@ export function Navbar({ className, user }: NavbarProps) {
         </Link>
 
         {/* Desktop Navigation */}
-        <NavigationMenu className="hidden md:flex">
+        <NavigationMenu className="hidden lg:flex">
           <NavigationMenuList className="gap-x-8 pr-4">
             {navItems.map((item) => (
               <NavigationMenuItem key={item.href}>
@@ -81,7 +81,7 @@ export function Navbar({ className, user }: NavbarProps) {
         </NavigationMenu>
 
         {/* Action Buttons */}
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden lg:flex items-center space-x-4">
           {user ? (
             <LogoutBtn />
           ) : (
@@ -99,7 +99,7 @@ export function Navbar({ className, user }: NavbarProps) {
 
         {/* Mobile Menu Trigger */}
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild className="md:hidden">
+          <SheetTrigger asChild className="lg:hidden">
             <Button variant="ghost" size="icon" className="shrink-0">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
