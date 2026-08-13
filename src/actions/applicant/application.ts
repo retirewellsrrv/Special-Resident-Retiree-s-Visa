@@ -1254,6 +1254,15 @@ export async function submitApplication(
     return { error: message, success: false };
   }
 
+  await notifyAdminsOfApplicationSubmission({
+    userId: user.id,
+    userEmail: user.email ?? "",
+    applicationCode: code,
+    isUpdate: false,
+  });
+
   revalidatePath("/applicant/application");
+  revalidatePath("/admin/applications");
+  revalidateTag("admin-applications", "seconds");
   return { error: null, success: true, invoiceUrl };
 }
