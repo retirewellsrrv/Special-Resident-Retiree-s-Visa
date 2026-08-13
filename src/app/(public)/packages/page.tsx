@@ -73,11 +73,11 @@ export default function Services() {
             {/* Services Grid & CTA */}
             <section className="max-w-6xl mx-auto w-full px-6 py-16 flex-grow">
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+                <div className="flex flex-wrap justify-center gap-8 items-stretch">
                     {loading ? (
                         /* Skeleton Loading State */
                         Array.from({ length: 3 }).map((_, index) => (
-                            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col h-full animate-pulse">
+                            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col h-full animate-pulse w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.4rem)] max-w-md">
                                 {/* Icon & Title Skeleton */}
                                 <div className="flex items-center gap-4 mb-4">
                                     <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
@@ -105,7 +105,7 @@ export default function Services() {
                             </div>
                         ))
                     ) : plans.length === 0 ? (
-                        <div className="col-span-full text-center py-12 text-gray-500">
+                        <div className="w-full text-center py-12 text-gray-500">
                             No services available at the moment.
                         </div>
                     ) : (
@@ -113,18 +113,19 @@ export default function Services() {
                             const IconComponent = iconMap[service.name] || Compass;
 
                             return (
-                                <ServiceCard
-                                    key={service.id}
-                                    id={service.id}
-                                    name={service.name}
-                                    subtitle={service.subtitle}
-                                    description={service.description}
-                                    price={service.price}
-                                    price_note={service.price_note}
-                                    tags={service.tags}
-                                    icon={<IconComponent className="w-6 h-6 text-[#9E1B32]" />}
-                                    onConsultClick={() => router.push('/consult')}
-                                />
+                                <div key={service.id} className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.4rem)] max-w-md">
+                                    <ServiceCard
+                                        id={service.id}
+                                        name={service.name}
+                                        subtitle={service.subtitle}
+                                        description={service.description}
+                                        price={service.price}
+                                        price_note={service.price_note}
+                                        tags={service.tags}
+                                        icon={<IconComponent className="w-6 h-6 text-[#9E1B32]" />}
+                                        onConsultClick={() => router.push('/consult')}
+                                    />
+                                </div>
                             );
                         })
                     )}
@@ -146,7 +147,7 @@ export default function Services() {
                             Get Started
                         </button>
                         <button
-                            onClick={() => router.push('/consult')}
+                            onClick={() => router.push('/contact')}
                             className="px-6 py-3 border border-white/40 text-white text-sm font-semibold rounded hover:bg-white/10 transition whitespace-nowrap"
                         >
                             Contact Us
