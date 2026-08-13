@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import { ApplicationStatusEnum } from "@/schemas/client-profiles";
 import { withAdmin } from "@/utils/auth/with-admin";
+import { getUser } from "@/utils/auth/getUser";
 import { sendApplicationStatusEmailToApplicant } from "@/lib/mailer";
 import type { NotificationType } from "@/lib/notification-types";
 
@@ -174,6 +175,9 @@ export type AppDetail = {
   status: string
   created_at: string
   updated_at: string
+  approved_by: string | null
+  approved_at: string | null
+  approved_by_name: string | null
   applicant_name: string
   phone_number: string
   email?: string
@@ -280,8 +284,11 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
 
   if (error || !data) return null
 
+  const approvedBy = data.approved_by ?? null;
+  const approvedAt = data.approved_at ?? null;
+
   const [docs, paymentData, consultationData, contactData, emergencyData,
-       appProfileData, passportData, visaData, eduData, empData, depData, famData] = await Promise.all([
+       appProfileData, passportData, visaData, eduData, empData, depData, famData, adminNameData, superAdminNameData] = await Promise.all([
     // review_note was added via migration — re-run `supabase gen types` to remove cast
     supabase
       .from("documents")
@@ -348,6 +355,16 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
       .select("*")
       .eq("application_id", id)
       .maybeSingle(),
+    supabase
+      .from("admin_profiles")
+      .select("name")
+      .eq("user_id", approvedBy ?? "")
+      .maybeSingle(),
+    supabase
+      .from("super_admin_profiles")
+      .select("name")
+      .eq("user_id", approvedBy ?? "")
+      .maybeSingle(),
   ])
 
   return {
@@ -357,6 +374,9 @@ export async function getApplicationDetail(id: number): Promise<AppDetail | null
     status: data.status,
     created_at: data.created_at,
     updated_at: data.updated_at,
+    approved_by: approvedBy,
+    approved_at: approvedAt,
+    approved_by_name: (adminNameData?.data?.name ?? superAdminNameData?.data?.name ?? null) || null,
     // Cast needed because joined relation isn't in generated types
     applicant_name: (data as { client_profiles?: { name: string } }).client_profiles?.name ?? "Unknown",
     phone_number: contactData.data?.mobile_no ?? "",
@@ -560,9 +580,17 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
     }
   }
 
+  // Capture who approved and when. approved_by/approved_at are cleared when the
+  // application leaves the approved state so the fields are only non-null while approved.
+  const user = await getUser();
+  const isApproving = target === "approved";
   const { error } = await supabase
     .from("applications")
-    .update({ status: target })
+    .update({
+      status: target,
+      approved_by: isApproving ? (user?.id ?? null) : null,
+      approved_at: isApproving ? new Date().toISOString() : null,
+    })
     .eq("id", Number(appId));
 
   if (error) return { error: error.message, success: false };
