@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { ArrowRight, Loader2, Pencil, Clock, CreditCard } from "lucide-react";
+import { ArrowRight, Loader2, Pencil, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,15 +23,11 @@ import {
 } from "@/components/applicant/application/constants";
 import {
   getMyConsultation,
-  getMyConsultationPayment,
   submitConsultationAction,
-  retryConsultationPaymentAction,
 } from "@/actions/applicant/consultation";
 import type {
   MyConsultation,
-  MyConsultationPayment,
   SubmitConsultationState,
-  RetryConsultationPaymentState,
 } from "@/actions/applicant/consultation";
 
 const MODES = [
@@ -53,12 +49,7 @@ export default function ConsultationRequestPage() {
     fieldErrors: null,
     success: false,
   });
-  const [retryState, retryAction, retryPending] = useActionState<
-    RetryConsultationPaymentState,
-    FormData
-  >(retryConsultationPaymentAction, { error: null, success: false });
   const [existing, setExisting] = useState<MyConsultation | null>(null);
-  const [payment, setPayment] = useState<MyConsultationPayment | null>(null);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState("");
   const [date, setDate] = useState("");
@@ -68,18 +59,15 @@ export default function ConsultationRequestPage() {
   );
 
   useEffect(() => {
-    Promise.all([getMyConsultation(), getMyConsultationPayment()]).then(
-      ([consultationData, paymentData]) => {
-        if (consultationData) {
-          setExisting(consultationData);
-          setMode(consultationData.mode_communication);
-          setDate(consultationData.meeting_date);
-          setPurpose(consultationData.purpose);
-        }
-        setPayment(paymentData);
-        setLoading(false);
-      },
-    );
+    getMyConsultation().then((consultationData) => {
+      if (consultationData) {
+        setExisting(consultationData);
+        setMode(consultationData.mode_communication);
+        setDate(consultationData.meeting_date);
+        setPurpose(consultationData.purpose);
+      }
+      setLoading(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -87,12 +75,6 @@ export default function ConsultationRequestPage() {
       window.location.href = state.invoiceUrl;
     }
   }, [state]);
-
-  useEffect(() => {
-    if (retryState.success && retryState.invoiceUrl) {
-      window.location.href = retryState.invoiceUrl;
-    }
-  }, [retryState]);
 
   useEffect(() => {
     if (state.fieldErrors) {
@@ -119,9 +101,6 @@ export default function ConsultationRequestPage() {
 
   const isLocked =
     existing?.status === "processing" || existing?.status === "accepted";
-
-  const canRetryPayment =
-    payment?.status === "cancelled" || payment?.status === "failed";
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-white py-10 px-4">
@@ -307,43 +286,6 @@ export default function ConsultationRequestPage() {
                     </div>
                   </form>
                 </>
-              )}
-
-              {canRetryPayment && (
-                <div className="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200">
-                  <div className="flex items-start gap-3">
-                    <CreditCard className="w-5 h-5 text-amber-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-neutral-800">
-                        Consultation Fee Payment {payment?.status === "cancelled" ? "Cancelled" : "Failed"}
-                      </p>
-                      <p className="text-sm text-neutral-500 mt-1">
-                        Your ₱50.00 consultation fee was not completed. Please retry the payment to continue.
-                      </p>
-                      {retryState.error && (
-                        <p className="text-sm text-red-600 mt-2">
-                          {retryState.error}
-                        </p>
-                      )}
-                      <form action={retryAction} className="mt-3">
-                        <Button
-                          type="submit"
-                          disabled={retryPending}
-                          className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {retryPending ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Redirecting to payment...
-                            </>
-                          ) : (
-                            "Retry Payment"
-                          )}
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
-                </div>
               )}
             </CardContent>
           </Card>
