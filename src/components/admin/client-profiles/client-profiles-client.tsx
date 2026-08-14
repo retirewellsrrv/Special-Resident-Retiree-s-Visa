@@ -1,29 +1,25 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
     type ClientRow,
     type ClientStats,
-    getClientDirectory,
 } from '@/actions/admin/client-profiles'
 import { StatusChip } from '@/components/ui/status-chip'
 import { TableSkeleton } from '@/components/ui/loading'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
-import { downloadCsv } from '@/lib/utils'
 import {
-    Download,
     Inbox,
-    Loader2,
     UserRound,
     Clock,
     CheckCircle2,
     XCircle,
     PauseCircle,
     AlertTriangle,
-    Eye,
+    ChevronRight,
     Plus,
     type LucideIcon,
 } from 'lucide-react'
@@ -38,35 +34,48 @@ const STATUS_ICON: Record<string, LucideIcon> = {
 }
 
 function ClientDirectoryRow({ row }: { row: ClientRow }) {
-    const StatusIcon = STATUS_ICON[row.status]
+    const StatusIcon = row.status ? STATUS_ICON[row.status] : undefined
+    const href = `/admin/profiles/${row.user_id}`
+    const rowLinkProps = {
+        href,
+        className: 'contents focus-visible:outline-2 focus-visible:outline-brand-primary-500 rounded-sm',
+    }
 
     return (
-        <TableRow>
+        <TableRow className="group cursor-pointer">
             <TableCell>
-                <div>
+                <Link {...rowLinkProps}>
                     <p className="text-sm font-semibold leading-tight text-brand-neutral-900">{row.name}</p>
-                    <p className="text-xs text-brand-neutral-500">{row.application_code}</p>
-                </div>
+                    <p className="text-xs text-brand-neutral-500">
+                        {row.application_code ?? 'No application yet'}
+                    </p>
+                </Link>
             </TableCell>
             <TableCell>
-                <StatusChip status={row.status} icon={StatusIcon} />
+                <Link {...rowLinkProps}>
+                    {row.status ? (
+                        <StatusChip status={row.status} icon={StatusIcon} />
+                    ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border border-brand-neutral-200 bg-brand-neutral-100 text-brand-neutral-600 capitalize">
+                            No Application
+                        </span>
+                    )}
+                </Link>
             </TableCell>
             <TableCell className="text-sm text-brand-neutral-500">
-                {row.updated_at
-                    ? new Date(row.updated_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                    })
-                    : '\u2014'}
+                <Link {...rowLinkProps}>
+                    {row.updated_at
+                        ? new Date(row.updated_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                        })
+                        : '\u2014'}
+                </Link>
             </TableCell>
             <TableCell className="text-right">
-                <Link
-                    href={`/admin/applications?userId=${row.user_id}`}
-                    className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3 py-1.5 transition-colors"
-                >
-                    <Eye className="w-3.5 h-3.5" />
-                    Review Application
+                <Link {...rowLinkProps} aria-label={`View profile of ${row.name}`}>
+                    <ChevronRight className="ml-auto h-4 w-4 text-brand-neutral-300 transition-all group-hover:text-brand-neutral-600 group-hover:translate-x-0.5" />
                 </Link>
             </TableCell>
         </TableRow>
@@ -74,23 +83,19 @@ function ClientDirectoryRow({ row }: { row: ClientRow }) {
 }
 
 export function ClientProfilesClient({
-    stats: _stats,
+    stats,
     rows,
     total,
     page,
-    filter,
     statusFilter,
     q,
-    applicationCode,
 }: {
     stats: ClientStats
     rows: ClientRow[]
     total: number
     page: number
-    filter: 'all' | 'new'
     statusFilter?: string
     q?: string
-    applicationCode?: string
 }) {
     const router = useRouter()
     const pathname = usePathname()
@@ -107,40 +112,13 @@ export function ClientProfilesClient({
         startTransition(() => router.push(`${pathname}?${next}`))
     }
 
-    const [isExporting, setIsExporting] = useState(false)
-
-    const handleExport = useCallback(async () => {
-        setIsExporting(true)
-        try {
-            const { rows: all } = await getClientDirectory({ limit: 10000 })
-            const headers = ['user_id', 'name', 'application_code', 'status', 'updated_at']
-            downloadCsv(all, headers, `client-profiles-${new Date().toISOString().slice(0, 10)}.csv`)
-        } finally {
-            setIsExporting(false)
-        }
-    }, [])
-
     function handleClear() {
-        navigate({ filter: 'all', status: undefined, q: undefined, application_code: undefined, page: '1' })
+        navigate({ status: undefined, q: undefined, page: '1' })
     }
 
     return (
         <div className="p-6 space-y-6">
-            <PageHeader
-                title="Manage Client Profiles"
-                actions={
-                    <>
-                        <button
-                            onClick={handleExport}
-                            disabled={isExporting}
-                            className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                            {isExporting ? 'Exporting...' : 'Export CSV'}
-                        </button>
-                    </>
-                }
-            />
+            <PageHeader title="Manage Client Profiles" />
 
             {/* Compact Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -150,7 +128,7 @@ export function ClientProfilesClient({
                     </div>
                     <div className="min-w-0 leading-none">
                         <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Total Clients</p>
-                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.total}</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.total}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
@@ -159,7 +137,7 @@ export function ClientProfilesClient({
                     </div>
                     <div className="min-w-0 leading-none">
                         <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Pending</p>
-                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.pending}</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.pending}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
@@ -168,7 +146,7 @@ export function ClientProfilesClient({
                     </div>
                     <div className="min-w-0 leading-none">
                         <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Approved</p>
-                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.approved}</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.approved}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
@@ -177,22 +155,13 @@ export function ClientProfilesClient({
                     </div>
                     <div className="min-w-0 leading-none">
                         <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Rejected</p>
-                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{_stats.rejected}</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.rejected}</p>
                     </div>
                 </div>
             </div>
 
             {/* Filters */}
             <FilterBar>
-                <FilterInput
-                    label="Application ID"
-                    placeholder="APP-00000"
-                    defaultValue={applicationCode ?? ''}
-                    onChange={(v) => navigate({ application_code: v || undefined, page: '1' })}
-                    disabled={isPending}
-                    isPending={isPending}
-                    debounceMs={400}
-                />
                 <FilterInput
                     label="Name"
                     placeholder="Client name"
@@ -229,7 +198,9 @@ export function ClientProfilesClient({
                             <TableHead>Name</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Last Updated</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="text-right">
+                                <span className="sr-only">Open profile</span>
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

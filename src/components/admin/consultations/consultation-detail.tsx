@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Loader2, CalendarDays, Wallet, FileText, Clock,
+  Loader2, CalendarDays, Wallet, FileText, Clock, Mail, Check, Copy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { StatusChip } from '@/components/ui/status-chip'
@@ -67,12 +67,18 @@ export function ConsultationDetail({ detail, onStatusChange }: Props) {
   return (
     <div className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
       <div className="px-5 py-4 border-b border-brand-neutral-100 flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-brand-neutral-900">{detail.applicant_name}</h3>
-          <p className="text-xs text-brand-neutral-400 mt-0.5">
-            Requested {formatDateTime(detail.created_at)}
-          </p>
-        </div>
+          <div>
+            <h3 className="text-lg font-semibold text-brand-neutral-900">{detail.applicant_name}</h3>
+            <p className="text-xs text-brand-neutral-400 mt-0.5">
+              Requested {formatDateTime(detail.created_at)}
+            </p>
+            {detail.status === 'accepted' && detail.approved_at && (
+              <p className="text-xs text-green-700 mt-1">
+                Accepted{detail.approved_by_name ? ` by ${detail.approved_by_name}` : ''} ·{' '}
+                {formatDateTime(detail.approved_at)}
+              </p>
+            )}
+          </div>
         <StatusChip status={detail.status} />
       </div>
 
@@ -80,6 +86,24 @@ export function ConsultationDetail({ detail, onStatusChange }: Props) {
         {/* ── Consultation Request ── */}
         <section className="px-5 py-4 space-y-3">
           <SectionTitle icon={CalendarDays} label="Consultation Request" />
+          <div className="space-y-1.5">
+            <span className="text-brand-neutral-400 text-xs font-semibold uppercase tracking-wider">Client Email</span>
+            <div className="flex items-center gap-2">
+              {detail.email ? (
+                <>
+                  <a
+                    href={`mailto:${detail.email}`}
+                    className="text-sm text-brand-primary-700 hover:text-brand-primary-900 hover:underline truncate"
+                  >
+                    {detail.email}
+                  </a>
+                  <CopyButton value={detail.email} />
+                </>
+              ) : (
+                <p className="text-sm text-brand-neutral-400">No email on file</p>
+              )}
+            </div>
+          </div>
           <div className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
             <InfoRow label="Preferred Date" value={formatDate(detail.meeting_date)} />
             <InfoRow label="Mode" value={MODE_LABELS[detail.mode_communication] ?? detail.mode_communication.replace(/_/g, ' ')} />
@@ -156,10 +180,6 @@ export function ConsultationDetail({ detail, onStatusChange }: Props) {
               Update
             </button>
           </div>
-          <p className="text-[11px] text-brand-neutral-400 mt-1">
-            Setting the consultation to <span className="font-medium text-green-600">Accepted</span> unlocks the
-            application form for the applicant.
-          </p>
         </section>
       </div>
     </div>
@@ -187,5 +207,35 @@ function InfoRow({ label, value, className }: { label: string; value: string; cl
       <span className="text-brand-neutral-400">{label}:</span>{' '}
       <span className="text-brand-neutral-900">{value}</span>
     </div>
+  )
+}
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Failed to copy email')
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      aria-label="Copy client email"
+      title="Copy client email"
+      className="inline-flex items-center justify-center rounded-md border border-brand-neutral-200 p-1.5 text-brand-neutral-400 hover:text-brand-neutral-700 hover:border-brand-neutral-300 transition-colors"
+    >
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-green-600" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
+    </button>
   )
 }

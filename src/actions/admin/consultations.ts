@@ -4,9 +4,10 @@ import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { ConsultationStatusEnum } from "@/schemas/consultation";
 import { withAdmin } from "@/utils/auth/with-admin";
-import { requireAdmin } from "@/utils/auth/getUser";
+import { getUser, requireAdmin } from "@/utils/auth/getUser";
 import type { Database } from "@/types/supabase";
 import { sendConsultationStatusEmailToApplicant } from "@/lib/mailer";
+import type { NotificationType } from "@/lib/notification-types";
 
 /** Throws when the caller is not an admin / super_admin (defense-in-depth). */
 async function assertAdmin() {
@@ -194,12 +195,16 @@ export type ConsultationDetail = {
   id: number;
   user_id: string;
   applicant_name: string;
+  email: string;
   meeting_date: string;
   mode_communication: string;
   purpose: string;
   status: string;
   created_at: string;
   updated_at: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  approved_by_name: string | null;
   application: {
     application_code: string;
     status: string;
@@ -221,13 +226,15 @@ export async function getConsultationDetail(id: number): Promise<ConsultationDet
 
   const { data, error } = await supabase
     .from("consultations")
-    .select("id, user_id, meeting_date, mode_communication, purpose, status, created_at, updated_at")
+    .select("id, user_id, meeting_date, mode_communication, purpose, status, created_at, updated_at, approved_by, approved_at")
     .eq("id", id)
     .single();
 
   if (error || !data) return null;
 
-  const [profile, app, payment] = await Promise.all([
+  const approvedBy = data.approved_by ?? null;
+
+  const [profile, app, payment, adminNameData, superAdminNameData, authUser] = await Promise.all([
     supabase.from("client_profiles").select("name").eq("user_id", data.user_id).maybeSingle(),
     supabase
       .from("applications")
@@ -242,18 +249,33 @@ export async function getConsultationDetail(id: number): Promise<ConsultationDet
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("admin_profiles")
+      .select("name")
+      .eq("user_id", approvedBy ?? "")
+      .maybeSingle(),
+    supabase
+      .from("super_admin_profiles")
+      .select("name")
+      .eq("user_id", approvedBy ?? "")
+      .maybeSingle(),
+    supabase.auth.admin.getUserById(data.user_id),
   ]);
 
   return {
     id: data.id,
     user_id: data.user_id,
     applicant_name: profile.data?.name ?? "Unknown",
+    email: authUser.data?.user?.email ?? "",
     meeting_date: data.meeting_date,
     mode_communication: data.mode_communication,
     purpose: data.purpose,
     status: data.status,
     created_at: data.created_at,
     updated_at: data.updated_at,
+    approved_by: approvedBy,
+    approved_at: data.approved_at ?? null,
+    approved_by_name: (adminNameData?.data?.name ?? superAdminNameData?.data?.name ?? null) || null,
     application: app.data
       ? {
           application_code: app.data.application_code,
@@ -296,8 +318,8 @@ export const updateConsultationStatus = withAdmin(async function updateConsultat
     return { error: null, success: true };
   }
 
-  // A consultation can only be accepted once the consultation fee is paid
-  if (parsed.data === "accepted") {
+  // A consultation can only be processed/accepted once the consultation fee is paid
+  if (parsed.data === "processing" || parsed.data === "accepted") {
     const { data: payment } = await supabase
       .from("payments")
       .select("status")
@@ -309,17 +331,25 @@ export const updateConsultationStatus = withAdmin(async function updateConsultat
 
     if (!payment || payment.status !== "success") {
       return {
-        error: "Cannot accept: the consultation fee has not been paid yet.",
+        error: `Cannot ${
+          parsed.data === "accepted" ? "accept" : "set to processing"
+        }: the consultation fee has not been paid yet.`,
         success: false,
       };
     }
   }
 
+  // Capture who approved and when. approved_by/approved_at are cleared when the
+  // consultation leaves the accepted state so they are only non-null while accepted.
+  const user = await getUser();
+  const isAccepting = parsed.data === "accepted";
   const { error } = await supabase
     .from("consultations")
     .update({
       status: parsed.data as Database["public"]["Enums"]["consultation_status"],
       updated_at: new Date().toISOString(),
+      approved_by: isAccepting ? (user?.id ?? null) : null,
+      approved_at: isAccepting ? new Date().toISOString() : null,
     })
     .eq("id", consultationId);
 
@@ -336,7 +366,7 @@ export const updateConsultationStatus = withAdmin(async function updateConsultat
     user_id: consultation.user_id,
     notification: `Your consultation request has been ${label}.`,
     is_read: false,
-    type: "consultation_status",
+    type: "consultation_status" satisfies NotificationType,
     link: "/applicant/consultation",
     created_at: new Date().toISOString(),
   });

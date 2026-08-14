@@ -4,18 +4,16 @@ import { ClientProfilesClient } from '@/components/admin/client-profiles/client-
 export default async function ClientProfilesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; filter?: string; status?: string; q?: string; application_code?: string }>
+  searchParams: Promise<{ page?: string; status?: string; q?: string }>
 }) {
   const resolvedParams = await searchParams
   const page = Number(resolvedParams.page ?? 1)
-  const filter = (resolvedParams.filter ?? 'all') as 'all' | 'new'
   const status = resolvedParams.status as string | undefined
   const q = resolvedParams.q as string | undefined
-  const application_code = resolvedParams.application_code as string | undefined
 
   const [stats, { rows, total }] = await Promise.all([
     getClientStats(),
-    getClientDirectory({ page, filter, status, q, application_code }),
+    getClientDirectory({ page, status, q }),
   ])
 
   return (
@@ -24,10 +22,8 @@ export default async function ClientProfilesPage({
       rows={rows}
       total={total}
       page={page}
-      filter={filter}
       statusFilter={status}
       q={q}
-      applicationCode={application_code}
     />
   )
 }

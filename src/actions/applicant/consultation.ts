@@ -10,6 +10,7 @@ import { consultationFormSchema } from "@/schemas/consultation";
 import xenditClient from "@/lib/xendit";
 import { assertPaymentRedirectsReady } from "@/lib/payment-redirect-check";
 import { sendConsultationEmailToAdmin } from "@/lib/mailer";
+import type { NotificationType } from "@/lib/notification-types";
 import type { Database } from "@/types/supabase";
 
 export type MyConsultation = {
@@ -187,7 +188,7 @@ export async function submitConsultationAction(
           admin_user_id: a.user_id,
           notification,
           is_read: false,
-          type: "new_consultation",
+          type: "new_consultation" satisfies NotificationType,
           link: "/admin/consultations",
           created_at: new Date().toISOString(),
         })),

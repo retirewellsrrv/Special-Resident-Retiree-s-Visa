@@ -27,7 +27,7 @@ export default function ApplicantLayout({
   const role = user?.user_metadata.role;
   const userName = user?.user_metadata.name
   return (
-    <SidebarLayout navItems={NAV_ITEMS} title="Applicant" user={{ name: userName || 'Applicant User', role: role || 'Applicant' }} notifications={<NotificationBell />}>
+    <SidebarLayout navItems={NAV_ITEMS} title="Applicant" user={{ name: userName || 'Applicant User', role: role || 'Applicant' }} notifications={<NotificationBell userId={user?.id} />}>
       {children}
     </SidebarLayout>
   )
