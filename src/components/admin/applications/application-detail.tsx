@@ -101,6 +101,18 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
             <p className="text-xs text-brand-neutral-400 mt-0.5">
               {detail.application_code}
             </p>
+            {detail.status === 'approved' && detail.approved_at && (
+              <p className="text-xs text-green-700 mt-1">
+                Approved{detail.approved_by_name ? ` by ${detail.approved_by_name}` : ''} ·{' '}
+                {new Date(detail.approved_at).toLocaleString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
           </div>
           <StatusChip status={detail.status} />
         </div>

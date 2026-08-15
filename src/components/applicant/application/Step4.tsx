@@ -1,8 +1,7 @@
 "use client";
 
-import { CheckCircle2, CreditCard, FileText } from "lucide-react";
+import { CheckCircle2, FileText } from "lucide-react";
 import type { FamilyMember } from "./Step2";
-import { RetryPaymentButton } from "./RetryPaymentButton";
 
 type EducationEntry = {
   id: string;
@@ -98,14 +97,10 @@ export function Step4({
   step1Data,
   step2Data,
   step4Data,
-  payment,
-  canRetry = false,
 }: {
   step1Data: Step1Data;
   step2Data: Step2Data;
   step4Data: Step4Data;
-  payment?: { amount: number; status: string } | null;
-  canRetry?: boolean;
 }) {
   const uploadedDocs = Object.entries(step4Data).filter(([, doc]) => doc.file || doc.name);
 
@@ -260,30 +255,6 @@ export function Step4({
             </div>
           )}
         </div>
-
-        {canRetry && payment && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-[#8B1A2B] flex items-center gap-2">
-              <CreditCard className="w-4 h-4" />
-              Payment
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-              <Field
-                label="Amount"
-                value={`₱${Number(payment.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`}
-              />
-              <Field
-                label="Status"
-                value={payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-              />
-            </div>
-            <p className="text-xs text-amber-700 leading-relaxed">
-              Your payment has not been completed yet. You can retry the
-              payment below to continue with your application.
-            </p>
-            <RetryPaymentButton />
-          </div>
-        )}
       </div>
     </>
   );

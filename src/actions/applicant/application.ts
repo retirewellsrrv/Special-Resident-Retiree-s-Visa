@@ -13,7 +13,9 @@ import type { Database } from "@/types/supabase";
 import { getUserServer } from "@/utils/auth/getUser";
 import xenditClient from "@/lib/xendit";
 import { assertPaymentRedirectsReady } from "@/lib/payment-redirect-check";
+import { voidPendingPaymentsBeforeRetry } from "@/lib/payment-void";
 import { sendApplicationSubmissionEmailToAdmin } from "@/lib/mailer";
+import type { NotificationType } from "@/lib/notification-types";
 import { randomUUID } from "crypto";
 
 export type ApplicantProfile = {
@@ -151,7 +153,6 @@ export type ExistingApplicationData = {
     amount: number;
     status: string;
   } | null;
-  canRetry: boolean;
 };
 
 export async function getExistingApplication(): Promise<ExistingApplicationData | null> {
@@ -186,17 +187,6 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
         .eq("id", app.payment_id)
         .single()
     : { data: null };
-
-  const { data: allPayments } = await supabase
-    .from("payments")
-    .select("status")
-    .eq("user_id", user.id)
-    .eq("service_type", "application");
-
-  const canRetry =
-    allPayments !== null &&
-    allPayments.length > 0 &&
-    !allPayments.some((p) => p.status === "success");
 
   const { data: contact } = await supabase
     .from("contacts")
@@ -341,7 +331,6 @@ export async function getExistingApplication(): Promise<ExistingApplicationData 
       : null,
     documents: documents ?? [],
     payment,
-    canRetry,
   };
 }
 
@@ -627,6 +616,10 @@ export async function retryPaymentAction(
     return { error: "Payment has already been completed", success: false };
   }
 
+  // Void any stale pending payments + their live Xendit invoices so the
+  // user never hits a lingering pending state or gets double-charged.
+  await voidPendingPaymentsBeforeRetry(supabase, user.id, "application");
+
   const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
   const paymentMethod = "ewallet" as Database["public"]["Enums"]["payment_methods"];
 
@@ -693,6 +686,59 @@ export async function retryPaymentAction(
         ? xenditError.message
         : "Failed to create payment invoice";
     return { error: message, success: false };
+  }
+}
+
+/**
+ * Notifies active admins (in-app + email) that an application was submitted
+ * or re-submitted. Best-effort: failures are logged, never surfaced to the
+ * applicant, and never block the successful submission.
+ */
+async function notifyAdminsOfApplicationSubmission(opts: {
+  userId: string;
+  userEmail: string;
+  applicationCode: string;
+  isUpdate: boolean;
+}): Promise<void> {
+  try {
+    const adminSupabase = createAdminClient();
+    const [profileResult, adminsResult] = await Promise.all([
+      adminSupabase
+        .from("client_profiles")
+        .select("name")
+        .eq("user_id", opts.userId)
+        .maybeSingle(),
+      adminSupabase
+        .from("admin_profiles")
+        .select("user_id")
+        .eq("is_active", true),
+    ]);
+
+    const applicantName = profileResult.data?.name ?? "";
+
+    const adminUserIds = (adminsResult.data ?? []).map((a) => a.user_id);
+    if (adminUserIds.length > 0) {
+      const notification = opts.isUpdate
+        ? `Application ${opts.applicationCode} re-submitted by ${applicantName || opts.userEmail || "an applicant"}.`
+        : `New application ${opts.applicationCode} submitted by ${applicantName || opts.userEmail || "an applicant"}.`;
+      await adminSupabase.from("admin_notifications").insert(
+        adminUserIds.map((adminUserId) => ({
+          admin_user_id: adminUserId,
+          notification,
+          is_read: false,
+          type: "new_application" satisfies NotificationType,
+          link: `/admin/applications?userId=${opts.userId}`,
+        })),
+      );
+    }
+
+    await sendApplicationSubmissionEmailToAdmin({
+      applicantEmail: opts.userEmail,
+      applicantName,
+      applicationCode: opts.applicationCode,
+    });
+  } catch (notifyError) {
+    console.error("Admin submission notification error:", notifyError);
   }
 }
 
@@ -888,45 +934,6 @@ export async function submitApplication(
         success: false,
       };
     appIdToUse = app.id;
-
-    // Notify active admins (in-app + email) so the new submission isn't missed
-    try {
-      const adminSupabase = createAdminClient();
-      const [profileResult, adminsResult] = await Promise.all([
-        adminSupabase
-          .from("client_profiles")
-          .select("name")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        adminSupabase.from("admin_profiles").select("user_id").eq("is_active", true),
-      ]);
-
-      const applicantName = profileResult.data?.name ?? "";
-
-      const adminUserIds = (adminsResult.data ?? []).map((a) => a.user_id);
-      if (adminUserIds.length > 0) {
-        await adminSupabase.from("admin_notifications").insert(
-          adminUserIds.map((adminUserId) => ({
-            admin_user_id: adminUserId,
-            notification: `New application ${code} submitted by ${applicantName || user.email || "an applicant"}.`,
-            is_read: false,
-            type: "new_application",
-            link: `/admin/applications?userId=${user.id}`,
-          })),
-        );
-      }
-
-      await sendApplicationSubmissionEmailToAdmin({
-        applicantEmail: user.email ?? "",
-        applicantName,
-        applicationCode: code,
-      });
-    } catch (notifyError) {
-      console.error("Admin submission notification error:", notifyError);
-    }
-
-    revalidatePath("/admin/applications");
-    revalidateTag("admin-applications", "seconds");
   }
 
   // ── Insert contact info ──────────────────────────────────────────────
@@ -1159,13 +1166,35 @@ export async function submitApplication(
     return { error: docErrors.join("; "), success: false };
   }
 
-  // If editing, don't create a new payment — keep existing payment
+  // Editing: only create a new payment when a retry is needed. Otherwise,
+  // the update is complete and we keep the existing payment.
   if (isEditing) {
-    revalidatePath("/applicant/application");
-    return { error: null, success: true };
+    const { data: outstanding } = await supabase
+      .from("payments")
+      .select("id, status")
+      .eq("user_id", user.id)
+      .eq("service_type", "application")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const needsRetry =
+      outstanding &&
+      (outstanding.status === "pending" ||
+        outstanding.status === "cancelled" ||
+        outstanding.status === "failed");
+
+    if (!needsRetry) {
+      revalidatePath("/applicant/application");
+      return { error: null, success: true };
+    }
   }
 
   const DEFAULT_FEE = 300;
+
+  // Void any stale pending payments first so the unique active-payment index
+  // (one pending/success per user + service) doesn't block the new record.
+  await voidPendingPaymentsBeforeRetry(supabase, user.id, "application");
 
   // ── Create payment record ────────────────────────────────────────────────
   const externalId = `srrv-${user.id}-${randomUUID().slice(0, 8)}`;
@@ -1231,6 +1260,15 @@ export async function submitApplication(
     return { error: message, success: false };
   }
 
+  await notifyAdminsOfApplicationSubmission({
+    userId: user.id,
+    userEmail: user.email ?? "",
+    applicationCode: code,
+    isUpdate: false,
+  });
+
   revalidatePath("/applicant/application");
+  revalidatePath("/admin/applications");
+  revalidateTag("admin-applications", "seconds");
   return { error: null, success: true, invoiceUrl };
 }

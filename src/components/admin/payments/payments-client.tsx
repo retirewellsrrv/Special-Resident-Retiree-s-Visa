@@ -3,7 +3,6 @@
 import { useCallback, useState, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Download, Loader2, Banknote, Clock, CheckCircle2, Undo2 } from 'lucide-react'
-import { TableSkeleton } from '@/components/ui/loading'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
 import PaymentTable from '@/components/admin/payments/payments-table'
@@ -191,31 +190,35 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
         <FilterClear onClick={handleClear} disabled={isPending} />
       </FilterBar>
 
-      {isPending ? (
-        <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-brand-neutral-100">
-            <span className="text-sm font-medium text-brand-neutral-900">Recent Transactions</span>
-            <span className="text-xs text-brand-neutral-500">Loading\u2026</span>
-          </div>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                {['Client Name', 'Transaction Code', 'Amount', 'Status', 'Payment Type', 'Service Type', 'Created At', ''].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-brand-neutral-500 uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <TableSkeleton rows={5} columns={7} />
-            </tbody>
-          </table>
+      {/* Table stays mounted so the page height never changes; a contained
+          spinner overlays it while the transition is pending. This avoids the
+          layout/scroll jump that swapping in a taller skeleton caused. */}
+      <div className="relative">
+        <div
+          className={
+            isPending
+              ? 'opacity-60 pointer-events-none transition-opacity duration-200'
+              : 'transition-opacity duration-200'
+          }
+        >
+          <PaymentTable
+            rows={rows}
+            total={total}
+          />
         </div>
-      ) : (
-        <PaymentTable
-          rows={rows}
-          total={total}
-        />
-      )}
+        {isPending && (
+          <div
+            role="status"
+            aria-label="Loading transactions"
+            className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/60"
+          >
+            <div className="flex items-center gap-2 rounded-lg border border-brand-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-brand-neutral-600 shadow-sm">
+              <Loader2 className="h-4 w-4 animate-spin text-brand-primary-600" />
+              Loading transactions...
+            </div>
+          </div>
+        )}
+      </div>
 
       <Pagination
         page={page}

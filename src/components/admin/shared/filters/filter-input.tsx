@@ -49,11 +49,19 @@ export function FilterInput({
     <div className="flex flex-col gap-1">
       <label className="text-[11px] text-brand-neutral-500 font-semibold uppercase tracking-wide">{label}</label>
       <div className="relative">
-        {isPending ? (
-          <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-brand-primary-600" />
-        ) : (
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-neutral-400" />
-        )}
+        {/*
+          Centering is done on a flex wrapper, NOT with a transform on the
+          icon itself. `animate-spin` sets `transform: rotate(...)` in its
+          keyframes, which overrides `-translate-y-1/2` and makes the spinner
+          drift downward while it spins.
+        */}
+        <div className="absolute left-2.5 top-0 bottom-0 flex items-center">
+          {isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-primary-600" />
+          ) : (
+            <Search className="h-3.5 w-3.5 text-brand-neutral-400" />
+          )}
+        </div>
         <input
           type="text"
           placeholder={placeholder}

@@ -9,7 +9,9 @@ import { getUserServer } from "@/utils/auth/getUser";
 import { consultationFormSchema } from "@/schemas/consultation";
 import xenditClient from "@/lib/xendit";
 import { assertPaymentRedirectsReady } from "@/lib/payment-redirect-check";
+import { voidPendingPaymentsBeforeRetry } from "@/lib/payment-void";
 import { sendConsultationEmailToAdmin } from "@/lib/mailer";
+import type { NotificationType } from "@/lib/notification-types";
 import type { Database } from "@/types/supabase";
 
 export type MyConsultation = {
@@ -30,31 +32,6 @@ export async function getMyConsultation(): Promise<MyConsultation | null> {
     .from("consultations")
     .select("id, meeting_date, mode_communication, purpose, status")
     .eq("user_id", user.id)
-    .maybeSingle();
-
-  return data;
-}
-
-export type MyConsultationPayment = {
-  amount: number;
-  status: Database["public"]["Enums"]["payment_status"];
-  payment_method: Database["public"]["Enums"]["payment_methods"];
-  transaction_code: string;
-};
-
-export async function getMyConsultationPayment(): Promise<MyConsultationPayment | null> {
-  const user = await getUserServer();
-  if (!user) return null;
-
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .from("payments")
-    .select("amount, status, payment_method, transaction_code")
-    .eq("user_id", user.id)
-    .eq("service_type", "consultation")
-    .order("created_at", { ascending: false })
-    .limit(1)
     .maybeSingle();
 
   return data;
@@ -127,7 +104,7 @@ export async function submitConsultationAction(
   const { data: savedConsultation, error: saveError } = existing
     ? await supabase
         .from("consultations")
-        .update(values)
+        .update({ ...values, status: "pending" })
         .eq("id", existing.id)
         .select("id")
         .maybeSingle()
@@ -187,7 +164,7 @@ export async function submitConsultationAction(
           admin_user_id: a.user_id,
           notification,
           is_read: false,
-          type: "new_consultation",
+          type: "new_consultation" satisfies NotificationType,
           link: "/admin/consultations",
           created_at: new Date().toISOString(),
         })),
@@ -202,12 +179,34 @@ export async function submitConsultationAction(
   revalidatePath("/admin/consultations");
   revalidateTag("admin-consultations", "seconds");
 
-  // Updates don't create a new payment
+  // Existing consultations only create a new payment when a retry is needed.
+  // Otherwise, the update is complete and we just send the user to the dashboard.
   if (existing) {
-    redirect("/applicant/dashboard?consultation=success");
+    const { data: outstanding } = await supabase
+      .from("payments")
+      .select("id, status")
+      .eq("user_id", user.id)
+      .eq("service_type", "consultation")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const needsRetry =
+      outstanding &&
+      (outstanding.status === "pending" ||
+        outstanding.status === "cancelled" ||
+        outstanding.status === "failed");
+
+    if (!needsRetry) {
+      redirect("/applicant/dashboard?consultation=success");
+    }
   }
 
   const CONSULTATION_FEE = 50;
+
+  // Void any stale pending payments first so the unique active-payment index
+  // (one pending/success per user + service) doesn't block the new record.
+  await voidPendingPaymentsBeforeRetry(supabase, user.id, "consultation");
 
   // ── Create consultation payment record ──────────────────────────────────
   const externalId = `srrv-consult-${user.id}-${randomUUID().slice(0, 8)}`;
@@ -318,6 +317,10 @@ export async function retryConsultationPaymentAction(
   if (existingSuccess) {
     return { error: "Payment has already been completed", success: false };
   }
+
+  // Void any stale pending payments + their live Xendit invoices so the
+  // user never hits a lingering pending state or gets double-charged.
+  await voidPendingPaymentsBeforeRetry(supabase, user.id, "consultation");
 
   const externalId = `srrv-consult-${user.id}-${randomUUID().slice(0, 8)}`;
   const { data: payment, error: paymentError } = await supabase

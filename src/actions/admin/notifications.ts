@@ -15,26 +15,34 @@ export type AdminNotificationItem = {
 export type AdminNotificationsResult = {
   unread: number;
   items: AdminNotificationItem[];
+  hasMore: boolean;
 };
 
-export async function getAdminNotifications(): Promise<AdminNotificationsResult> {
+export async function getAdminNotifications(
+  page = 1,
+  pageSize = 20,
+): Promise<AdminNotificationsResult> {
   const user = await getUserServer();
-  if (!user) return { unread: 0, items: [] };
+  if (!user) return { unread: 0, items: [], hasMore: false };
 
   const supabase = createAdminClient();
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   const { data } = await supabase
     .from("admin_notifications")
     .select("id, notification, is_read, type, link, created_at")
     .eq("admin_user_id", user.id)
     .order("id", { ascending: false })
-    .limit(20);
+    .range(from, to);
 
   const items = (data ?? []) as AdminNotificationItem[];
 
   return {
     unread: items.filter((n) => !n.is_read).length,
     items,
+    hasMore: items.length === pageSize,
   };
 }
 
@@ -63,6 +71,20 @@ export async function markAdminNotificationRead(id: number): Promise<{ success: 
     .from("admin_notifications")
     .update({ is_read: true })
     .eq("id", id)
+    .eq("admin_user_id", user.id);
+
+  return { success: !error };
+}
+
+export async function deleteAdminNotificationsAction(): Promise<{ success: boolean }> {
+  const user = await getUserServer();
+  if (!user) return { success: false };
+
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("admin_notifications")
+    .delete()
     .eq("admin_user_id", user.id);
 
   return { success: !error };

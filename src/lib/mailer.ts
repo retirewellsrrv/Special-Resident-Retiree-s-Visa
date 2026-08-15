@@ -1,5 +1,62 @@
+import { createAdminClient } from "@/lib/supabase/server";
+
 const RESEND_API_URL = "https://api.resend.com/emails";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin.retirewellsrrv@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "dev@retirewellsrrv.com";
+
+/**
+ * Converts the inline-HTML email bodies to a plain-text alternative
+ * (improves deliverability/spam score and readability in text clients).
+ * Optimized for this repo's simple table-based templates.
+ */
+export function emailHtmlToText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<head[\s\S]*?<\/head>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|h1|h2|h3|div|tr|table)>/gi, "\n")
+    .replace(/<\/td>/gi, "  ")
+    .replace(/<\/th>/gi, "  ")
+    .replace(/<td[^>]*>/gi, "")
+    .replace(/<th[^>]*>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join("\n");
+}
+
+/**
+ * Appends a delivery record to the `email_logs` audit table.
+ * Best-effort — a logging failure must never break email sending.
+ */
+async function logEmail(opts: {
+  to: string;
+  from?: string;
+  subject?: string;
+  status: "sent" | "failed" | "skipped";
+  error?: string | null;
+}): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("email_logs" as never).insert({
+      to_address: opts.to,
+      from_address: opts.from ?? null,
+      subject: opts.subject ?? null,
+      status: opts.status,
+      error: opts.error ?? null,
+      created_at: new Date().toISOString(),
+    } as never);
+  } catch (err) {
+    console.error("[mailer] Failed to write email log:", err);
+  }
+}
 
 export type ConsultationEmailData = {
   applicantEmail: string;
@@ -75,28 +132,67 @@ async function sendEmail({
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
     console.warn("[mailer] RESEND_API_KEY is not set. Skipping email.");
+    await logEmail({ to, from, subject, status: "skipped", error: "RESEND_API_KEY not set" });
     return;
   }
 
-  const res = await fetch(RESEND_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      reply_to: replyTo,
-      subject,
-      html,
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    console.error("[mailer] Failed to send email:", res.status, body);
+  if (!to || !to.trim()) {
+    console.warn("[mailer] Skipping email with empty recipient.");
+    await logEmail({ to, from, subject, status: "skipped", error: "empty recipient" });
+    return;
   }
+
+  let lastError: string | null = null;
+
+  // Best-effort with a single retry on transient failures (network errors,
+  // 5xx, 429). Never throws — callers must not be blocked by email problems.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(RESEND_API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to,
+          reply_to: replyTo,
+          subject,
+          html,
+          text: emailHtmlToText(html),
+        }),
+      });
+
+      if (res.ok) {
+        await logEmail({ to, from, subject, status: "sent" });
+        return;
+      }
+
+      const body = await res.text();
+      lastError = `status ${res.status}: ${body.slice(0, 500)}`;
+      console.error(
+        `[mailer] Failed to send email (attempt ${attempt}/2):`,
+        res.status,
+        body,
+      );
+
+      // Non-transient errors won't improve on retry.
+      if (res.status < 500 && res.status !== 429) break;
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[mailer] Email request error (attempt ${attempt}/2):`,
+        err,
+      );
+    }
+
+    if (attempt === 1) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+
+  await logEmail({ to, from, subject, status: "failed", error: lastError });
 }
 
 function wrapTableRows(rows: { label: string; value: string }[]): string {
@@ -319,6 +415,8 @@ export async function sendConsultationEmailToAdmin(
 export async function sendConsultationPaymentEmailToAdmin(
   data: ConsultationPaymentEmailData,
 ): Promise<void> {
+  console.log('admin email: ', ADMIN_EMAIL)
+  console.log('data', data)
   await sendEmail({
     from: `Retire Well SRRV <${ADMIN_EMAIL}>`,
     to: ADMIN_EMAIL,

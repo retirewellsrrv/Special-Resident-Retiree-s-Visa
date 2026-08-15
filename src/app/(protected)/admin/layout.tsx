@@ -31,7 +31,7 @@ export default function AdminLayout({
   const role = user?.user_metadata.role;
   const userName = user?.user_metadata.name
   return (
-    <SidebarLayout navItems={NAV_ITEMS} title="Admin" user={{ name: userName || 'Admin User', role: role || 'Admin' }} notifications={<AdminNotificationBell />}>
+    <SidebarLayout navItems={NAV_ITEMS} title="Admin" user={{ name: userName || 'Admin User', role: role || 'Admin' }} notifications={<AdminNotificationBell userId={user?.id} />}>
       {children}
     </SidebarLayout>
   )

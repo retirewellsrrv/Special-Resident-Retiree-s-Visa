@@ -203,8 +203,6 @@ export default function SRRVApplicationPage() {
                   step1Data={step1Data}
                   step2Data={step2Data}
                   step4Data={step4Data}
-                  payment={existingApplication?.payment ?? null}
-                  canRetry={existingApplication?.canRetry ?? false}
                 />
               )}
               {!isLoadingProfile && !isConsultationLoading && currentStep === 5 && existingApplication && (
