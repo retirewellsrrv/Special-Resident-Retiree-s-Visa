@@ -230,6 +230,7 @@ function DashboardContent() {
   const consultationPayment = data?.consultationPayment ?? null;
   const canRetry = data?.canRetry ?? false;
   const canRetryConsultationPayment =
+    consultationPayment?.status === "pending" ||
     consultationPayment?.status === "cancelled" ||
     consultationPayment?.status === "failed";
   const hasPayment = !!payment;

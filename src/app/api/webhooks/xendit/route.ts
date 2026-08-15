@@ -49,16 +49,46 @@ export async function POST(request: Request) {
       (payload.payment_method ?? payload.paymentMethod) as string | undefined,
     );
 
-    // Only transition from "pending" so a late EXPIRED/FAILED event
-    // can never downgrade a payment that already succeeded.
+    // Only consider payments that are still pending so a late EXPIRED/FAILED
+    // event can never downgrade a payment that already succeeded.
+    const { data: existing } = await supabase
+      .from("payments")
+      .select("id, user_id, service_type")
+      .eq("transaction_code", externalId)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (!existing) {
+      return NextResponse.json({ received: true });
+    }
+
+    // Dedup guard: never record a second success for the same user + service.
+    // If the user already has a successful payment for this service, mark this
+    // one failed instead so duplicate paid invoices can't double-count.
+    let statusToApply: PaymentStatus = paymentStatus;
+    if (paymentStatus === "success") {
+      const { data: duplicate } = await supabase
+        .from("payments")
+        .select("id")
+        .eq("user_id", existing.user_id)
+        .eq("service_type", existing.service_type)
+        .eq("status", "success")
+        .neq("id", existing.id)
+        .maybeSingle();
+
+      if (duplicate) {
+        statusToApply = "failed";
+      }
+    }
+
     const { data: payment } = await supabase
       .from("payments")
       .update({
-        status: paymentStatus,
+        status: statusToApply,
         payment_method: paymentMethod,
         updated_at: new Date().toISOString(),
       })
-      .eq("transaction_code", externalId)
+      .eq("id", existing.id)
       .eq("status", "pending")
       .select("user_id, amount, status, payment_method, transaction_code, service_type")
       .maybeSingle();
