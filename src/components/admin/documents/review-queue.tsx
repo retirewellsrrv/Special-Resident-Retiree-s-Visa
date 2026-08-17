@@ -1,21 +1,15 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ChevronDown, ChevronRight, FileIcon, Inbox, Plus, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { StatusChip } from '@/components/ui/status-chip'
+import { documentTypeLabel } from './document-review/document-meta'
+import { cn } from '@/lib/utils'
 import type { DocumentForReview, ReviewStats } from '@/actions/admin/documents'
 
 function initials(name: string) {
   return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-}
-
-const DOC_TYPE_LABELS: Record<string, string> = {
-  passport: 'Passport',
-  visa: 'Visa',
-  nbi: 'NBI Clearance',
-  pension: 'Pension Proof',
-  medical: 'Medical Report',
 }
 
 type SortMode = 'latest' | 'oldest' | 'most-pending' | 'alphabetical'
@@ -34,9 +28,10 @@ interface Props {
   onSelect: (doc: DocumentForReview) => void
   sort: SortMode
   onSortChange: (sort: SortMode) => void
+  className?: string
 }
 
-export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortChange }: Props) {
+export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortChange, className }: Props) {
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(() => {
     if (selectedId !== null) {
       const selectedDoc = docs.find((d) => d.id === selectedId)
@@ -44,6 +39,20 @@ export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortCha
     }
     return new Set()
   })
+
+  // Keep the selected document's applicant group expanded when the
+  // selection changes (e.g. via the ?doc= URL param or auto-advance).
+  useEffect(() => {
+    if (selectedId === null) return
+    const selectedDoc = docs.find((d) => d.id === selectedId)
+    if (!selectedDoc) return
+    setExpandedUsers((prev) => {
+      if (prev.has(selectedDoc.user_id)) return prev
+      const next = new Set(prev)
+      next.add(selectedDoc.user_id)
+      return next
+    })
+  }, [selectedId, docs])
 
   const grouped = useMemo(() => {
     const map = new Map<string, { name: string; docs: DocumentForReview[]; pendingCount: number; latestDate: string }>()
@@ -87,7 +96,7 @@ export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortCha
   }
 
   return (
-    <aside className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+    <aside className={cn('flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0', className)}>
       <div className="px-4 py-3 border-b border-brand-neutral-100">
         <div className="flex items-center justify-between">
           <div>
@@ -170,7 +179,7 @@ export function ReviewQueue({ docs, stats, selectedId, onSelect, sort, onSortCha
                         <p className={`text-sm font-medium truncate ${
                           isSelected ? 'text-brand-primary-800' : 'text-brand-neutral-900'
                         }`}>
-                          {DOC_TYPE_LABELS[doc.type] ?? doc.type}
+                          {documentTypeLabel(doc.type)}
                         </p>
                         <p className="text-[11px] text-brand-neutral-400 truncate mt-0.5">{doc.name}</p>
                         <p className="text-[10px] text-brand-neutral-300 truncate mt-0.5">{doc.application_code}</p>

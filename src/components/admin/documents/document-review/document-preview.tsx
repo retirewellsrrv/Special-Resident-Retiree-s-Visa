@@ -1,23 +1,18 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { ZoomIn, ZoomOut, Printer, Download, FileIcon, Loader2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Download, FileIcon, Loader2 } from 'lucide-react'
 import { getDocumentSignedUrl } from '@/actions/admin/documents'
-import type { DocumentForReview } from '@/actions/admin/documents'
-
-const DOC_TYPE_LABELS: Record<string, string> = {
-  passport: 'Passport',
-  visa: 'Visa',
-  nbi: 'NBI Clearance',
-  pension: 'Pension Proof',
-  medical: 'Medical Report',
-}
+import { documentTypeLabel, type ReviewableDocument } from './document-meta'
+import { cn } from '@/lib/utils'
 
 interface Props {
-  doc: DocumentForReview
+  doc: ReviewableDocument
+  /** Extra classes for the outer card (e.g. flex-1 min-h-0 in a column) */
+  className?: string
 }
 
-export function DocumentViewer({ doc }: Props) {
+export function DocumentPreview({ doc, className }: Props) {
   const [zoom, setZoom] = useState(1)
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -63,6 +58,11 @@ export function DocumentViewer({ doc }: Props) {
     return () => { cancelled = true }
   }, [fetchUrl])
 
+  // Reset zoom when switching to a different document
+  useEffect(() => {
+    setZoom(1)
+  }, [doc.id])
+
   const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'tif'].includes(doc.format)
   const isPdf = doc.format === 'pdf'
 
@@ -70,14 +70,25 @@ export function DocumentViewer({ doc }: Props) {
   const zoomOut = () => setZoom((z) => Math.max(z - 0.25, 0.25))
 
   return (
-    <div className="flex flex-col flex-1 rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+    <div
+      className={cn(
+        'flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0',
+        className,
+      )}
+    >
       <div className="px-4 py-3 border-b border-brand-neutral-100 flex items-center justify-between">
         <div className="min-w-0 flex-1">
           <h3 className="text-base font-semibold text-brand-neutral-900 truncate">
-            {doc.name}
+            {documentTypeLabel(doc.type)}
           </h3>
-          <p className="text-xs text-brand-neutral-400 mt-0.5">
-            {doc.application_code} &middot; {doc.applicant_name} &middot; {DOC_TYPE_LABELS[doc.type] ?? doc.type}
+          <p className="text-xs text-brand-neutral-400 mt-0.5 truncate">
+            {doc.application_code && doc.applicant_name ? (
+              <>
+                {doc.application_code} &middot; {doc.applicant_name} &middot; {doc.name}
+              </>
+            ) : (
+              doc.name
+            )}
           </p>
         </div>
 
@@ -141,7 +152,7 @@ export function DocumentViewer({ doc }: Props) {
         ) : isPdf ? (
           <iframe
             src={`${signedUrl}#view=fitH`}
-            className="w-full h-full rounded-lg border-0"
+            className="w-full h-[70vh] min-h-[480px] rounded-lg border-0"
             title={doc.name}
             style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
           />

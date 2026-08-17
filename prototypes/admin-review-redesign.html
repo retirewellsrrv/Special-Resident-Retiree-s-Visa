@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Review — Responsive Redesign Prototype</title>
+<style>
+  /* ─── Tokens (mirrors tailwind.config.ts brand palette) ─────────────── */
+  :root {
+    --primary:       #a6192e;
+    --primary-600:   #871426;
+    --primary-700:   #69101d;
+    --primary-800:   #4a0b15;
+    --primary-50:    #f0d7db;
+    --primary-100:   #e8c2c8;
+    --primary-200:   #d798a1;
+    --primary-300:   #c76e7b;
+
+    --n0: #e4e7eb; --n1: #d6dae0; --n2: #bac1cb; --n3: #9da7b6;
+    --n4: #818ea0; --n5: #64748b; --n6: #525f71; --n7: #3f4958;
+    --n8: #2d343e; --n9: #1a1f25;
+
+    --surface: #f8f9fa;
+    --white:   #ffffff;
+
+    --amber-50:#fef3c7; --amber-600:#d97706; --amber-700:#b45309;
+    --green-50:#dcfce7; --green-600:#15803d;
+    --red-50:#fee2e2;   --red-600:#b91c1c;   --red-700:#991b1b;
+    --blue-50:#dbeafe;  --blue-600:#2563eb;
+    --orange-50:#ffedd5;--orange-600:#c2410c;
+    --slate-50:#f1f5f9; --slate-600:#475569;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #0d0204 0%, #1d0408 100%);
+    color: var(--n9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+    min-height: 100vh;
+  }
+
+  button { font-family: inherit; cursor: pointer; }
+  .iconbtn {
+    border: 1px solid var(--n2); background: var(--white); color: var(--n5);
+    width: 28px; height: 28px; border-radius: 6px; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 14px; line-height: 1;
+  }
+  .iconbtn:hover { background: var(--n0); color: var(--n7); }
+  .iconbtn:disabled { opacity: .35; cursor: default; }
+
+  /* ─── Top toolbar ─────────────────────────────────────────────────── */
+  .toolbar {
+    width: 100%; max-width: 1180px;
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; color: #fff;
+  }
+  .toolbar h1 { font-size: 15px; font-weight: 600; letter-spacing: .2px; opacity: .95; }
+  .toolbar .sub { font-size: 12px; opacity: .55; margin-top: 2px; font-weight: 400; }
+  .toolbar .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+  .seg {
+    display: inline-flex; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16);
+    border-radius: 8px; overflow: hidden;
+  }
+  .seg button {
+    background: transparent; border: 0; color: rgba(255,255,255,.75);
+    padding: 8px 14px; font-size: 12px; font-weight: 500;
+  }
+  .seg button.active { background: var(--primary); color: #fff; }
+  .seg button:hover:not(.active) { background: rgba(255,255,255,.12); color: #fff; }
+
+  /* ─── Stage + frame ───────────────────────────────────────────────── */
+  .stage {
+    width: 100%; max-width: 1180px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08);
+    transition: width .35s ease, height .35s ease, border-radius .35s ease;
+    position: relative;
+  }
+  .frame.desktop { width: 100%; height: 660px; }
+  .frame.mobile  { width: 400px; height: 800px; border-radius: 34px; }
+  .framelabel { color: rgba(255,255,255,.6); font-size: 11px; letter-spacing: .3px; text-align: center; }
+
+  .view { width: 100%; height: 100%; display: none; position: relative; }
+  .view.active { display: flex; flex-direction: column; }
+
+  /* ─── Shared UI primitives ────────────────────────────────────────── */
+  .panel { background: var(--white); border: 1px solid var(--n1); border-radius: 12px; overflow: hidden; }
+  .pagehead {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 20px 0;
+  }
+  .pagehead h2 { font-size: 20px; font-weight: 600; color: var(--n9); }
+  .pagehead .desc { font-size: 12px; color: var(--n4); margin-top: 2px; }
+  .search {
+    display: flex; align-items: center; gap: 8px; border: 1px solid var(--n2);
+    background: var(--white); border-radius: 8px; padding: 8px 12px; min-width: 220px;
+  }
+  .search input { border: 0; outline: 0; font-size: 13px; color: var(--n9); width: 100%; background: transparent; }
+  .search input::placeholder { color: var(--n3); }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .chip .dot { width: 5px; height: 5px; border-radius: 50%; }
+  .chip-pending   { background: var(--amber-50);  color: var(--amber-700); }
+  .chip-pending .dot   { background: var(--amber-600); }
+  .chip-processing{ background: var(--blue-50);   color: var(--blue-600); }
+  .chip-processing .dot{ background: var(--blue-600); }
+  .chip-accepted  { background: var(--green-50);  color: var(--green-600); }
+  .chip-accepted .dot  { background: var(--green-600); }
+  .chip-approved  { background: var(--green-50);  color: var(--green-600); }
+  .chip-approved .dot  { background: var(--green-600); }
+  .chip-rejected  { background: var(--red-50);    color: var(--red-700); }
+  .chip-rejected .dot  { background: var(--red-600); }
+  .chip-actionneed{ background: var(--orange-50); color: var(--orange-600); }
+  .chip-actionneed .dot{ background: var(--orange-600); }
+  .chip-paused    { background: var(--slate-50);  color: var(--slate-600); }
+  .chip-paused .dot { background: var(--slate-600); }
+
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: var(--n6); background: var(--n0);
+  }
+
+  .btn {
+    border: 0; border-radius: 8px; font-size: 13px; font-weight: 600;
+    padding: 9px 16px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-600); }
+  .btn-ghost { background: var(--white); color: var(--n7); border: 1px solid var(--n2); }
+  .btn-ghost:hover { background: var(--n0); }
+  .btn-danger { background: var(--red-600); color: #fff; }
+  .btn-danger:hover { background: var(--red-700); }
+  .btn:disabled { opacity: .4; cursor: default; }
+
+  /* ═══ DESKTOP — DOCUMENTS (two-pane master/detail) ══════════════════ */
+  .doc-desktop { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 20px 16px; }
+  .doc-desktop .split {
+    flex: 1; min-height: 0; display: grid; grid-template-columns: 320px 1fr; gap: 14px; margin-top: 14px;
+  }
+  .queue-panel { display: flex; flex-direction: column; min-height: 0; }
+  .queue-head {
+    padding: 12px 14px; border-bottom: 1px solid var(--n0);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .queue-head h3 { font-size: 13px; font-weight: 600; color: var(--n9); }
+  .queue-head small { font-size: 11px; color: var(--n4); display: block; margin-top: 1px; font-weight: 400; }
+  .queue-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+  .groupbtn {
+    width: 100%; display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+    background: var(--white); border: 0; border-bottom: 1px solid var(--n0); text-align: left;
+  }
+  .groupbtn:hover { background: var(--surface); }
+  .groupbtn .gname { font-size: 13px; font-weight: 600; color: var(--n9); }
+  .groupbtn .gmeta { font-size: 11px; color: var(--n4); }
+  .pending-pill {
+    margin-left: 6px; display: inline-flex; align-items: center; gap: 4px;
+    background: var(--amber-50); color: var(--amber-700); border-radius: 999px;
+    padding: 1px 7px; font-size: 10px; font-weight: 600;
+  }
+  .docrow {
+    width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 14px 9px 40px;
+    background: var(--white); border: 0; text-align: left; border-bottom: 1px solid var(--n0);
+  }
+  .docrow:hover { background: var(--surface); }
+  .docrow.sel { background: var(--primary-50); box-shadow: inset 0 0 0 1px var(--primary-200); }
+  .docrow .dicon {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--n0); color: var(--n4);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 13px;
+  }
+  .docrow.sel .dicon { background: var(--primary-100); color: var(--primary-700); }
+  .docrow .dname { font-size: 13px; font-weight: 500; color: var(--n9); }
+  .docrow.sel .dname { color: var(--primary-700); }
+  .docrow .dfile { font-size: 11px; color: var(--n4); margin-top: 1px; }
+
+  /* Desktop workspace: preview + actions rail */
+  .ws-desktop { display: flex; flex-direction: column; min-height: 0; gap: 0; }
+  .ws-body { flex: 1; min-height: 0; display: flex; }
+  .preview-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .preview-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px; border-bottom: 1px solid var(--n0); background: var(--white);
+  }
+  .preview-toolbar .ptitle { font-size: 13px; font-weight: 600; color: var(--n9); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .preview-toolbar .psub { font-size: 11px; color: var(--n4); margin-top: 1px; }
+  .preview-toolbar .tools { display: flex; align-items: center; gap: 5px; flex-shrink: 0; margin-left: 10px; }
+  .zoomval { font-size: 11px; color: var(--n5); width: 36px; text-align: center; }
+  .preview-stage {
+    flex: 1; overflow: auto; background: var(--n0);
+    display: flex; align-items: center; justify-content: center; padding: 18px;
+  }
+  .rail {
+    width: 300px; flex-shrink: 0; border-left: 2px solid var(--n1);
+    background: var(--white); display: flex; flex-direction: column; min-height: 0;
+  }
+  .rail-scroll { flex: 1; overflow-y: auto; padding: 18px; }
+  .rail h4 { font-size: 10px; font-weight: 600; color: var(--n4); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+  .dl { font-size: 12.5px; }
+  .dl > div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; }
+  .dl dt { color: var(--n4); }
+  .dl dd { color: var(--n9); font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; }
+  .rail-divider { height: 1px; background: var(--n0); margin: 14px 0; }
+  .rail label { font-size: 10px; font-weight: 600; color: var(--n4); text-transform: uppercase; letter-spacing: .6px; display: block; margin-bottom: 8px; }
+  .segstatus { display: flex; flex-direction: column; gap: 6px; }
+  .segstatus .opt {
+    display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+    border: 1px solid var(--n2); background: var(--white); border-radius: 8px;
+    padding: 8px 10px; font-size: 12.5px; font-weight: 500; color: var(--n8);
+  }
+  .segstatus .opt .r { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--n2); flex-shrink: 0; }
+  .segstatus .opt.sel { border-color: var(--primary); background: var(--primary-50); color: var(--primary-700); }
+  .segstatus .opt.sel .r { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 2px #fff; }
+  .opt-approve.sel { border-color: var(--green-600) !important; background: var(--green-50) !important; color: var(--green-600) !important; }
+  .opt-approve.sel .r { border-color: var(--green-600) !important; background: var(--green-600) !important; }
+  .opt-reject.sel { border-color: var(--red-600) !important; background: var(--red-50) !important; color: var(--red-700) !important; }
+  .opt-reject.sel .r { border-color: var(--red-600) !important; background: var(--red-600) !important; }
+  .opt-action.sel { border-color: var(--orange-600) !important; background: var(--orange-50) !important; color: var(--orange-600) !important; }
+  .opt-action.sel .r { border-color: var(--orange-600) !important; background: var(--orange-600) !important; }
+  .rail textarea {
+    width: 100%; border: 1px solid var(--n2); border-radius: 8px; padding: 9px 10px;
+    font-size: 12.5px; font-family: inherit; resize: vertical; outline: none; min-height: 64px;
+  }
+  .rail textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-50); }
+  .savebar { border-top: 2px solid var(--n1); padding: 12px 16px; display: flex; justify-content: flex-end; }
+  .ws-nav {
+    border-top: 2px solid var(--n1); padding: 10px 16px; background: var(--white);
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+  }
+  .ws-nav .count { font-size: 12px; color: var(--n4); }
+
+  /* ═══ MOBILE — DOCUMENTS (queue → full-screen workspace) ═══════════ */
+  .m-screen { position: absolute; inset: 0; display: none; flex-direction: column; background: var(--surface); }
+  .m-screen.active { display: flex; }
+  .m-top {
+    height: 52px; flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; background: var(--white); border-bottom: 1px solid var(--n1);
+    box-shadow: 0 2px 8px rgba(0,0,0,.06); z-index: 5;
+  }
+  .m-top .mt-title { font-size: 15px; font-weight: 600; color: var(--n9); }
+  .m-top .mt-sub { font-size: 11px; color: var(--n4); margin-top: 1px; }
+  .m-top .mt-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .backbtn {
+    display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 0;
+    color: var(--primary-600); font-size: 13px; font-weight: 600; padding: 6px 4px;
+  }
+  .m-queue-scroll { flex: 1; overflow-y: auto; padding: 12px; }
+  .m-docrow {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    background: var(--white); border: 1px solid var(--n1); border-radius: 10px;
+    padding: 11px 12px; margin-bottom: 8px; text-align: left;
+  }
+  .m-docrow:hover { border-color: var(--n3); }
+  .m-docrow .dicon { width: 34px; height: 34px; border-radius: 8px; background: var(--n0); color: var(--n4); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .m-docrow .dname { font-size: 13.5px; font-weight: 500; color: var(--n9); }
+  .m-docrow .dfile { font-size: 11px; color: var(--n4); margin-top: 1px; }
+  .m-docrow .chev { margin-left: auto; color: var(--n3); }
+
+  /* workspace screen */
+  .m-ws-body { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--n0); }
+  .m-preview-stage { flex: 1; min-height: 0; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 14px; }
+  .m-chipstrip {
+    background: var(--white); border-top: 1px solid var(--n1);
+    display: flex; gap: 8px; padding: 10px 14px; overflow-x: auto; flex-shrink: 0;
+  }
+  .m-chip {
+    border: 1px solid var(--n2); background: var(--white); color: var(--n7);
+    border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 500; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .m-chip.sel { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .m-chip .mini { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .7; }
+  .m-actionbar {
+    background: var(--white); border-top: 2px solid var(--n1);
+    display: flex; gap: 8px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    flex-shrink: 0; box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+  }
+  .m-actionbar .btn { flex: 1; justify-content: center; padding: 11px 8px; font-size: 12.5px; }
+
+  /* ═══ DESKTOP — APPLICATIONS ═══════════════════════════════════════ */
+  .app-desktop { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 20px 16px; overflow: hidden; }
+  .statrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  .statcard {
+    display: flex; align-items: center; gap: 10px; background: var(--white);
+    border: 1px solid var(--n1); border-radius: 10px; padding: 10px 12px;
+  }
+  .statcard .ico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .statcard .num { font-size: 14px; font-weight: 600; color: var(--n9); }
+  .statcard .lbl { font-size: 9px; font-weight: 600; color: var(--n4); text-transform: uppercase; letter-spacing: .5px; }
+  .filterbar { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .fselect {
+    border: 1px solid var(--n2); background: var(--white); border-radius: 8px;
+    padding: 8px 10px; font-size: 12.5px; color: var(--n7); outline: none;
+  }
+  .app-split { flex: 1; min-height: 0; display: grid; grid-template-columns: 360px 1fr; gap: 14px; margin-top: 12px; }
+  .approw {
+    width: 100%; display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+    background: var(--white); border: 0; text-align: left; border-bottom: 1px solid var(--n0);
+  }
+  .approw:hover { background: var(--surface); }
+  .approw.sel { background: var(--primary-50); box-shadow: inset 0 0 0 1px var(--primary-200); }
+  .approw.sel .avatar { background: var(--primary); color: #fff; }
+  .approw .aname { font-size: 13px; font-weight: 500; color: var(--n9); }
+  .approw.sel .aname { color: var(--primary-700); }
+  .approw .acode { font-size: 11px; color: var(--n4); margin-top: 1px; }
+
+  .detail-panel { display: flex; flex-direction: column; min-height: 0; background: var(--white); }
+  .detail-head { padding: 16px 20px; border-bottom: 1px solid var(--n0); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .detail-head h3 { font-size: 16px; font-weight: 600; color: var(--n9); }
+  .detail-head .acode { font-size: 11px; color: var(--n4); margin-top: 2px; }
+  .detail-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+  .dsection { padding: 14px 20px; border-bottom: 1px solid var(--n0); }
+  .dsection h5 { font-size: 10px; font-weight: 600; color: var(--n4); text-transform: uppercase; letter-spacing: .6px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 18px; font-size: 12.5px; }
+  .dgrid .field { padding: 2px 0; }
+  .dgrid .field .k { color: var(--n4); }
+  .dgrid .field .v { color: var(--n9); font-weight: 500; }
+  .doclinkrow {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--n1); background: var(--white); border-radius: 9px;
+    padding: 9px 12px; margin-bottom: 6px; text-align: left;
+  }
+  .doclinkrow:hover { border-color: var(--primary-200); background: var(--primary-50); }
+  .doclinkrow .dname { font-size: 13px; font-weight: 500; color: var(--n9); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .doclinkrow .go { color: var(--primary-600); font-weight: 600; font-size: 12px; }
+  .appstatusbar { border-top: 1px solid var(--n0); padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
+  .appstatusbar select {
+    border: 1px solid var(--n2); border-radius: 8px; padding: 9px 10px; font-size: 13px; color: var(--n9); outline: none; flex: 1;
+  }
+  .appstatusbar select:focus { border-color: var(--primary); }
+
+  /* ═══ MOBILE — APPLICATIONS ════════════════════════════════════════ */
+  .m-approw {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    background: var(--white); border: 1px solid var(--n1); border-radius: 10px;
+    padding: 12px; margin-bottom: 8px; text-align: left;
+  }
+  .m-approw:hover { border-color: var(--n3); }
+  .m-detail-scroll { flex: 1; overflow-y: auto; }
+  .m-dsection { padding: 14px 16px; border-bottom: 8px solid var(--n0); }
+  .m-dsection h5 { font-size: 10px; font-weight: 600; color: var(--n4); text-transform: uppercase; letter-spacing: .6px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .m-dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; font-size: 12.5px; }
+  .m-dgrid .field { padding: 2px 0; }
+  .m-dgrid .field .k { color: var(--n4); }
+  .m-dgrid .field .v { color: var(--n9); font-weight: 500; }
+  .m-statusbar {
+    background: var(--white); border-top: 2px solid var(--n1);
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 16px rgba(0,0,0,.06); flex-shrink: 0;
+  }
+  .m-statusbar .btn { width: 100%; justify-content: center; padding: 12px; font-size: 13.5px; }
+  .collapsible h5 { cursor: pointer; user-select: none; }
+  .collapsible .arrow { margin-left: auto; color: var(--n4); }
+
+  /* ─── Document preview placeholders ─────────────────────────────── */
+  .doc-page {
+    background: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    width: 100%; max-width: 430px; padding: 22px; font-size: 11px; color: var(--n4);
+  }
+  .doc-page .ph { display: flex; gap: 14px; align-items: flex-start; }
+  .doc-page .photo {
+    width: 88px; height: 100px; border-radius: 6px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--n0), var(--n2));
+    display: flex; align-items: center; justify-content: center; color: var(--n4); font-size: 20px;
+  }
+  .doc-page .lines { flex: 1; display: flex; flex-direction: column; gap: 7px; padding-top: 4px; }
+  .doc-page .line { height: 7px; border-radius: 3px; background: var(--n0); }
+  .doc-page .line.w60 { width: 60%; } .doc-page .line.w80 { width: 80%; } .doc-page .line.w40 { width: 40%; }
+  .doc-page .rule { height: 1px; background: var(--n0); margin: 14px 0; }
+  .doc-page .rows { display: flex; flex-direction: column; gap: 10px; }
+  .doc-page .rows > div { display: flex; justify-content: space-between; }
+  .doc-page .rows b { color: var(--n7); font-weight: 600; }
+  .doc-page .tag { display: inline-block; background: var(--primary); color: #fff; font-size: 8px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 3px; margin-bottom: 12px; }
+
+  .pp-card {
+    width: 100%; max-width: 320px; border-radius: 10px; overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,.18); background: var(--white);
+  }
+  .pp-card .pp-top { background: var(--primary); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .pp-card .pp-body { display: flex; gap: 14px; padding: 16px 14px; }
+  .pp-card .pp-photo { width: 84px; height: 96px; border-radius: 6px; background: linear-gradient(135deg, var(--n0), var(--n2)); display: flex; align-items: center; justify-content: center; color: var(--n4); font-size: 20px; }
+  .pp-card .pp-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 9.5px; }
+  .pp-card .pp-fields b { color: var(--n8); display: block; font-size: 10.5px; }
+  .pp-card .pp-fields .k { color: var(--n4); }
+  .pp-card .pp-mrz { border-top: 1px solid var(--n1); padding: 8px 14px; font-family: monospace; font-size: 10px; letter-spacing: 1px; color: var(--n6); white-space: nowrap; overflow: hidden; }
+
+  /* ─── Sheet overlay ──────────────────────────────────────────────── */
+  .sheet-overlay {
+    position: fixed; inset: 0; background: rgba(13,2,4,.5); z-index: 100;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .sheet-overlay.open { display: flex; }
+  .sheet {
+    background: var(--white); width: 100%; max-width: 560px;
+    border-radius: 18px 18px 0 0; padding: 8px 20px calc(22px + env(safe-area-inset-bottom));
+    animation: sheetUp .25s ease;
+    max-height: 78vh; overflow-y: auto;
+  }
+  @keyframes sheetUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sheet .grabber { width: 40px; height: 4px; border-radius: 999px; background: var(--n2); margin: 0 auto 14px; }
+  .sheet h3 { font-size: 16px; font-weight: 600; color: var(--n9); margin-bottom: 4px; }
+  .sheet .hint { font-size: 12px; color: var(--n4); margin-bottom: 14px; }
+  .sheet .field-label { font-size: 10px; font-weight: 600; color: var(--n4); text-transform: uppercase; letter-spacing: .6px; display: block; margin: 12px 0 6px; }
+  .sheet textarea {
+    width: 100%; border: 1px solid var(--n2); border-radius: 8px; padding: 10px 12px;
+    font-size: 13px; font-family: inherit; resize: vertical; outline: none; min-height: 74px;
+  }
+  .sheet textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-50); }
+  .sheet .req { color: var(--red-600); margin-left: 2px; }
+  .sheet .actions { display: flex; gap: 10px; margin-top: 16px; }
+  .sheet .actions .btn { flex: 1; justify-content: center; padding: 11px; }
+  .radio-opt {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    border: 1px solid var(--n1); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    background: var(--white); text-align: left; font-size: 13.5px; font-weight: 500; color: var(--n8);
+  }
+  .radio-opt .r { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--n2); flex-shrink: 0; }
+  .radio-opt.sel { border-color: var(--primary); background: var(--primary-50); color: var(--primary-700); }
+  .radio-opt.sel .r { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 3px #fff; }
+
+  /* ─── Toast ──────────────────────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--n9); color: #fff; font-size: 13px; font-weight: 500;
+    padding: 11px 18px; border-radius: 10px; display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35); opacity: 0; pointer-events: none;
+    transition: all .25s ease; z-index: 200; max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast .tick { color: #4ade80; font-size: 15px; }
+
+  .empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; height: 100%; color: var(--n4); font-size: 13px;
+  }
+  .empty .big { font-size: 30px; }
+
+  /* scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--n2); border-radius: 999px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div>
+    <h1>Admin Review — Responsive Redesign Prototype</h1>
+    <div class="sub">Based on the structure revamp plan · same URL, adaptive layout</div>
+  </div>
+  <div class="controls">
+    <div class="seg" id="featureSeg">
+      <button data-feature="documents" class="active">Document Review</button>
+      <button data-feature="applications">Application Review</button>
+    </div>
+    <div class="seg" id="viewSeg">
+      <button data-view="desktop" class="active">Desktop · lg+</button>
+      <button data-view="mobile">Mobile · &lt;lg</button>
+    </div>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="frame desktop" id="frame">
+
+    <!-- ════════════ DESKTOP — DOCUMENT REVIEW (two-pane) ════════════ -->
+    <div class="view view-desktop view-documents" id="view-docD"></div>
+
+    <!-- ════════════ DESKTOP — APPLICATION REVIEW (two-pane) ═════════ -->
+    <div class="view view-desktop view-applications" id="view-appD"></div>
+
+    <!-- ════════════ MOBILE — DOCUMENT REVIEW (queue ↔ workspace) ═══ -->
+    <div class="view view-mobile view-documents" id="view-docM"></div>
+
+    <!-- ════════════ MOBILE — APPLICATION REVIEW (queue ↔ detail) ═══ -->
+    <div class="view view-mobile view-applications" id="view-appM"></div>
+
+  </div>
+  <div class="framelabel" id="frameLabel">Desktop · two-pane master/detail — queue left, review surface right</div>
+</div>
+
+<!-- Shared bottom sheet + toast -->
+<div class="sheet-overlay" id="sheetOverlay">
+  <div class="sheet" id="sheetContent"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   Data (mirrors real actions output shape)
+   ══════════════════════════════════════════════════════════════════════ */
+const USERS = [
+  { uid: 'u1', name: 'Maria Santos', code: 'APP-2026-0012',
+    docs: [
+      { id: 101, type: 'Passport',        file: 'passport_scan.pdf',  fmt: 'PDF', status: 'pending',     note: null },
+      { id: 102, type: 'Visa',            file: 'entry_visa.pdf',     fmt: 'PDF', status: 'accepted',   note: null },
+      { id: 103, type: 'NBI Clearance',   file: 'nbi_2026.png',       fmt: 'PNG', status: 'pending',     note: null },
+      { id: 104, type: 'Pension Proof',   file: 'pension_stmt.pdf',   fmt: 'PDF', status: 'action need', note: 'Statement is from 2024 — please upload the latest 3 months.' },
+      { id: 105, type: 'Medical Report',  file: 'medical_rpt.pdf',    fmt: 'PDF', status: 'pending',     note: null },
+    ] },
+  { uid: 'u2', name: 'John Lim', code: 'APP-2026-0009',
+    docs: [
+      { id: 201, type: 'Passport',      file: 'passport.jpg',      fmt: 'JPG', status: 'accepted', note: null },
+      { id: 202, type: 'NBI Clearance', file: 'nbi_2026.jpg',      fmt: 'JPG', status: 'pending',   note: null },
+    ] },
+  { uid: 'u3', name: 'Ana Reyes', code: 'APP-2026-0007',
+    docs: [
+      { id: 301, type: 'Passport',       file: 'passport_scan.pdf', fmt: 'PDF', status: 'accepted', note: null },
+      { id: 302, type: 'Medical Report', file: 'medical_rpt.pdf',   fmt: 'PDF', status: 'rejected', note: 'Report must be within 6 months of application date.' },
+    ] },
+];
+
+const APPS = [
+  { id: 1, name: 'Maria Santos',  code: 'APP-2026-0012', status: 'processing',
+    phone: '0917 555 0142', email: 'maria.santos@email.com', street: '12 Palm Drive, Makati',
+    birth: 'Mar 12, 1958', gender: 'Female', passport: 'P1234567A', expiry: 'Aug 10, 2031',
+    docs: USERS[0].docs, statusNote: null },
+  { id: 2, name: 'John Lim',      code: 'APP-2026-0009', status: 'pending',
+    phone: '0918 444 3321', email: 'john.lim@email.com', street: '88 Harbor Rd, Cebu',
+    birth: 'Jan 3, 1952', gender: 'Male', passport: 'P8765432B', expiry: 'Apr 2, 2030',
+    docs: USERS[1].docs, statusNote: null },
+  { id: 3, name: 'Ana Reyes',     code: 'APP-2026-0007', status: 'paused',
+    phone: '0916 222 1190', email: 'ana.reyes@email.com', street: '5 Bayview Ave, Davao',
+    birth: 'Nov 21, 1960', gender: 'Female', passport: 'P3344556C', expiry: 'Feb 14, 2029',
+    docs: USERS[2].docs, statusNote: null },
+  { id: 4, name: 'Carlos Mendoza', code: 'APP-2026-0005', status: 'approved',
+    phone: '0917 888 7710', email: 'carlos.m@email.com', street: '27 Sunset Blvd, Baguio',
+    birth: 'Jun 9, 1955', gender: 'Male', passport: 'P9988776D', expiry: 'Dec 1, 2032',
+    docs: [], statusNote: null },
+];
+
+/* ══════════════════════════════════════════════════════════════════════
+   Shared helpers
+   ══════════════════════════════════════════════════════════════════════ */
+function chip(status) {
+  const cls = 'chip-' + status.replace(/ /g, '');
+  const label = status === 'action need' ? 'Action' : status.charAt(0).toUpperCase() + status.slice(1);
+  return `<span class="chip ${cls}"><span class="dot"></span>${label}</span>`;
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+function icon(name) {
+  const glyphs = { file:'▤', search:'⌕', back:'←', pdf:'▤', img:'▦', check:'✓', note:'✎',
+    user:'●', map:'⌖', plane:'✈', heart:'♥', brief:'▤', grad:'◆', docs:'▥', chev:'›',
+    bell:'🔔', help:'?', ext:'↗' };
+  return `<span aria-hidden="true">${glyphs[name] ?? name}</span>`;
+}
+function initials(name) { return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(); }
+function docIcon(doc) { return `<span class="dicon">${icon(doc.fmt === 'PDF' ? 'file' : 'img')}</span>`; }
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span class="tick">${icon('check')}</span>${esc(msg)}`;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+let sheetConfirm = null;
+function openSheet(html, onConfirm) {
+  document.getElementById('sheetContent').innerHTML = html;
+  document.getElementById('sheetOverlay').classList.add('open');
+  sheetConfirm = onConfirm;
+}
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('open');
+  sheetConfirm = null;
+}
+document.getElementById('sheetOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeSheet();
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+   State per variant
+   ══════════════════════════════════════════════════════════════════════ */
+const S = {
+  docD: { selId: 101, expanded: new Set(['u1']), selStatus: 'pending', selNote: '' },
+  docM: { screen: 'queue', selId: null, expanded: new Set(['u1']), selStatus: null, selNote: '', sheetStatus: null },
+  appD: { selId: 1, selStatus: 'processing' },
+  appM: { screen: 'queue', selId: null, selStatus: 'pending', selNote: '' },
+};
+
+function findDoc(id) {
+  for (const u of USERS) for (const d of u.docs) if (d.id === id) return { doc: d, user: u };
+  return null;
+}
+function userDocs(uid) { return USERS.find(u => u.uid === uid).docs; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DOC PREVIEW PLACEHOLDER
+   ══════════════════════════════════════════════════════════════════════ */
+function previewHTML(doc) {
+  if (!doc) return `<div class="empty"><div class="big">✓</div>All documents have been reviewed.</div>`;
+  if (doc.type === 'Passport') {
+    return `<div class="pp-card">
+      <div class="pp-top"><span>PASSPORT</span><span>${esc(doc.file.split('_').pop().toUpperCase())}</span></div>
+      <div class="pp-body">
+        <div class="pp-photo">👤</div>
+        <div class="pp-fields">
+          <div><span class="k">Surname</span><b>SANTOS</b></div>
+          <div><span class="k">Given names</span><b>MARIA LUZ</b></div>
+          <div><span class="k">Passport no.</span><b>P1234567A</b></div>
+          <div><span class="k">Nationality</span><b>FILIPINO</b></div>
+          <div><span class="k">Expiry</span><b>AUG 10 2031</b></div>
+        </div>
+      </div>
+      <div class="pp-mrz">P&lt;PHLSANTOS&lt;&lt;MARIA&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;P1234567A</div>
+    </div>`;
+  }
+  return `<div class="doc-page">
+    <span class="tag">${esc(doc.type.toUpperCase())} · ${esc(doc.fmt)}</span>
+    <div class="ph">
+      <div class="photo">👤</div>
+      <div class="lines">
+        <div class="line w80"></div><div class="line w60"></div>
+        <div class="line w80"></div><div class="line w40"></div>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="rows">
+      <div><span>Document name</span><b>${esc(doc.file)}</b></div>
+      <div><span>Type</span><b>${esc(doc.type)}</b></div>
+      <div><span>Format</span><b>${esc(doc.fmt)}</b></div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DESKTOP DOCUMENTS
+   ══════════════════════════════════════════════════════════════════════ */
+function renderDocD() {
+  const el = document.getElementById('view-docD');
+  const st = S.docD;
+  const hit = findDoc(st.selId);
+  const selDoc = hit ? hit.doc : null;
+
+  let queueHTML = '';
+  for (const u of USERS) {
+    const pend = u.docs.filter(d => d.status === 'pending' || d.status === 'action need').length;
+    const open = st.expanded.has(u.uid);
+    queueHTML += `
+      <button class="groupbtn" onclick="toggleGroupD('${u.uid}')">
+        <span class="avatar">${initials(u.name)}</span>
+        <span style="flex:1;min-width:0">
+          <span class="gname">${esc(u.name)}</span>
+          <span class="gmeta">${u.docs.length} docs${pend ? `<span class="pending-pill"><span style="width:5px;height:5px;border-radius:50%;background:#d97706;display:inline-block"></span>${pend} pending</span>` : ''}</span>
+        </span>
+        <span style="color:var(--n4);font-size:11px">${open ? '▾' : '▸'}</span>
+      </button>`;
+    if (open) {
+      for (const d of u.docs) {
+        queueHTML += `
+          <button class="docrow ${d.id === st.selId ? 'sel' : ''}" onclick="selDocD(${d.id})">
+            ${docIcon(d)}
+            <span style="flex:1;min-width:0">
+              <span class="dname">${esc(d.type)}</span>
+              <span class="dfile">${esc(d.file)}</span>
+            </span>
+            ${d.note ? `<span style="color:#d97706;font-size:11px">✎</span>` : ''}
+            ${chip(d.status)}
+          </button>`;
+      }
+    }
+  }
+
+  const idx = selDoc ? userDocs(hit.user.uid).findIndex(d => d.id === selDoc.id) : -1;
+  const siblings = selDoc ? userDocs(hit.user.uid) : [];
+  const changed = st.selStatus !== (selDoc?.status ?? '') || st.selNote !== (selDoc?.note ?? '');
+
+  el.innerHTML = `
+    <div class="pagehead">
+      <div>
+        <h2>Document Review</h2>
+        <div class="desc">${siblings.length || 0} docs shown · ${queueHTML.match(/class="docrow/g)?.length ?? 0} total in queue</div>
+      </div>
+      <div class="search">${icon('search')}<input placeholder="Search by applicant name..." /></div>
+    </div>
+    <div class="doc-desktop">
+      <div class="split">
+        <div class="panel queue-panel">
+          <div class="queue-head">
+            <div><h3>Review Queue</h3><small>Documents grouped by applicant</small></div>
+            <select class="fselect" style="font-size:11px;padding:5px 8px"><option>Latest</option><option>Oldest</option><option>Most pending</option><option>Alphabetical</option></select>
+          </div>
+          <div class="queue-scroll">${queueHTML}</div>
+        </div>
+
+        <div class="panel ws-desktop">
+          ${selDoc ? `
+          <div class="ws-body">
+            <div class="preview-wrap">
+              <div class="preview-toolbar">
+                <div style="min-width:0">
+                  <div class="ptitle">${esc(selDoc.type)} · ${esc(hit.user.name)}</div>
+                  <div class="psub">${esc(selDoc.file)} · ${esc(hit.user.code)}</div>
+                </div>
+                <div class="tools">
+                  <button class="iconbtn" title="Zoom out">−</button>
+                  <span class="zoomval">100%</span>
+                  <button class="iconbtn" title="Zoom in">+</button>
+                  <span style="width:1px;height:18px;background:var(--n2);margin:0 4px"></span>
+                  <button class="iconbtn" title="Open in new tab">${icon('ext')}</button>
+                </div>
+              </div>
+              <div class="preview-stage">${previewHTML(selDoc)}</div>
+            </div>
+            <div class="rail">
+              <div class="rail-scroll">
+                <h4>Document Info</h4>
+                <dl class="dl">
+                  <div><dt>Type</dt><dd>${esc(selDoc.type)}</dd></div>
+                  <div><dt>File</dt><dd>${esc(selDoc.file)}</dd></div>
+                  <div><dt>Format</dt><dd style="text-transform:uppercase">${esc(selDoc.fmt)}</dd></div>
+                  <div><dt>Applicant</dt><dd>${esc(hit.user.name)}</dd></div>
+                  <div><dt>Status</dt><dd>${chip(selDoc.status)}</dd></div>
+                </dl>
+                <div class="rail-divider"></div>
+                <label>Decision</label>
+                <div class="segstatus">
+                  <button class="opt opt-approve ${st.selStatus === 'accepted' ? 'sel' : ''}" onclick="setDocStatusD('accepted')"><span class="r"></span>Accept</button>
+                  <button class="opt opt-action ${st.selStatus === 'action need' ? 'sel' : ''}" onclick="setDocStatusD('action need')"><span class="r"></span>Action needed</button>
+                  <button class="opt opt-reject ${st.selStatus === 'rejected' ? 'sel' : ''}" onclick="setDocStatusD('rejected')"><span class="r"></span>Reject</button>
+                </div>
+                <div style="margin-top:14px">
+                  <label>Review note ${(st.selStatus === 'rejected' || st.selStatus === 'action need') ? '<span class="req">*</span>' : ''}</label>
+                  <textarea placeholder="${st.selStatus === 'rejected' ? 'Reason for rejection...' : st.selStatus === 'action need' ? 'What action is needed from the applicant...' : 'Optional internal note...'}"
+                    oninput="S.docD.selNote=this.value">${esc(st.selNote)}</textarea>
+                  <div style="font-size:10.5px;color:var(--n4);margin-top:5px">${(st.selStatus === 'rejected' || st.selStatus === 'action need') ? 'A note is required for this status.' : 'Internal note visible to other admins.'}</div>
+                </div>
+              </div>
+              <div class="savebar">
+                <button class="btn btn-primary" ${changed ? '' : 'disabled'} onclick="saveDocD()">${icon('check')} ${changed ? 'Save Review' : 'Saved'}</button>
+              </div>
+            </div>
+          </div>
+          <div class="ws-nav">
+            <button class="btn btn-ghost" ${idx <= 0 ? 'disabled' : ''} onclick="navDocD(-1)">← Previous</button>
+            <span class="count">${idx + 1} / ${siblings.length}</span>
+            <button class="btn btn-ghost" ${idx >= siblings.length - 1 ? 'disabled' : ''} onclick="navDocD(1)">Next →</button>
+          </div>
+          ` : `<div class="empty"><div class="big">✓</div>All documents have been reviewed.</div>`}
+        </div>
+      </div>
+    </div>`;
+}
+function toggleGroupD(uid) {
+  const s = S.docD.expanded; s.has(uid) ? s.delete(uid) : s.add(uid); renderDocD();
+}
+function selDocD(id) { S.docD.selId = id; S.docD.selStatus = findDoc(id).doc.status; S.docD.selNote = findDoc(id).doc.note ?? ''; renderDocD(); }
+function setDocStatusD(status) { S.docD.selStatus = status; renderDocD(); }
+function navDocD(dir) {
+  const hit = findDoc(S.docD.selId);
+  const sib = userDocs(hit.user.uid);
+  const i = sib.findIndex(d => d.id === S.docD.selId) + dir;
+  if (i >= 0 && i < sib.length) selDocD(sib[i].id);
+}
+function saveDocD() {
+  const hit = findDoc(S.docD.selId);
+  const needsNote = S.docD.selStatus === 'rejected' || S.docD.selStatus === 'action need';
+  if (needsNote && !S.docD.selNote.trim()) { showToast('A review note is required for this status.'); return; }
+  hit.doc.status = S.docD.selStatus; hit.doc.note = S.docD.selNote.trim() || null;
+  // Auto-advance to the next document in this applicant's set
+  const sib = userDocs(hit.user.uid);
+  const i = sib.findIndex(d => d.id === S.docD.selId);
+  const next = sib[i + 1];
+  if (next) {
+    S.docD.selId = next.id;
+    S.docD.selStatus = next.status;
+    S.docD.selNote = next.note ?? '';
+  }
+  renderDocD(); showToast('Document status updated — auto-advancing to next');
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE DOCUMENTS (queue → full-screen workspace)
+   ══════════════════════════════════════════════════════════════════════ */
+function renderDocM() {
+  const el = document.getElementById('view-docM');
+  const st = S.docM;
+
+  if (st.screen === 'queue') {
+    let rows = '';
+    for (const u of USERS) {
+      const pend = u.docs.filter(d => d.status === 'pending' || d.status === 'action need').length;
+      rows += `
+        <button class="groupbtn" style="padding:12px 14px" onclick="toggleGroupM('${u.uid}')">
+          <span class="avatar">${initials(u.name)}</span>
+          <span style="flex:1;min-width:0">
+            <span class="gname">${esc(u.name)}</span>
+            <span class="gmeta">${u.docs.length} docs · ${esc(u.code)}${pend ? `<span class="pending-pill">${pend} pending</span>` : ''}</span>
+          </span>
+          <span style="color:var(--n4);font-size:12px">${st.expanded.has(u.uid) ? '▾' : '▸'}</span>
+        </button>`;
+      if (st.expanded.has(u.uid)) {
+        for (const d of u.docs) {
+          rows += `
+            <button class="m-docrow" onclick="openDocM(${d.id})">
+              ${docIcon(d)}
+              <span style="flex:1;min-width:0">
+                <span class="dname">${esc(d.type)}</span>
+                <span class="dfile">${esc(d.file)}</span>
+              </span>
+              ${d.note ? `<span style="color:#d97706;font-size:11px">✎</span>` : ''}
+              <span class="chip chip-${d.status.replace(/ /g,'')}"><span class="dot"></span></span>
+              <span class="chev">›</span>
+            </button>`;
+        }
+      }
+    }
+    el.innerHTML = `
+      <div class="m-screen active">
+        <div class="m-top">
+          <div><div class="mt-title">Document Review</div><div class="mt-sub">${USERS.reduce((a,u)=>a+u.docs.length,0)} documents · ${USERS.length} applicants</div></div>
+          <div class="mt-right"><span class="iconbtn">${icon('bell')}</span></div>
+        </div>
+        <div class="m-queue-scroll">
+          <div class="search" style="width:100%;margin-bottom:12px">${icon('search')}<input placeholder="Search documents..." /></div>
+          ${rows}
+        </div>
+      </div>`;
+    return;
+  }
+
+  // workspace screen
+  const hit = findDoc(st.selId);
+  const sib = userDocs(hit.user.uid);
+  const idx = sib.findIndex(d => d.id === st.selId);
+  const doc = sib[idx];
+  const chips = sib.map((d, i) => `
+    <button class="m-chip ${d.id === st.selId ? 'sel' : ''}" onclick="openDocM(${d.id})">
+      <span class="mini"></span>${i + 1}
+    </button>`).join('');
+
+  el.innerHTML = `
+    <div class="m-screen active">
+      <div class="m-top">
+        <button class="backbtn" onclick="backToQueueM()">← Documents</button>
+        <div style="min-width:0"><div class="mt-title">${esc(doc.type)}</div><div class="mt-sub">${idx + 1} of ${sib.length} · ${esc(hit.user.name)}</div></div>
+        <div class="mt-right">${chip(doc.status)}</div>
+      </div>
+      <div class="m-ws-body">
+        <div class="m-preview-stage">${previewHTML(doc)}</div>
+        <div class="m-chipstrip">${chips}</div>
+      </div>
+      <div class="m-actionbar">
+        <button class="btn btn-ghost" style="border-color:var(--green-600);color:var(--green-600)" onclick="sheetDocM('accepted')">✓ Accept</button>
+        <button class="btn btn-ghost" style="border-color:var(--orange-600);color:var(--orange-600)" onclick="sheetDocM('action need')">⚠ Action</button>
+        <button class="btn btn-danger" onclick="sheetDocM('rejected')">✕ Reject</button>
+      </div>
+    </div>`;
+}
+function toggleGroupM(uid) { const s = S.docM.expanded; s.has(uid) ? s.delete(uid) : s.add(uid); renderDocM(); }
+function openDocM(id) {
+  S.docM.selId = id; S.docM.screen = 'workspace';
+  S.docM.selStatus = null; S.docM.selNote = '';
+  renderDocM();
+}
+function backToQueueM() { S.docM.screen = 'queue'; renderDocM(); }
+function sheetDocM(status) {
+  const st = S.docM;
+  st.sheetStatus = status;
+  const needsNote = status === 'rejected' || status === 'action need';
+  openSheet(`
+    <div class="grabber"></div>
+    <h3>${status === 'rejected' ? 'Reject document' : status === 'action need' ? 'Request action' : 'Accept document'}</h3>
+    <div class="hint">${status === 'rejected' ? 'The applicant will be notified with the reason below.' : status === 'action need' ? 'Explain what the applicant needs to do.' : 'The document will be marked as accepted.'}</div>
+    <label class="field-label">Review note${needsNote ? '<span class="req">*</span>' : ' <span style="text-transform:none;font-weight:400">(optional)</span>'}</label>
+    <textarea id="sheetNote" placeholder="${status === 'rejected' ? 'Reason for rejection...' : status === 'action need' ? 'What action is needed...' : 'Optional note...'}"></textarea>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="closeSheet()">Cancel</button>
+      <button class="btn ${status === 'rejected' ? 'btn-danger' : 'btn-primary'}" onclick="confirmSheetDocM()">Confirm</button>
+    </div>
+  `);
+}
+function confirmSheetDocM() {
+  const st = S.docM;
+  const status = st.sheetStatus;
+  const note = document.getElementById('sheetNote').value;
+  const needsNote = status === 'rejected' || status === 'action need';
+  if (needsNote && !note.trim()) { showToast('A review note is required for this status.'); return; }
+  const hit = findDoc(st.selId);
+  hit.doc.status = status; hit.doc.note = note.trim() || null;
+  closeSheet();
+  // Auto-advance to the next document in this applicant's set
+  const sib = userDocs(hit.user.uid);
+  const i = sib.findIndex(d => d.id === st.selId);
+  st.selStatus = null; st.selNote = '';
+  if (i < sib.length - 1) {
+    st.selId = sib[i + 1].id;
+    renderDocM();
+    showToast(`Document ${status} — moved to next`);
+  } else {
+    st.screen = 'queue';
+    renderDocM();
+    showToast(`Document ${status} — all documents reviewed`);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DESKTOP APPLICATIONS (two-pane)
+   ══════════════════════════════════════════════════════════════════════ */
+function renderAppD() {
+  const el = document.getElementById('view-appD');
+  const st = S.appD;
+  const app = APPS.find(a => a.id === st.selId);
+
+  const rows = APPS.map(a => `
+    <button class="approw ${a.id === st.selId ? 'sel' : ''}" onclick="selAppD(${a.id})">
+      <span class="avatar">${initials(a.name)}</span>
+      <span style="flex:1;min-width:0">
+        <span class="aname">${esc(a.name)}</span>
+        <span class="acode">${esc(a.code)}</span>
+      </span>
+      ${chip(a.status)}
+    </button>`).join('');
+
+  const pendDocs = app.docs.filter(d => d.status === 'pending' || d.status === 'action need').length;
+  const docLinks = app.docs.length === 0
+    ? `<div style="font-size:12px;color:var(--n4)">No documents submitted yet.</div>`
+    : app.docs.map((d, i) => `
+      <button class="doclinkrow" onclick="gotoDocFromApp(${d.id})">
+        <span style="width:30px;height:30px;border-radius:8px;background:var(--n0);display:flex;align-items:center;justify-content:center;color:var(--n4);font-size:12px">${icon(d.fmt === 'PDF' ? 'file' : 'img')}</span>
+        <span class="dname">${esc(d.type)} <span style="display:block;color:var(--n4);font-size:11px">${esc(d.file)}</span></span>
+        ${d.note ? `<span style="color:#d97706;font-size:11px">✎</span>` : ''}
+        ${chip(d.status)}
+        <span class="go">Review →</span>
+      </button>`).join('');
+
+  const sNote = st.selStatus !== app.status;
+  el.innerHTML = `
+    <div class="pagehead">
+      <div><h2>Manage Applications</h2><div class="desc">Review eligibility, documents, and application status</div></div>
+    </div>
+    <div class="app-desktop">
+      <div class="statrow">
+        ${[
+          ['Total', APPS.length, 'var(--blue-600)', 'var(--blue-50)', '📋'],
+          ['Pending', 1, 'var(--amber-600)', 'var(--amber-50)', '⏱'],
+          ['Approved', 1, 'var(--green-600)', 'var(--green-50)', '✓'],
+          ['Rejected', 0, 'var(--red-600)', 'var(--red-50)', '⚠'],
+        ].map(([l, n, c, bg, ic]) => `
+          <div class="statcard">
+            <div class="ico" style="background:${bg};color:${c}">${ic}</div>
+            <div><div class="num">${n}</div><div class="lbl">${l}</div></div>
+          </div>`).join('')}
+      </div>
+      <div class="filterbar">
+        <select class="fselect"><option>All Status</option><option>Pending</option><option>Processing</option><option>Approved</option></select>
+        <div class="search" style="flex:1;min-width:0">${icon('search')}<input placeholder="Search by name or code..." /></div>
+      </div>
+      <div class="app-split">
+        <div class="panel queue-panel">
+          <div class="queue-head"><div><h3>Applications</h3><small>${APPS.filter(a=>a.status==='pending').length} pending · ${APPS.length} total</small></div></div>
+          <div class="queue-scroll">${rows}</div>
+        </div>
+        <div class="panel detail-panel">
+          <div class="detail-head">
+            <div style="min-width:0">
+              <h3>${esc(app.name)}</h3>
+              <div class="acode">${esc(app.code)} · Submitted Mar 2, 2026</div>
+            </div>
+            ${chip(app.status)}
+          </div>
+          <div class="detail-scroll">
+            <div class="dsection">
+              <h5>Contact Information</h5>
+              <div class="dgrid">
+                <div class="field"><span class="k">Phone:</span> <span class="v">${esc(app.phone)}</span></div>
+                <div class="field"><span class="k">Email:</span> <span class="v">${esc(app.email)}</span></div>
+                <div class="field" style="grid-column:1/-1"><span class="k">Address:</span> <span class="v">${esc(app.street)}</span></div>
+              </div>
+            </div>
+            <div class="dsection">
+              <h5>Personal Profile</h5>
+              <div class="dgrid">
+                <div class="field"><span class="k">Born:</span> <span class="v">${esc(app.birth)}</span></div>
+                <div class="field"><span class="k">Gender:</span> <span class="v">${esc(app.gender)}</span></div>
+                <div class="field"><span class="k">Passport:</span> <span class="v">${esc(app.passport)}</span></div>
+                <div class="field"><span class="k">Expires:</span> <span class="v">${esc(app.expiry)}</span></div>
+              </div>
+            </div>
+            <div class="dsection">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <h5 style="margin-bottom:0">Documents (${app.docs.length})</h5>
+                ${pendDocs > 0 ? `<span style="font-size:10px;color:#b45309;font-weight:600">${pendDocs} need review</span>` : ''}
+              </div>
+              ${docLinks}
+            </div>
+            <div class="dsection">
+              <h5>Additional Information</h5>
+              <div style="font-size:12.5px;color:var(--n7)">Education · Employment · Dependents · Family Background
+                <span style="color:var(--n4)">(collapsible sections)</span></div>
+            </div>
+          </div>
+          <div class="appstatusbar">
+            <select value="${esc(st.selStatus)}" onchange="S.appD.selStatus=this.value">
+              <option value="pending">Pending</option><option value="processing">Processing</option>
+              <option value="paused">Paused</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+            </select>
+            <button class="btn btn-primary" ${sNote ? '' : 'disabled'} onclick="saveAppD()">${icon('check')} ${sNote ? 'Update' : 'Saved'}</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+function selAppD(id) {
+  S.appD.selId = id;
+  S.appD.selStatus = APPS.find(a => a.id === id).status;
+  renderAppD();
+}
+function saveAppD() {
+  const app = APPS.find(a => a.id === S.appD.selId);
+  const status = S.appD.selStatus;
+  if (status === 'rejected' || status === 'approved') {
+    openSheet(`
+      <div class="grabber"></div>
+      <h3>${status === 'rejected' ? 'Reject application' : 'Approve application'}</h3>
+      <div class="hint">${status === 'rejected' ? 'This sends a rejection notice with the note below.' : 'This sends the approval confirmation to the applicant.'}</div>
+      <label class="field-label">${status === 'rejected' ? 'Reason' : 'Approval note'} <span class="req">*</span></label>
+      <textarea id="appSheetNote" placeholder="${status === 'rejected' ? 'Why was the application rejected?' : 'Message to include in the approval...'}"></textarea>
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="closeSheet()">Cancel</button>
+        <button class="btn ${status === 'rejected' ? 'btn-danger' : 'btn-primary'}" onclick="confirmAppD('${status}')">${status === 'rejected' ? 'Reject' : 'Approve'}</button>
+      </div>
+    `);
+    return;
+  }
+  app.status = status; renderAppD(); showToast(`Application ${status}`);
+}
+function confirmAppD(status) {
+  const note = document.getElementById('appSheetNote').value;
+  if (!note.trim()) { showToast('A note is required for this action.'); return; }
+  const app = APPS.find(a => a.id === S.appD.selId);
+  app.status = status; app.statusNote = note.trim();
+  closeSheet(); renderAppD(); showToast(`Application ${status}`);
+}
+function gotoDocFromApp(id) {
+  // In the real app this navigates to /admin/documents?doc=<id>&app=<appId>
+  switchView('documents', window.currentView);
+  if (window.currentView === 'mobile') { S.docM.screen = 'workspace'; S.docM.selId = id; renderDocM(); }
+  else { S.docD.selId = id; S.docD.selStatus = findDoc(id).doc.status; S.docD.selNote = findDoc(id).doc.note ?? ''; renderDocD(); }
+  showToast('Opened document in review workspace');
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE APPLICATIONS (queue → detail)
+   ══════════════════════════════════════════════════════════════════════ */
+function renderAppM() {
+  const el = document.getElementById('view-appM');
+  const st = S.appM;
+
+  if (st.screen === 'queue') {
+    const rows = APPS.map(a => `
+      <button class="m-approw" onclick="openAppM(${a.id})">
+        <span class="avatar" style="width:34px;height:34px">${initials(a.name)}</span>
+        <span style="flex:1;min-width:0">
+          <span class="aname" style="font-size:13.5px;font-weight:500;color:var(--n9)">${esc(a.name)}</span>
+          <span class="acode" style="font-size:11px;color:var(--n4);display:block;margin-top:1px">${esc(a.code)}</span>
+        </span>
+        ${chip(a.status)}
+        <span style="color:var(--n3)">›</span>
+      </button>`).join('');
+    el.innerHTML = `
+      <div class="m-screen active">
+        <div class="m-top">
+          <div><div class="mt-title">Applications</div><div class="mt-sub">${APPS.filter(a=>a.status==='pending').length} pending · ${APPS.length} total</div></div>
+          <div class="mt-right"><span class="iconbtn">${icon('bell')}</span></div>
+        </div>
+        <div class="m-queue-scroll">
+          <div class="search" style="width:100%;margin-bottom:12px">${icon('search')}<input placeholder="Search by name or code..." /></div>
+          ${rows}
+        </div>
+      </div>`;
+    return;
+  }
+
+  const app = APPS.find(a => a.id === st.selId);
+  const pendDocs = app.docs.filter(d => d.status === 'pending' || d.status === 'action need').length;
+  const docLinks = app.docs.length === 0
+    ? `<div style="font-size:12px;color:var(--n4)">No documents submitted yet.</div>`
+    : app.docs.map(d => `
+      <button class="doclinkrow" onclick="gotoDocFromApp(${d.id})">
+        <span style="width:32px;height:32px;border-radius:8px;background:var(--n0);display:flex;align-items:center;justify-content:center;color:var(--n4);font-size:13px">${icon(d.fmt === 'PDF' ? 'file' : 'img')}</span>
+        <span class="dname">${esc(d.type)} <span style="display:block;color:var(--n4);font-size:11px">${esc(d.file)}</span></span>
+        ${chip(d.status)}
+        <span class="go">Review →</span>
+      </button>`).join('');
+
+  el.innerHTML = `
+    <div class="m-screen active">
+      <div class="m-top">
+        <button class="backbtn" onclick="backToQueueAppM()">← Applications</button>
+        <div style="min-width:0"><div class="mt-title">${esc(app.name)}</div><div class="mt-sub">${esc(app.code)}</div></div>
+        <div class="mt-right">${chip(app.status)}</div>
+      </div>
+      <div class="m-detail-scroll">
+        <div class="m-dsection">
+          <h5>Contact Information</h5>
+          <div class="m-dgrid">
+            <div class="field"><span class="k">Phone:</span> <span class="v">${esc(app.phone)}</span></div>
+            <div class="field"><span class="k">Email:</span> <span class="v">${esc(app.email)}</span></div>
+            <div class="field" style="grid-column:1/-1"><span class="k">Address:</span> <span class="v">${esc(app.street)}</span></div>
+          </div>
+        </div>
+        <div class="m-dsection">
+          <h5>Personal Profile</h5>
+          <div class="m-dgrid">
+            <div class="field"><span class="k">Born:</span> <span class="v">${esc(app.birth)}</span></div>
+            <div class="field"><span class="k">Gender:</span> <span class="v">${esc(app.gender)}</span></div>
+            <div class="field"><span class="k">Passport:</span> <span class="v">${esc(app.passport)}</span></div>
+            <div class="field"><span class="k">Expires:</span> <span class="v">${esc(app.expiry)}</span></div>
+          </div>
+        </div>
+        <div class="m-dsection">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <h5 style="margin-bottom:0">Documents (${app.docs.length})</h5>
+            ${pendDocs > 0 ? `<span style="font-size:10px;color:#b45309;font-weight:600">${pendDocs} need review</span>` : ''}
+          </div>
+          ${docLinks}
+        </div>
+        <div class="m-dsection collapsible" onclick="this.querySelector('.extra').style.display = this.querySelector('.extra').style.display === 'block' ? 'none' : 'block'">
+          <h5>Additional Information <span class="arrow">▾</span></h5>
+          <div class="extra" style="display:none;font-size:12.5px;color:var(--n7)">Education · Employment · Dependents · Family Background</div>
+        </div>
+      </div>
+      <div class="m-statusbar">
+        <button class="btn btn-primary" onclick="sheetAppM()">Update Status</button>
+      </div>
+    </div>`;
+}
+function openAppM(id) {
+  S.appM.selId = id;
+  S.appM.selStatus = APPS.find(a => a.id === id).status;
+  S.appM.screen = 'detail';
+  renderAppM();
+}
+function backToQueueAppM() { S.appM.screen = 'queue'; renderAppM(); }
+function sheetAppM() {
+  const app = APPS.find(a => a.id === S.appM.selId);
+  const opts = ['pending', 'processing', 'paused', 'approved', 'rejected'];
+  const radios = opts.map(o => `
+    <button class="radio-opt ${o === S.appM.selStatus ? 'sel' : ''}" onclick="pickAppStatusM('${o}')">
+      <span class="r"></span>${o.charAt(0).toUpperCase() + o.slice(1)}
+    </button>`).join('');
+  openSheet(`
+    <div class="grabber"></div>
+    <h3>Set application status</h3>
+    <div class="hint">${esc(app.name)} · ${esc(app.code)}</div>
+    ${radios}
+    <div class="sheet-note-wrap" style="display:none">
+      <label class="field-label">Reason for rejection <span class="req">*</span></label>
+      <textarea id="appMNote" placeholder="Why was the application rejected?"></textarea>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="closeSheet()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAppM()">Save Status</button>
+    </div>
+  `);
+  if (S.appM.selStatus === 'rejected') document.querySelector('.sheet-note-wrap').style.display = 'block';
+}
+function pickAppStatusM(status) {
+  S.appM.selStatus = status;
+  document.querySelectorAll('.radio-opt').forEach(b => b.classList.toggle('sel', b.textContent.trim().toLowerCase() === status));
+  document.querySelector('.sheet-note-wrap').style.display = status === 'rejected' ? 'block' : 'none';
+}
+function confirmAppM() {
+  const app = APPS.find(a => a.id === S.appM.selId);
+  const status = S.appM.selStatus;
+  if (status === 'rejected') {
+    const note = document.getElementById('appMNote').value;
+    if (!note.trim()) { showToast('A reason is required to reject.'); return; }
+    app.statusNote = note.trim();
+  }
+  app.status = status;
+  closeSheet(); renderAppM(); showToast(`Application ${status}`);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Viewport + feature switching
+   ══════════════════════════════════════════════════════════════════════ */
+window.currentView = 'desktop';
+window.currentFeature = 'documents';
+
+function switchView(view) {
+  window.currentView = view;
+  const frame = document.getElementById('frame');
+  frame.classList.toggle('desktop', view === 'desktop');
+  frame.classList.toggle('mobile', view === 'mobile');
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  document.getElementById('frameLabel').textContent =
+    view === 'desktop'
+      ? 'Desktop · lg+ — two-pane master/detail: queue on the left, review surface on the right'
+      : 'Mobile · <lg — queue and review are exclusive screens; review takes over full-screen with sticky back + action bars';
+  renderAll();
+}
+
+function switchFeature(feature) {
+  window.currentFeature = feature;
+  document.querySelectorAll('#featureSeg button').forEach(b => b.classList.toggle('active', b.dataset.feature === feature));
+  renderAll();
+}
+
+function renderAll() {
+  renderDocD(); renderDocM(); renderAppD(); renderAppM();
+  document.querySelectorAll('.view').forEach(v => {
+    const show =
+      v.classList.contains('view-' + window.currentView) &&
+      v.classList.contains('view-' + window.currentFeature);
+    v.classList.toggle('active', show);
+  });
+}
+
+document.getElementById('viewSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (b) switchView(b.dataset.view);
+});
+document.getElementById('featureSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (b) switchFeature(b.dataset.feature);
+});
+
+/* ─── Init with optional deep-link params ───
+   ?view=desktop|mobile
+   ?feature=documents|applications
+   ?doc=<id>      → auto-open that document in the workspace (mobile) / select it (desktop)
+   ?app=<id>      → auto-open that application detail (mobile) / select it (desktop)  */
+(function init() {
+  const params = new URLSearchParams(location.search);
+  const view = params.get('view') === 'mobile' ? 'mobile' : 'desktop';
+  const feature = params.get('feature') === 'applications' ? 'applications' : 'documents';
+
+  window.currentView = view;
+  window.currentFeature = feature;
+
+  const doc = Number(params.get('doc'));
+  if (doc && findDoc(doc)) {
+    S.docD.selId = doc;
+    S.docD.selStatus = findDoc(doc).doc.status;
+    S.docD.selNote = findDoc(doc).doc.note ?? '';
+    S.docM.screen = 'workspace';
+    S.docM.selId = doc;
+  }
+
+  const app = Number(params.get('app'));
+  if (app && APPS.find(a => a.id === app)) {
+    S.appD.selId = app;
+    S.appD.selStatus = APPS.find(a => a.id === app).status;
+    S.appM.screen = 'detail';
+    S.appM.selId = app;
+    S.appM.selStatus = APPS.find(a => a.id === app).status;
+  }
+
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  document.querySelectorAll('#featureSeg button').forEach(b => b.classList.toggle('active', b.dataset.feature === feature));
+
+  renderAll();
+})();
+</script>
+</body>
+</html>

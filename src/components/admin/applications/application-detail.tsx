@@ -1,37 +1,36 @@
 'use client'
 
 import { useState, useTransition, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import {
   Loader2, FileIcon, ExternalLink, MessageSquare,
-  User, MapPin, Plane,
+  User, MapPin, Plane, ChevronLeft,
   GraduationCap, Briefcase, Users, Heart, ChevronDown, ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { StatusChip } from '@/components/ui/status-chip'
 import { updateAppStatus } from '@/actions/admin/applications-admin'
+import { documentTypeLabel } from '@/components/admin/documents/document-review/document-meta'
+import { cn } from '@/lib/utils'
 import { DocumentReviewModal } from './document-review-modal'
+import { ApplicationStatusSheet } from './application-status-sheet'
 import type { AppDetail } from '@/actions/admin/applications-admin'
-
-const DOC_TYPE_LABELS: Record<string, string> = {
-  passport: 'Passport',
-  visa: 'Visa',
-  nbi: 'NBI Clearance',
-  pension: 'Pension Proof',
-  medical: 'Medical Report',
-}
 
 interface Props {
   detail: AppDetail
-  onStatusChange: () => void
+  /** Clears the ?app= selection (mobile back button / after status change) */
+  onBack?: () => void
+  /** Called with the detail id after a successful status change */
+  onStatusChange: (id: number) => void
   onDocReviewSaved?: () => void
+  /** Extra classes for the outer panel (parent supplies sizing/rounding) */
+  className?: string
 }
 
-export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: Props) {
-  const router = useRouter()
+export function ApplicationDetail({ detail, onBack, onStatusChange, onDocReviewSaved, className }: Props) {
   const [isPending, startTransition] = useTransition()
   const [selectedAppStatus, setSelectedAppStatus] = useState(detail.status)
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false)
+  const [statusSheetOpen, setStatusSheetOpen] = useState(false)
 
   // Document review modal state
   const [reviewModalOpen, setReviewModalOpen] = useState(false)
@@ -47,18 +46,25 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
     setShowAdditionalInfo(false)
   }, [detail.id, detail.status])
 
-  const handleAppStatus = (status: string) => {
-    const formData = new FormData()
-    formData.set('app_id', String(detail.id))
-    formData.set('status', status)
-    startTransition(async () => {
+  const handleAppStatus = useCallback(
+    async (status: string): Promise<boolean> => {
+      // No-op if the status is not actually changing — avoids bouncing the
+      // admin back to the queue for a change that does nothing.
+      if (status === detail.status) return true
+      const formData = new FormData()
+      formData.set('app_id', String(detail.id))
+      formData.set('status', status)
       const result = await updateAppStatus({ error: null, success: false }, formData)
-      if (!result.success && result.error) { toast.error(result.error); return }
+      if (!result.success && result.error) {
+        toast.error(result.error)
+        return false
+      }
       toast.success(`Application ${status}`)
-      onStatusChange()
-      router.refresh()
-    })
-  }
+      onStatusChange(detail.id)
+      return true
+    },
+    [detail.id, detail.status, onStatusChange],
+  )
 
   const openDocReview = useCallback((index: number) => {
     setReviewDocIndex(index)
@@ -67,10 +73,10 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
 
   const handleDocumentsUpdated = useCallback((docId: number, newStatus: string) => {
     setLocalDocStatuses((prev) => ({ ...prev, [docId]: newStatus }))
-    // Silently refresh detail data without deselecting the application
+    // The parent's onDocReviewSaved triggers a router.refresh() that re-fetches
+    // the server-side detail — no need to refresh again here.
     onDocReviewSaved?.()
-    router.refresh()
-  }, [onDocReviewSaved, router])
+  }, [onDocReviewSaved])
 
   const someDocsNeedReview = detail.documents.some(
     (d) => {
@@ -94,8 +100,27 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
 
   return (
     <>
-      <div className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
-        <div className="px-5 py-4 border-b border-brand-neutral-100 flex items-center justify-between">
+      <div className={cn('flex flex-col overflow-hidden min-h-0 bg-white', className)}>
+        {/* ── Mobile top bar (back + identity) — shown below the xl two-pane split ── */}
+        <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-brand-neutral-100 xl:hidden shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back to applications"
+            className="inline-flex items-center gap-1 text-brand-primary-600 text-sm font-semibold px-2 py-2 -ml-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Applications
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-brand-neutral-900 truncate">{detail.applicant_name}</p>
+            <p className="text-[11px] text-brand-neutral-400 truncate">{detail.application_code}</p>
+          </div>
+          <StatusChip status={detail.status} className="shrink-0" />
+        </div>
+
+        {/* ── Desktop header (xl+) ── */}
+        <div className="hidden xl:flex px-5 py-4 border-b border-brand-neutral-100 items-center justify-between shrink-0">
           <div>
             <h3 className="text-lg font-semibold text-brand-neutral-900">{detail.applicant_name}</h3>
             <p className="text-xs text-brand-neutral-400 mt-0.5">
@@ -283,7 +308,7 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-brand-neutral-900 truncate group-hover:text-brand-primary-700 transition-colors">
-                          {DOC_TYPE_LABELS[doc.type] ?? doc.type}
+                          {documentTypeLabel(doc.type)}
                         </p>
                         <p className="text-xs text-brand-neutral-400 truncate">{doc.name}</p>
                       </div>
@@ -433,10 +458,15 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
               )}
             </section>
           )}
+        </div>
 
-          {/* ── Application Status ── */}
-          <section className="px-5 py-4 space-y-3">
-            <h4 className="text-xs font-semibold text-brand-neutral-400 uppercase tracking-wider">Application Status</h4>
+        {/* ── Sticky status bar ── */}
+        <div className="border-t-2 border-brand-neutral-200 bg-white px-4 py-3 shrink-0">
+          {/* Desktop (xl+): select + update */}
+          <div className="hidden xl:flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-brand-neutral-400 uppercase tracking-wider">
+              Application Status
+            </span>
             <div className="flex items-center gap-2">
               <select
                 value={selectedAppStatus}
@@ -450,17 +480,28 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
                 <option value="paused">Paused</option>
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
+                <option value="payment_failed">Payment Failed</option>
               </select>
               <button
-                onClick={() => handleAppStatus(selectedAppStatus)}
-                disabled={isPending}
+                onClick={() => startTransition(() => { handleAppStatus(selectedAppStatus) })}
+                disabled={isPending || selectedAppStatus === detail.status}
                 className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 disabled:opacity-40 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
               >
                 {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Update
+                {isPending ? 'Updating...' : selectedAppStatus === detail.status ? 'Saved' : 'Update'}
               </button>
             </div>
-          </section>
+          </div>
+
+          {/* Mobile (<xl): full-width update status */}
+          <div className="xl:hidden">
+            <button
+              onClick={() => setStatusSheetOpen(true)}
+              className="w-full inline-flex items-center justify-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-white text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
+            >
+              Update Status
+            </button>
+          </div>
         </div>
       </div>
 
@@ -471,6 +512,16 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
         open={reviewModalOpen}
         onOpenChange={setReviewModalOpen}
         onDocumentsUpdated={handleDocumentsUpdated}
+      />
+
+      {/* Mobile status sheet */}
+      <ApplicationStatusSheet
+        open={statusSheetOpen}
+        onOpenChange={setStatusSheetOpen}
+        currentStatus={selectedAppStatus}
+        applicantName={detail.applicant_name}
+        applicationCode={detail.application_code}
+        onSave={handleAppStatus}
       />
     </>
   )

@@ -1,10 +1,10 @@
 import { getDocumentsForReview, getDocumentStats } from '@/actions/admin/documents'
-import { DocumentsReview } from '@/components/admin/documents/documents-review'
+import { DocumentsIndex } from '@/components/admin/documents/documents-index'
 
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ userId?: string; q?: string; sort?: string; page?: string }>
+  searchParams: Promise<{ userId?: string; q?: string; sort?: string; page?: string; doc?: string }>
 }) {
   const resolvedParams = await searchParams
   const page = Number(resolvedParams.page ?? 1)
@@ -23,13 +23,14 @@ export default async function DocumentsPage({
   const stats = { ...existingStats, total }
 
   return (
-    <DocumentsReview
+    <DocumentsIndex
       docs={rows}
       stats={stats}
       total={total}
       page={page}
       search={resolvedParams.q}
       sort={sort}
+      docId={resolvedParams.doc}
     />
   )
 }

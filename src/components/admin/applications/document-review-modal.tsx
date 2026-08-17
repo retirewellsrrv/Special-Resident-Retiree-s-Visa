@@ -16,15 +16,8 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { StatusChip } from '@/components/ui/status-chip'
 import { getDocumentSignedUrl } from '@/actions/admin/documents'
 import { updateDocumentReview } from '@/actions/admin/document-review'
+import { documentTypeLabel } from '@/components/admin/documents/document-review/document-meta'
 import type { AppDetail } from '@/actions/admin/applications-admin'
-
-const DOC_TYPE_LABELS: Record<string, string> = {
-  passport: 'Passport',
-  visa: 'Visa',
-  nbi: 'NBI Clearance',
-  pension: 'Pension Proof',
-  medical: 'Medical Report',
-}
 
 interface Props {
   documents: AppDetail['documents']
@@ -185,7 +178,7 @@ export function DocumentReviewModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-            className="!max-w-[75rem] w-[calc(100%-100px)] max-h-[calc(100vh-100px)] h-auto min-h-[480px] p-0 flex flex-col gap-0 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
+            className="!max-w-[75rem] w-[calc(100%-24px)] lg:w-[calc(100%-100px)] max-h-[calc(100vh-24px)] lg:max-h-[calc(100vh-100px)] h-auto min-h-[min(420px,100dvh)] p-0 flex flex-col gap-0 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
             showCloseButton={false}
           >
         {/* ── Header ── */}
@@ -193,7 +186,7 @@ export function DocumentReviewModal({
           <div className="min-w-0 flex-1">
             <DialogTitle className="sr-only">Document Review</DialogTitle>
             <p className="text-sm font-semibold text-brand-neutral-900 truncate">
-              {currentDoc ? DOC_TYPE_LABELS[currentDoc.type] ?? currentDoc.type : ''}
+              {currentDoc ? documentTypeLabel(currentDoc.type) : ''}
             </p>
             <p className="text-[11px] text-brand-neutral-400 truncate">
               {currentDoc?.name ?? ''}
@@ -217,9 +210,9 @@ export function DocumentReviewModal({
         </div>
 
         {/* ── Body: preview + sidebar ── */}
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
           {/* Document Preview */}
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="h-1/2 lg:h-auto lg:flex-1 flex flex-col min-w-0">
             {/* Zoom controls */}
             <div className="flex items-center justify-end gap-1 px-5 py-2.5 border-b border-brand-neutral-100 shrink-0 bg-brand-neutral-50/50">
               <button
@@ -314,7 +307,7 @@ export function DocumentReviewModal({
           </div>
 
           {/* ── Sidebar: metadata + actions ── */}
-          <div className="w-[300px] shrink-0 border-l-2 border-brand-neutral-200 bg-white flex flex-col overflow-hidden">
+          <div className="flex-1 lg:flex-none lg:w-[300px] shrink-0 border-t-2 border-brand-neutral-200 lg:border-t-0 lg:border-l-2 bg-white flex flex-col overflow-hidden min-h-0">
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Document metadata */}
               <div>
@@ -326,7 +319,7 @@ export function DocumentReviewModal({
                     <dt className="text-brand-neutral-400">Type</dt>
                     <dd className="text-brand-neutral-900 font-medium">
                       {currentDoc
-                        ? DOC_TYPE_LABELS[currentDoc.type] ?? currentDoc.type
+                        ? documentTypeLabel(currentDoc.type)
                         : '-'}
                     </dd>
                   </div>
