@@ -63,7 +63,7 @@ export function ReviewActions({ doc, onStatusChange }: Props) {
             onChange={(e) => setSelectedStatus(e.target.value)}
             disabled={isPending}
             aria-label="Document status"
-            className={`text-sm rounded-lg border bg-white text-brand-neutral-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 disabled:opacity-40 ${
+            className={`text-[16px] sm:text-sm rounded-lg border bg-white text-brand-neutral-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 disabled:opacity-40 ${
               statusChanged ? 'border-amber-300 ring-1 ring-amber-200' : 'border-brand-neutral-200'
             }`}
           >
@@ -116,7 +116,7 @@ export function ReviewActions({ doc, onStatusChange }: Props) {
             }
             rows={3}
             disabled={isPending}
-            className={`w-full text-sm rounded-lg border bg-white text-brand-neutral-900 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 placeholder:text-brand-neutral-300 disabled:opacity-40 ${
+            className={`w-full text-[16px] sm:text-sm rounded-lg border bg-white text-brand-neutral-900 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-brand-primary-500 placeholder:text-brand-neutral-300 disabled:opacity-40 ${
               noteChanged ? 'border-amber-300 ring-1 ring-amber-200' : 'border-brand-neutral-200'
             }`}
           />

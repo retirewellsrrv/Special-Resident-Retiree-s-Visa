@@ -117,7 +117,7 @@ export function ClientProfilesClient({
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
             <PageHeader title="Manage Client Profiles" />
 
             {/* Compact Stats */}
@@ -187,8 +187,66 @@ export function ClientProfilesClient({
                 <FilterClear onClick={handleClear} disabled={isPending} />
             </FilterBar>
 
-            {/* Table */}
-            <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
+            {/* ── Mobile cards ── */}
+            <div className="md:hidden space-y-3">
+                {isPending ? (
+                    <TableSkeleton rows={Math.min(rows.length || limit, limit)} columns={2} />
+                ) : rows.length === 0 ? (
+                    <div className="flex flex-col items-center gap-3 py-12 text-center">
+                        <Inbox className="size-10 text-brand-neutral-300" />
+                        <p className="text-sm text-brand-neutral-400">No clients found.</p>
+                        <Link
+                            href="/admin/applications"
+                            className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+                        >
+                            <Plus className="h-4 w-4" /> View Applications
+                        </Link>
+                    </div>
+                ) : (
+                    rows.map((row) => {
+                        const StatusIcon = row.status ? STATUS_ICON[row.status] : undefined
+                        return (
+                            <Link
+                                key={row.user_id}
+                                href={`/admin/profiles/${row.user_id}`}
+                                className="block bg-white border border-brand-neutral-200 rounded-xl overflow-hidden transition-colors hover:bg-brand-neutral-50"
+                            >
+                                <div className="px-4 py-3 flex items-center gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold leading-tight text-brand-neutral-900 truncate">{row.name}</p>
+                                        <p className="text-xs text-brand-neutral-500 truncate">
+                                            {row.application_code ?? 'No application yet'}
+                                        </p>
+                                    </div>
+                                    {row.status ? (
+                                        <StatusChip status={row.status} icon={StatusIcon} />
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border border-brand-neutral-200 bg-brand-neutral-100 text-brand-neutral-600 capitalize shrink-0">
+                                            No Application
+                                        </span>
+                                    )}
+                                    <ChevronRight className="h-4 w-4 text-brand-neutral-300 shrink-0" />
+                                </div>
+                                <div className="px-4 py-2 border-t border-brand-neutral-100 bg-brand-neutral-50/40 flex items-center justify-between">
+                                    <span className="text-xs text-brand-neutral-400">Last updated</span>
+                                    <span className="text-xs text-brand-neutral-500">
+                                        {row.updated_at
+                                            ? new Date(row.updated_at).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                            })
+                                            : '\u2014'}
+                                    </span>
+                                </div>
+                            </Link>
+                        )
+                    })
+                )}
+            </div>
+
+            {/* ── Desktop table ── */}
+            <div className="hidden md:block bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-brand-neutral-100">
                     <span className="text-sm font-medium text-brand-neutral-900">Client Records</span>
                 </div>

@@ -33,6 +33,7 @@ export default function SuperAdminLayout({
       ctaLabel="New Admin"
       onCta={() => router.push('/super-admin/manage-admins')}
       user={{ name: userName || 'Super Admin', role: 'Super Admin' }}
+      hideNotifications
     >
       {children}
     </SidebarLayout>

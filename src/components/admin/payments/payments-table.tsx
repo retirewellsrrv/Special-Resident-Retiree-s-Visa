@@ -87,6 +87,52 @@ export default function PaymentTable({ rows, total }: Props) {
         <span className="text-sm font-medium text-brand-neutral-900">Recent Transactions</span>
       </div>
 
+      {/* ── Mobile card list ── */}
+      <div className="md:hidden divide-y divide-brand-neutral-100">
+        {sorted.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-12 text-center px-4">
+            <Inbox className="size-10 text-brand-neutral-300" />
+            <p className="text-sm text-brand-neutral-400">No transactions found</p>
+            <a
+              href="/admin/applications"
+              className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+            >
+              <ExternalLink className="h-4 w-4" /> View Applications
+            </a>
+          </div>
+        ) : (
+          sorted.map((row) => (
+            <div key={row.id} className="px-4 py-3 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm text-brand-neutral-900 font-medium truncate">{row.client_name ?? '\u2014'}</p>
+                  <p className="font-mono text-xs text-brand-neutral-500 truncate">{row.transaction_code}</p>
+                </div>
+                <StatusBadge status={row.status} />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium">{fmt(row.amount)}</span>
+                <span className="text-sm text-brand-neutral-600 capitalize">{row.payment_method}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span
+                  className={
+                    row.service_type === 'application'
+                      ? 'inline-flex rounded-md bg-brand-primary-50 text-brand-primary-800 px-2 py-0.5 text-xs font-medium capitalize'
+                      : 'inline-flex rounded-md bg-violet-50 text-violet-700 px-2 py-0.5 text-xs font-medium capitalize'
+                  }
+                >
+                  {row.service_type}
+                </span>
+                <span className="text-xs text-brand-neutral-500">{fmtDate(row.created_at)}</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── Desktop table ── */}
+      <div className="hidden md:block">
       <Table>
         <TableHeader>
           <TableRow>
@@ -137,6 +183,7 @@ export default function PaymentTable({ rows, total }: Props) {
           ))}
         </TableBody>
       </Table>
+      </div>
     </div>
   )
 }

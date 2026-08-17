@@ -65,10 +65,10 @@ export function ConsultationDetail({ detail, onStatusChange }: Props) {
   }
 
   return (
-    <div className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
-      <div className="px-5 py-4 border-b border-brand-neutral-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-brand-neutral-900">{detail.applicant_name}</h3>
+    <div className="flex flex-1 flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+      <div className="px-5 py-4 border-b border-brand-neutral-100 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-semibold text-brand-neutral-900 truncate">{detail.applicant_name}</h3>
             <p className="text-xs text-brand-neutral-400 mt-0.5">
               Requested {formatDateTime(detail.created_at)}
             </p>
@@ -79,7 +79,7 @@ export function ConsultationDetail({ detail, onStatusChange }: Props) {
               </p>
             )}
           </div>
-        <StatusChip status={detail.status} />
+        <StatusChip status={detail.status} className="shrink-0" />
       </div>
 
       <div className="flex-1 overflow-y-auto divide-y divide-brand-neutral-50">
@@ -118,7 +118,7 @@ export function ConsultationDetail({ detail, onStatusChange }: Props) {
         {detail.payment ? (
           <section className="px-5 py-4 space-y-3">
             <SectionTitle icon={Wallet} label="Consultation Payment" />
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <InfoRow label="Transaction Code" value={detail.payment.transaction_code} />
               <InfoRow label="Amount" value={`$${Number(detail.payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} />
               <InfoRow label="Method" value={detail.payment.payment_method} className="capitalize" />
@@ -139,7 +139,7 @@ export function ConsultationDetail({ detail, onStatusChange }: Props) {
         {detail.application ? (
           <section className="px-5 py-4 space-y-3">
             <SectionTitle icon={FileText} label="Linked Application" />
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <InfoRow label="Code" value={detail.application.application_code} />
               <div className="flex items-center gap-2">
                 <span className="text-brand-neutral-400">Status:</span>

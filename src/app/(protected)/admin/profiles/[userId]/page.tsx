@@ -15,7 +15,7 @@ export default async function ClientProfileDetailPage({
   if (!detail) notFound()
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <Link
         href="/admin/profiles"
         className="inline-flex items-center gap-1.5 text-sm text-brand-neutral-500 hover:text-brand-neutral-800 transition-colors"

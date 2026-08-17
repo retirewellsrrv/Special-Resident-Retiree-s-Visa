@@ -38,6 +38,7 @@ export function ConsultationsClient({ stats, rows, total, page, statusFilter, se
   const [loadingDetail, setLoadingDetail] = useState(false)
   const lastPage = Math.max(1, Math.ceil(total / PER_PAGE))
   const fetchRef = useRef(0)
+  const detailRef = useRef<HTMLDivElement>(null)
 
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id)
@@ -59,6 +60,15 @@ export function ConsultationsClient({ stats, rows, total, page, statusFilter, se
         setLoadingDetail(false)
       })
   }, [selectedId])
+
+  // On mobile/tablet (queue + detail stack vertically), scroll the detail pane
+  // into view once it loads so the admin doesn't have to hunt for it.
+  useEffect(() => {
+    if (!detail || !detailRef.current) return
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [detail])
 
   // Called when the consultation status changes: keep the detail open with fresh
   // data so admins can quickly process the queue, and refresh the list/stats.
@@ -196,27 +206,29 @@ export function ConsultationsClient({ stats, rows, total, page, statusFilter, se
           />
         )}
 
-        {loadingDetail ? (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <div className="flex flex-col items-center gap-2 text-brand-neutral-400">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="text-xs">Loading consultation details...</span>
+        <div ref={detailRef} className="min-h-0 min-w-0 flex flex-col">
+          {loadingDetail ? (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <div className="flex flex-col items-center gap-2 text-brand-neutral-400">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="text-xs">Loading consultation details...</span>
+              </div>
             </div>
-          </div>
-        ) : detail ? (
-          <ConsultationDetail
-            detail={detail}
-            onStatusChange={handleStatusChange}
-          />
-        ) : selectedId === null ? (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <p className="text-sm text-brand-neutral-400">Select a consultation to review.</p>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <p className="text-sm text-brand-neutral-400">Consultation not found.</p>
-          </div>
-        )}
+          ) : detail ? (
+            <ConsultationDetail
+              detail={detail}
+              onStatusChange={handleStatusChange}
+            />
+          ) : selectedId === null ? (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <p className="text-sm text-brand-neutral-400">Select a consultation to review.</p>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <p className="text-sm text-brand-neutral-400">Consultation not found.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <Pagination

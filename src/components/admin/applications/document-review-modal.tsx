@@ -185,7 +185,7 @@ export function DocumentReviewModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-            className="!max-w-[75rem] w-[calc(100%-100px)] max-h-[calc(100vh-100px)] h-auto min-h-[480px] p-0 flex flex-col gap-0 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
+            className="!max-w-[75rem] w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100vh-100px)] h-auto min-h-[480px] p-0 flex flex-col gap-0 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
             showCloseButton={false}
           >
         {/* ── Header ── */}
@@ -217,9 +217,9 @@ export function DocumentReviewModal({
         </div>
 
         {/* ── Body: preview + sidebar ── */}
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
           {/* Document Preview */}
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 flex flex-col min-w-0 min-h-0 h-56 lg:h-auto">
             {/* Zoom controls */}
             <div className="flex items-center justify-end gap-1 px-5 py-2.5 border-b border-brand-neutral-100 shrink-0 bg-brand-neutral-50/50">
               <button
@@ -314,7 +314,7 @@ export function DocumentReviewModal({
           </div>
 
           {/* ── Sidebar: metadata + actions ── */}
-          <div className="w-[300px] shrink-0 border-l-2 border-brand-neutral-200 bg-white flex flex-col overflow-hidden">
+          <div className="w-full lg:w-[300px] shrink-0 border-t-2 lg:border-t-0 lg:border-l-2 border-brand-neutral-200 bg-white flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Document metadata */}
               <div>

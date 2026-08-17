@@ -95,7 +95,7 @@ export function ClientProfileDetail({ detail }: { detail: ClientDetail }) {
           ) : (
             <div className="divide-y divide-brand-neutral-50">
               {detail.applications.map((app) => (
-                <div key={app.id} className="py-3 flex items-center justify-between gap-3">
+                <div key={app.id} className="py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-brand-neutral-900 font-mono">{app.application_code}</p>
                     <p className="text-xs text-brand-neutral-400">Submitted {formatDateTime(app.created_at)}</p>
@@ -122,7 +122,7 @@ export function ClientProfileDetail({ detail }: { detail: ClientDetail }) {
                 .filter((app) => app.fullDetail)
                 .map((app) => (
                   <div key={app.id} className="py-3 space-y-4">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-brand-neutral-900 font-mono">{app.application_code}</p>
                         <p className="text-xs text-brand-neutral-400">Approved {formatDateTime(app.updated_at)}</p>
@@ -152,7 +152,7 @@ export function ClientProfileDetail({ detail }: { detail: ClientDetail }) {
             <div className="divide-y divide-brand-neutral-50">
               {detail.consultations.map((c) => (
                 <div key={c.id} className="py-3 space-y-1">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <p className="text-sm font-medium text-brand-neutral-900 capitalize">
                       {MODE_LABELS[c.mode_communication] ?? c.mode_communication.replace(/_/g, ' ')}
                       {' \u00b7 '}
@@ -173,7 +173,7 @@ export function ClientProfileDetail({ detail }: { detail: ClientDetail }) {
           ) : (
             <div className="divide-y divide-brand-neutral-50">
               {detail.payments.map((p) => (
-                <div key={p.id} className="py-3 flex items-center justify-between gap-3">
+                <div key={p.id} className="py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-brand-neutral-900">{formatMoney(p.amount)}</p>
                     <p className="text-xs text-brand-neutral-400 font-mono">

@@ -38,6 +38,7 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
   const [loadingDetail, setLoadingDetail] = useState(false)
   const lastPage = Math.max(1, Math.ceil(total / 10))
   const fetchRef = useRef(0)
+  const detailRef = useRef<HTMLDivElement>(null)
 
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id)
@@ -53,6 +54,15 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
       setLoadingDetail(false)
     })
   }, [selectedId])
+
+  // On mobile/tablet (queue + detail stack vertically), scroll the detail pane
+  // into view once it loads so the admin doesn't have to hunt for it.
+  useEffect(() => {
+    if (!detail || !detailRef.current) return
+    if (window.matchMedia('(max-width: 1279px)').matches) {
+      detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [detail])
 
   // Called when the overall application status changes (pending → approved, etc.)
   // Deselects the application because it may no longer be in the current filter.
@@ -187,28 +197,30 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
           />
         )}
 
-        {loadingDetail ? (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <div className="flex flex-col items-center gap-2 text-brand-neutral-400">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="text-xs">Loading application details...</span>
+        <div ref={detailRef} className="min-h-0 min-w-0 flex flex-col">
+          {loadingDetail ? (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <div className="flex flex-col items-center gap-2 text-brand-neutral-400">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="text-xs">Loading application details...</span>
+              </div>
             </div>
-          </div>
-        ) : detail ? (
-          <ApplicationDetail
-            detail={detail}
-            onStatusChange={handleAppStatusChange}
-            onDocReviewSaved={handleDocReviewSaved}
-          />
-        ) : selectedId === null ? (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <p className="text-sm text-brand-neutral-400">Select an application to review.</p>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <p className="text-sm text-brand-neutral-400">Application not found.</p>
-          </div>
-        )}
+          ) : detail ? (
+            <ApplicationDetail
+              detail={detail}
+              onStatusChange={handleAppStatusChange}
+              onDocReviewSaved={handleDocReviewSaved}
+            />
+          ) : selectedId === null ? (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <p className="text-sm text-brand-neutral-400">Select an application to review.</p>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <p className="text-sm text-brand-neutral-400">Application not found.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <Pagination
