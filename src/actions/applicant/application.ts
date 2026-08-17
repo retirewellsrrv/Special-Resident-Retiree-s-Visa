@@ -576,6 +576,39 @@ export async function getPaymentReceipt(
   };
 }
 
+export type ApplicantReceipt = {
+  transactionCode: string;
+  amount: number;
+  status: string;
+  paymentMethod: string;
+  serviceType: "application" | "consultation";
+  createdAt: string;
+};
+
+export async function getApplicantReceipts(): Promise<ApplicantReceipt[] | null> {
+  const user = await getUserServer();
+  if (!user) return null;
+
+  const supabase = await createClient();
+
+  const { data: payments } = await supabase
+    .from("payments")
+    .select("transaction_code, amount, status, payment_method, service_type, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (!payments) return [];
+
+  return payments.map((p) => ({
+    transactionCode: p.transaction_code,
+    amount: p.amount,
+    status: p.status,
+    paymentMethod: p.payment_method,
+    serviceType: p.service_type as "application" | "consultation",
+    createdAt: p.created_at,
+  }));
+}
+
 export type RetryPaymentState = {
   error: string | null;
   success: boolean;
