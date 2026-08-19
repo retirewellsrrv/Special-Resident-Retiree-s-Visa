@@ -8,7 +8,7 @@ import {
     type ClientStats,
 } from '@/actions/admin/client-profiles'
 import { StatusChip } from '@/components/ui/status-chip'
-import { TableSkeleton } from '@/components/ui/loading'
+import { TableSkeleton, CardListSkeleton } from '@/components/ui/loading'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
 import {
@@ -190,7 +190,7 @@ export function ClientProfilesClient({
             {/* ── Mobile cards ── */}
             <div className="md:hidden space-y-3">
                 {isPending ? (
-                    <TableSkeleton rows={Math.min(rows.length || limit, limit)} columns={2} />
+                    <CardListSkeleton rows={Math.min(rows.length || limit, limit)} />
                 ) : rows.length === 0 ? (
                     <div className="flex flex-col items-center gap-3 py-12 text-center">
                         <Inbox className="size-10 text-brand-neutral-300" />

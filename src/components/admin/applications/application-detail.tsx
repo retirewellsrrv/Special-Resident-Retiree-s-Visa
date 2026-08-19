@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Loader2, FileIcon, ExternalLink, MessageSquare,
+  Loader2, FileIcon, ExternalLink, MessageSquare, ArrowLeft,
   User, MapPin, Plane,
   GraduationCap, Briefcase, Users, Heart, ChevronDown, ChevronRight,
 } from 'lucide-react'
@@ -25,9 +25,11 @@ interface Props {
   detail: AppDetail
   onStatusChange: () => void
   onDocReviewSaved?: () => void
+  /** Mobile/tablet (<lg): shows a back button so the full-screen detail mode returns to the queue */
+  onBack?: () => void
 }
 
-export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: Props) {
+export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved, onBack }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [selectedAppStatus, setSelectedAppStatus] = useState(detail.status)
@@ -96,23 +98,35 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
     <>
       <div className="flex flex-1 flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
         <div className="px-5 py-4 border-b border-brand-neutral-100 flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="text-lg font-semibold text-brand-neutral-900 truncate">{detail.applicant_name}</h3>
-            <p className="text-xs text-brand-neutral-400 mt-0.5">
-              {detail.application_code}
-            </p>
-            {detail.status === 'approved' && detail.approved_at && (
-              <p className="text-xs text-green-700 mt-1">
-                Approved{detail.approved_by_name ? ` by ${detail.approved_by_name}` : ''} ·{' '}
-                {new Date(detail.approved_at).toLocaleString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })}
-              </p>
+          <div className="flex items-center gap-2 min-w-0">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="lg:hidden inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 -ml-2 text-xs font-medium text-brand-neutral-500 hover:bg-brand-neutral-50 hover:text-brand-neutral-800 transition-colors"
+                aria-label="Back to application queue"
+              >
+                <ArrowLeft className="size-3.5" />
+                Queue
+              </button>
             )}
+            <div className="min-w-0">
+              <h3 className="text-lg font-semibold text-brand-neutral-900 truncate">{detail.applicant_name}</h3>
+              <p className="text-xs text-brand-neutral-400 mt-0.5">
+                {detail.application_code}
+              </p>
+              {detail.status === 'approved' && detail.approved_at && (
+                <p className="text-xs text-green-700 mt-1">
+                  Approved{detail.approved_by_name ? ` by ${detail.approved_by_name}` : ''} ·{' '}
+                  {new Date(detail.approved_at).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
+                </p>
+              )}
+            </div>
           </div>
           <StatusChip status={detail.status} className="shrink-0" />
         </div>
@@ -252,19 +266,28 @@ export function ApplicationDetail({ detail, onStatusChange, onDocReviewSaved }: 
 
           {/* ── Documents ── */}
           <section className="px-5 py-4 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <h4 className="text-xs font-semibold text-brand-neutral-400 uppercase tracking-wider">
                 Documents ({detail.documents.length})
               </h4>
-              {detail.documents.length > 0 && (
-                <button
-                  onClick={() => openDocReview(0)}
+              <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+                <a
+                  href={`/admin/documents?userId=${detail.user_id}`}
                   className="inline-flex items-center gap-1.5 text-brand-primary-600 hover:text-brand-primary-800 text-sm font-medium transition-colors"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Review All
-                </button>
-              )}
+                  Review in Documents
+                </a>
+                {detail.documents.length > 0 && (
+                  <button
+                    onClick={() => openDocReview(0)}
+                    className="inline-flex items-center gap-1.5 text-brand-primary-600 hover:text-brand-primary-800 text-sm font-medium transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Review All
+                  </button>
+                )}
+              </div>
             </div>
             {detail.documents.length === 0 ? (
               <p className="text-sm text-brand-neutral-400">No documents submitted yet.</p>

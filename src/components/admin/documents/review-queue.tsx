@@ -24,9 +24,11 @@ interface Props {
   onResetFilters?: () => void
   /** Soft loading state (keeps the list mounted instead of swapping skeletons) */
   pending?: boolean
+  /** Extra classes for the root (e.g. flex sizing when embedded in a sheet) */
+  className?: string
 }
 
-export function ReviewQueue({ docs, selectedId, onSelect, sort, hasFilters, onResetFilters, pending }: Props) {
+export function ReviewQueue({ docs, selectedId, onSelect, sort, hasFilters, onResetFilters, pending, className }: Props) {
   // Auto-expand every applicant group: the queue is a triage list, not an
   // accordion gate. Re-sync whenever the result set changes.
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(
@@ -79,7 +81,10 @@ export function ReviewQueue({ docs, selectedId, onSelect, sort, hasFilters, onRe
   }
 
   return (
-    <aside className="relative flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+    <aside className={cn(
+      'relative flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0',
+      className,
+    )}>
       {/* Soft loading indicator — list stays mounted, no skeleton swap */}
       {pending && (
         <div className="absolute inset-x-0 top-0 z-20 h-0.5 overflow-hidden rounded-t-xl">

@@ -1,11 +1,23 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import { ZoomIn, ZoomOut, Download, FileIcon, Loader2, ArrowLeft, User, Hash, FileText, Calendar, ExternalLink } from 'lucide-react'
 import { getDocumentSignedUrl } from '@/actions/admin/documents'
 import { documentTypeLabel } from './document-labels'
 import type { DocumentForReview } from '@/actions/admin/documents'
 import { cn } from '@/lib/utils'
+
+// Lazy-load pdf.js so it stays out of the main bundle and never renders on
+// the server (it relies on browser APIs).
+const PdfViewer = dynamic(() => import('@/components/shared/pdf-viewer').then((m) => m.PdfViewer), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-brand-neutral-50 rounded-lg border border-brand-neutral-200">
+      <Loader2 className="h-6 w-6 animate-spin text-brand-neutral-400" />
+    </div>
+  ),
+})
 
 interface Props {
   doc: DocumentForReview
@@ -92,9 +104,8 @@ export function DocumentViewer({ doc, onBack }: Props) {
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
-            {/* Zoom controls — hidden on mobile for PDFs, where the mobile
-                card hands off to the device's native reader instead */}
-            <div className={cn('flex items-center gap-1', isPdf && 'hidden lg:flex')}>
+            {/* Zoom controls — the PdfViewer provides its own zoom for PDFs */}
+            <div className={cn('flex items-center gap-1', isPdf && 'hidden')}>
               <button
                 onClick={zoomOut}
                 disabled={zoom <= 0.25}
@@ -155,6 +166,15 @@ export function DocumentViewer({ doc, onBack }: Props) {
             <Calendar className="size-3 shrink-0" />
             <span>{uploadedDate}</span>
           </div>
+          {doc.application_id && (
+            <a
+              href={`/admin/applications?app=${doc.application_id}`}
+              className="inline-flex items-center gap-1 font-medium text-brand-primary-600 hover:text-brand-primary-800 hover:underline"
+            >
+              <ExternalLink className="size-3 shrink-0" />
+              View application
+            </a>
+          )}
         </dl>
       </div>
 
@@ -186,39 +206,11 @@ export function DocumentViewer({ doc, onBack }: Props) {
             </p>
           </div>
         ) : isPdf ? (
-          <>
-            {/* Desktop/tablet: inline iframe preview (requires a wide viewport) */}
-            <iframe
-              src={`${signedUrl}#view=fitH`}
-              className="hidden lg:block w-full h-full rounded-lg border-0"
-              title={doc.name}
-              style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
-            />
-            {/* Mobile: iframes don't render PDFs reliably (esp. iOS Safari) —
-                hand off to the device's native reader instead */}
-            <div className="lg:hidden flex flex-col items-center gap-3 p-6 text-center">
-              <div className="flex size-14 items-center justify-center rounded-xl bg-brand-neutral-100 text-brand-neutral-400">
-                <FileText className="size-7" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-brand-neutral-700">PDF preview is best on a larger screen</p>
-                <p className="text-xs text-brand-neutral-400 mt-1 leading-relaxed">
-                  Open the PDF to view it in your device's built-in reader.
-                </p>
-              </div>
-              {signedUrl && (
-                <a
-                  href={signedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
-                >
-                  <ExternalLink className="size-4" />
-                  Open PDF
-                </a>
-              )}
-            </div>
-          </>
+          /* In-app pdf.js viewer (canvas-based — works on iOS Safari) with
+             its own zoom + page navigation. No new-tab handoff required. */
+          <div className="w-full h-full min-h-0">
+            <PdfViewer key={signedUrl} url={signedUrl} fileName={doc.name} />
+          </div>
         ) : (
           <div className="flex flex-col items-center gap-2 text-brand-neutral-400">
             <FileIcon className="h-8 w-8" />

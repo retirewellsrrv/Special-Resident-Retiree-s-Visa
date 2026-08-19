@@ -16,7 +16,7 @@ import { NavItems, type NavItem } from '@/components/layout/sidebar-nav'
 import { SidebarLogout } from '@/components/layout/sidebar-logout'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Plus, Bell, HelpCircle } from 'lucide-react'
+import { Plus, Bell } from 'lucide-react'
 import type { ReactNode } from 'react'
 import logo from '@/assets/images/logo.jpg'
 
@@ -142,16 +142,6 @@ export function SidebarLayout({
                     <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand-primary-500 ring-2 ring-white" />
                   </Button>
                 ))}
-
-                {/* Help */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-brand-neutral-500 hover:text-brand-neutral-800 hover:bg-brand-neutral-100 rounded-full size-9"
-                  aria-label="Help"
-                >
-                  <HelpCircle className="size-[18px]" />
-                </Button>
 
                 <div className="mx-2 h-6 w-px bg-brand-neutral-200" />
 
