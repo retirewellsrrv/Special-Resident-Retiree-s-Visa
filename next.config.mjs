@@ -12,6 +12,7 @@ const nextConfig = {
         },
         proxyClientMaxBodySize: '50mb',
     },
+    transpilePackages: ['pdfjs-dist', 'react-pdf'],
     turbopack: {
         root: __dirname,
     },

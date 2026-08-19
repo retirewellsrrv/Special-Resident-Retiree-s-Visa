@@ -16,7 +16,7 @@ import { NavItems, type NavItem } from '@/components/layout/sidebar-nav'
 import { SidebarLogout } from '@/components/layout/sidebar-logout'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Plus, Bell, HelpCircle } from 'lucide-react'
+import { Plus, Bell } from 'lucide-react'
 import type { ReactNode } from 'react'
 import logo from '@/assets/images/logo.jpg'
 
@@ -32,6 +32,8 @@ interface SidebarLayoutProps {
     avatarUrl?: string
   }
   notifications?: ReactNode
+  /** Hide the notifications bell entirely (used by portals without a notifications feature) */
+  hideNotifications?: boolean
 }
 
 export function SidebarLayout({
@@ -42,6 +44,7 @@ export function SidebarLayout({
   onCta,
   user = { name: 'Admin User', role: 'Senior Registrar' },
   notifications,
+  hideNotifications = false,
 }: SidebarLayoutProps) {
   const initials = user.name
     .split(' ')
@@ -128,7 +131,7 @@ export function SidebarLayout({
               <SidebarTrigger className="text-brand-neutral-400 hover:text-brand-neutral-700 shrink-0" />
 
               <div className="flex items-center gap-1">
-                {notifications ?? (
+                {!hideNotifications && (notifications ?? (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -138,17 +141,7 @@ export function SidebarLayout({
                     <Bell className="size-[18px]" />
                     <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-brand-primary-500 ring-2 ring-white" />
                   </Button>
-                )}
-
-                {/* Help */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-brand-neutral-500 hover:text-brand-neutral-800 hover:bg-brand-neutral-100 rounded-full size-9"
-                  aria-label="Help"
-                >
-                  <HelpCircle className="size-[18px]" />
-                </Button>
+                ))}
 
                 <div className="mx-2 h-6 w-px bg-brand-neutral-200" />
 
@@ -174,7 +167,7 @@ export function SidebarLayout({
               </div>
             </header>
 
-            <main className="flex-1 overflow-auto p-6 animate-in fade-in duration-300">{children}</main>
+            <main className="flex-1 overflow-auto p-4 md:p-6 animate-in fade-in duration-300">{children}</main>
           </SidebarInset>
         </div>
       </SidebarProvider>

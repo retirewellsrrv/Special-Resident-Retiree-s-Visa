@@ -185,7 +185,8 @@ export function ServiceTable({ services }: Props) {
 
   return (
     <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
-      <table className="w-full border-collapse text-sm" style={{ tableLayout: 'fixed' }}>
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[800px] border-collapse text-sm" style={{ tableLayout: 'fixed' }}>
         <thead>
           <tr className="bg-brand-neutral-50 border-b border-brand-neutral-200">
             <SortHeader label="Name" column="name" className="w-28" />
@@ -384,6 +385,7 @@ export function ServiceTable({ services }: Props) {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

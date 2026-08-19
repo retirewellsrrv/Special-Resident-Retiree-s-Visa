@@ -3,6 +3,7 @@
 import { Inbox, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { StatusChip } from '@/components/ui/status-chip'
+import { cn } from '@/lib/utils'
 import type { AppStats, AppRow } from '@/actions/admin/applications-admin'
 
 function initials(name: string) {
@@ -14,11 +15,12 @@ interface Props {
   stats: AppStats
   selectedId: number | null
   onSelect: (id: number) => void
+  className?: string
 }
 
-export function ApplicationQueue({ rows, stats, selectedId, onSelect }: Props) {
+export function ApplicationQueue({ rows, stats, selectedId, onSelect, className }: Props) {
   return (
-    <aside className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+    <aside className={cn('flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0', className)}>
       <div className="px-4 py-3 border-b border-brand-neutral-100">
         <h3 className="text-sm font-semibold text-brand-neutral-900">Applications</h3>
         <p className="text-xs text-brand-neutral-400 mt-0.5">

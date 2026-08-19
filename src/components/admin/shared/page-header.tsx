@@ -21,14 +21,16 @@ export function PageHeader({ title, description, actions, variant = 'default' }:
   }
 
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <div className="min-w-0">
         <h1 className="text-xl font-medium text-brand-neutral-900">{title}</h1>
         {description && (
           <p className="text-sm text-brand-neutral-500 mt-1 max-w-xl">{description}</p>
         )}
       </div>
-      {actions && <div className="flex gap-2 shrink-0">{actions}</div>}
+      {actions && (
+        <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>
+      )}
     </div>
   )
 }

@@ -195,16 +195,75 @@ async function sendEmail({
   await logEmail({ to, from, subject, status: "failed", error: lastError });
 }
 
-function wrapTableRows(rows: { label: string; value: string }[]): string {
-  return rows
-    .map(
-      ({ label, value }) => `
+function infoTable(rows: { label: string; value: string }[]): string {
+  return `
+  <table role="presentation" class="srrv-info" width="100%" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
+    ${rows
+      .map(
+        ({ label, value }) => `
+    <tr>
+      <td class="srrv-info-label" style="padding: 10px 16px; font-size: 13px; color: #6B7280; white-space: nowrap; vertical-align: top;">${label}</td>
+      <td class="srrv-info-value" style="padding: 10px 16px; font-size: 13px; font-weight: 600; color: #111827; vertical-align: top; word-break: break-word;">${value}</td>
+    </tr>`,
+      )
+      .join("")}
+  </table>`;
+}
+
+/**
+ * Responsive document shell shared by all templates.
+ * - Full HTML doc with viewport meta so mobile clients render at phone width.
+ * - Embedded <style> with a 600px media query (Gmail app / Apple Mail /
+ *   Outlook mobile): stacks the info rows label-over-value and tightens
+ *   padding. Desktop clients without media-query support (Outlook Win)
+ *   fall back to the fixed table layout, which stays 560px wide with
+ *   word-break on the value cells.
+ */
+function emailShell(title: string, contentHtml: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>${title}</title>
+    <style>
+      @media only screen and (max-width: 600px) {
+        .srrv-body { padding: 24px 12px !important; }
+        .srrv-content { padding: 20px !important; }
+        .srrv-info,
+        .srrv-info tbody,
+        .srrv-info tr,
+        .srrv-info td { width: 100% !important; display: block !important; box-sizing: border-box !important; }
+        .srrv-info td { border: none !important; padding: 6px 14px !important; white-space: normal !important; }
+        .srrv-info-label { font-weight: 600 !important; color: #374151 !important; padding-bottom: 0 !important; }
+      }
+    </style>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #F9FAFB; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;">
+    <div class="srrv-body" style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
         <tr>
-          <td style="padding: 10px 16px; font-size: 13px; color: #6B7280; white-space: nowrap;">${label}</td>
-          <td style="padding: 10px 16px; font-size: 13px; font-weight: 600; color: #111827;">${value}</td>
-        </tr>`,
-    )
-    .join("");
+          <td align="center" style="padding: 0;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; max-width: 560px; background-color: #ffffff; border-radius: 12px; border: 1px solid #E5E7EB;">
+              <tr>
+                <td style="background-color: #8B1A2B; padding: 24px 28px;">
+                  <h1 style="margin: 0; color: #ffffff; font-size: 20px; line-height: 1.35;">${title}</h1>
+                </td>
+              </tr>
+              <tr>
+                <td class="srrv-content" style="padding: 28px;">
+                  ${contentHtml}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>`;
 }
 
 function consultationBody(data: ConsultationEmailData): string {
@@ -213,55 +272,39 @@ function consultationBody(data: ConsultationEmailData): string {
     ? "An applicant has updated their consultation request."
     : "An applicant has submitted a new consultation request.";
 
-  return `
-  <div style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
-    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">
-      <div style="background-color: #8B1A2B; padding: 24px 28px;">
-        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">${label}</h1>
-      </div>
-      <div style="padding: 28px;">
-        <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">${subtitle}</p>
-        <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
-          ${wrapTableRows([
-            { label: "Name", value: data.applicantName || "—" },
-            { label: "Email", value: data.applicantEmail },
-            { label: "Preferred Date", value: formatDate(data.meetingDate) },
-            { label: "Mode", value: modeLabel(data.mode) },
-            { label: "Purpose", value: data.purpose },
-          ])}
-        </table>
-        <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
-          Sent automatically from the SRRV applicant portal.
-        </p>
-      </div>
-    </div>
-  </div>`;
+  return emailShell(
+    label,
+    `
+    <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">${subtitle}</p>
+    ${infoTable([
+      { label: "Name", value: data.applicantName || "—" },
+      { label: "Email", value: data.applicantEmail },
+      { label: "Preferred Date", value: formatDate(data.meetingDate) },
+      { label: "Mode", value: modeLabel(data.mode) },
+      { label: "Purpose", value: data.purpose },
+    ])}
+    <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
+      Sent automatically from the SRRV applicant portal.
+    </p>`,
+  );
 }
 
 function applicationSubmissionBody(data: ApplicationSubmissionEmailData): string {
-  return `
-  <div style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
-    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">
-      <div style="background-color: #8B1A2B; padding: 24px 28px;">
-        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">New SRRV Application Submitted</h1>
-      </div>
-      <div style="padding: 28px;">
-        <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
-          An applicant has submitted a new SRRV application. Please review the details below.
-        </p>
-        <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
-          ${wrapTableRows([
-            { label: "Name", value: data.applicantName || "—" },
-            { label: "Email", value: data.applicantEmail },
-            { label: "Application Code", value: data.applicationCode },
-          ])}
-        </table>
-        <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
-          Sent automatically from the SRRV applicant portal.
-        </p>
-      </div>
-    </div>
-  </div>`;
+  return emailShell(
+    "New SRRV Application Submitted",
+    `
+    <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
+      An applicant has submitted a new SRRV application. Please review the details below.
+    </p>
+    ${infoTable([
+      { label: "Name", value: data.applicantName || "—" },
+      { label: "Email", value: data.applicantEmail },
+      { label: "Application Code", value: data.applicationCode },
+    ])}
+    <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
+      Sent automatically from the SRRV applicant portal.
+    </p>`,
+  );
 }
 
 const APPLICATION_STATUS_LABELS: Record<ApplicationStatusEmailData["status"], string> = {
@@ -291,30 +334,22 @@ function applicationStatusMessage(status: ApplicationStatusEmailData["status"]):
 }
 
 function applicationStatusBody(data: ApplicationStatusEmailData): string {
-  return `
-  <div style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
-    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">
-      <div style="background-color: #8B1A2B; padding: 24px 28px;">
-        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">Application Status Update</h1>
-      </div>
-      <div style="padding: 28px;">
-        <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
-          ${applicationStatusMessage(data.status)}
-        </p>
-        <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
-          ${wrapTableRows([
-            { label: "Name", value: data.applicantName || "—" },
-            { label: "Email", value: data.applicantEmail },
-            { label: "Application Code", value: data.applicationCode },
-            { label: "Status", value: APPLICATION_STATUS_LABELS[data.status] },
-          ])}
-        </table>
-        <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
-          Sent automatically from the SRRV applicant portal.
-        </p>
-      </div>
-    </div>
-  </div>`;
+  return emailShell(
+    "Application Status Update",
+    `
+    <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
+      ${applicationStatusMessage(data.status)}
+    </p>
+    ${infoTable([
+      { label: "Name", value: data.applicantName || "—" },
+      { label: "Email", value: data.applicantEmail },
+      { label: "Application Code", value: data.applicationCode },
+      { label: "Status", value: APPLICATION_STATUS_LABELS[data.status] },
+    ])}
+    <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
+      Sent automatically from the SRRV applicant portal.
+    </p>`,
+  );
 }
 
 const CONSULTATION_STATUS_LABELS: Record<ConsultationStatusEmailData["status"], string> = {
@@ -338,29 +373,21 @@ function consultationStatusMessage(status: ConsultationStatusEmailData["status"]
 }
 
 function consultationStatusBody(data: ConsultationStatusEmailData): string {
-  return `
-  <div style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
-    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">
-      <div style="background-color: #8B1A2B; padding: 24px 28px;">
-        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">Consultation Request Update</h1>
-      </div>
-      <div style="padding: 28px;">
-        <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
-          ${consultationStatusMessage(data.status)}
-        </p>
-        <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
-          ${wrapTableRows([
-            { label: "Name", value: data.applicantName || "—" },
-            { label: "Email", value: data.applicantEmail },
-            { label: "Status", value: CONSULTATION_STATUS_LABELS[data.status] },
-          ])}
-        </table>
-        <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
-          Sent automatically from the SRRV applicant portal.
-        </p>
-      </div>
-    </div>
-  </div>`;
+  return emailShell(
+    "Consultation Request Update",
+    `
+    <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
+      ${consultationStatusMessage(data.status)}
+    </p>
+    ${infoTable([
+      { label: "Name", value: data.applicantName || "—" },
+      { label: "Email", value: data.applicantEmail },
+      { label: "Status", value: CONSULTATION_STATUS_LABELS[data.status] },
+    ])}
+    <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
+      Sent automatically from the SRRV applicant portal.
+    </p>`,
+  );
 }
 
 function paymentBody(data: ConsultationPaymentEmailData): string {
@@ -369,35 +396,27 @@ function paymentBody(data: ConsultationPaymentEmailData): string {
     currency: "PHP",
   }).format(data.payment.amount);
 
-  return `
-  <div style="font-family: Arial, Helvetica, sans-serif; background-color: #F9FAFB; padding: 32px 16px;">
-    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">
-      <div style="background-color: #8B1A2B; padding: 24px 28px;">
-        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">Consultation Fee Paid</h1>
-      </div>
-      <div style="padding: 28px;">
-        <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
-          An applicant has paid the consultation fee. Please review the details below.
-        </p>
-        <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px;">
-          ${wrapTableRows([
-            { label: "Name", value: data.applicantName || "—" },
-            { label: "Email", value: data.applicantEmail },
-            { label: "Preferred Date", value: formatDate(data.meetingDate) },
-            { label: "Mode", value: modeLabel(data.mode) },
-            { label: "Purpose", value: data.purpose },
-            { label: "Amount", value: total },
-            { label: "Payment Method", value: data.payment.paymentMethod.replace(/_/g, " ").toUpperCase() },
-            { label: "Transaction Code", value: data.payment.transactionCode },
-            { label: "Status", value: data.payment.status.toUpperCase() },
-          ])}
-        </table>
-        <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
-          Sent automatically from the SRRV applicant portal.
-        </p>
-      </div>
-    </div>
-  </div>`;
+  return emailShell(
+    "Consultation Fee Paid",
+    `
+    <p style="margin: 0 0 20px; font-size: 14px; color: #4B5563; line-height: 1.6;">
+      An applicant has paid the consultation fee. Please review the details below.
+    </p>
+    ${infoTable([
+      { label: "Name", value: data.applicantName || "—" },
+      { label: "Email", value: data.applicantEmail },
+      { label: "Preferred Date", value: formatDate(data.meetingDate) },
+      { label: "Mode", value: modeLabel(data.mode) },
+      { label: "Purpose", value: data.purpose },
+      { label: "Amount", value: total },
+      { label: "Payment Method", value: data.payment.paymentMethod.replace(/_/g, " ").toUpperCase() },
+      { label: "Transaction Code", value: data.payment.transactionCode },
+      { label: "Status", value: data.payment.status.toUpperCase() },
+    ])}
+    <p style="margin: 24px 0 0; font-size: 12px; color: #9CA3AF;">
+      Sent automatically from the SRRV applicant portal.
+    </p>`,
+  );
 }
 
 export async function sendConsultationEmailToAdmin(
@@ -415,8 +434,6 @@ export async function sendConsultationEmailToAdmin(
 export async function sendConsultationPaymentEmailToAdmin(
   data: ConsultationPaymentEmailData,
 ): Promise<void> {
-  console.log('admin email: ', ADMIN_EMAIL)
-  console.log('data', data)
   await sendEmail({
     from: `Retire Well SRRV <${ADMIN_EMAIL}>`,
     to: ADMIN_EMAIL,

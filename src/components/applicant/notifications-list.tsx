@@ -91,7 +91,7 @@ export function NotificationsList() {
           </div>
         </CardHeader>
 
-        <CardAction className="flex gap-2 p-4">
+        <CardAction className="flex flex-col gap-2 p-4 sm:flex-row">
           <Button
             variant="outline"
             size="sm"

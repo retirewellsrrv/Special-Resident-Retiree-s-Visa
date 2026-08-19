@@ -184,8 +184,117 @@ export function AdminTable({ admins }: Props) {
         </Dialog>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
+      {/* ── Mobile cards ── */}
+      <div className="md:hidden space-y-3">
+        {filteredAdmins.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-12 text-center">
+            {searchQuery || statusFilter !== 'all' ? (
+              <SearchX className="size-8 text-brand-neutral-300" />
+            ) : (
+              <Inbox className="size-8 text-brand-neutral-300" />
+            )}
+            <p className="text-sm text-brand-neutral-400">
+              {searchQuery || statusFilter !== 'all' ? 'No admins match your filters.' : 'No admin accounts yet. Click "Add Admin" to create one.'}
+            </p>
+          </div>
+        ) : (
+          filteredAdmins.map((admin) => {
+            const isBusy = deletingId === admin.user_id || togglingId === admin.user_id
+            return (
+              <div
+                key={admin.user_id}
+                className={`bg-white border border-brand-neutral-200 rounded-xl overflow-hidden ${deletingId === admin.user_id ? 'opacity-40' : ''}`}
+              >
+                <div className="px-4 py-3 flex items-center gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary-50 text-brand-primary-700">
+                    <Shield className="size-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-brand-neutral-900 truncate">{admin.name}</p>
+                    <p className="text-xs text-brand-neutral-500 truncate">{admin.email}</p>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium shrink-0 ${
+                      admin.is_active
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-brand-neutral-100 text-brand-neutral-500 border border-brand-neutral-200'
+                    }`}
+                  >
+                    <span className={`size-1.5 rounded-full ${admin.is_active ? 'bg-green-500' : 'bg-brand-neutral-300'}`} />
+                    {admin.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+
+                <div className="px-4 py-2.5 flex items-center justify-between gap-2 border-t border-brand-neutral-100 bg-brand-neutral-50/40">
+                  <div className="flex items-center gap-1.5 text-xs">
+                    {admin.email_confirmed ? (
+                      <span className="inline-flex items-center gap-1 text-green-600">
+                        <Mail className="size-3.5" /> Verified
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-amber-600">
+                        <MailX className="size-3.5" /> Pending
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-brand-neutral-400">
+                    Joined{' '}
+                    {new Date(admin.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric', month: 'short', day: 'numeric',
+                    })}
+                  </span>
+                </div>
+
+                <div className="px-4 py-2.5 flex items-center gap-2 border-t border-brand-neutral-100">
+                  <button
+                    onClick={() => handleToggle(admin.user_id, admin.is_active)}
+                    disabled={isBusy}
+                    className="inline-flex items-center gap-1 border border-brand-neutral-200 text-brand-neutral-500 hover:bg-brand-neutral-50 rounded-md px-2.5 py-1.5 text-xs disabled:opacity-40 transition-colors"
+                  >
+                    {togglingId === admin.user_id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : admin.is_active ? (
+                      <Ban className="h-3 w-3" />
+                    ) : (
+                      <CheckCircle className="h-3 w-3" />
+                    )}
+                    {admin.is_active ? 'Disable' : 'Enable'}
+                  </button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        disabled={isBusy}
+                        className="inline-flex items-center gap-1 bg-brand-primary-50 text-brand-primary-700 border border-brand-primary-100 hover:bg-brand-primary-100 rounded-md px-2.5 py-1.5 text-xs disabled:opacity-40 transition-colors"
+                      >
+                        {deletingId === admin.user_id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                        Delete
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete admin account</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete <strong>{admin.name}</strong>? This will remove their admin profile and disable their access. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction variant="destructive" onClick={() => handleDelete(admin.user_id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      {/* ── Desktop table ── */}
+      <div className="hidden md:block bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-brand-neutral-100">
           <span className="text-sm font-medium text-brand-neutral-900">Admin Accounts</span>
           <span className="text-xs text-brand-neutral-500">{filteredAdmins.length} of {admins.length} records</span>
