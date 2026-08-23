@@ -10,6 +10,7 @@ import { ApplicationDetail } from './application-detail'
 import { Pagination } from '@/components/ui/pagination'
 import type { AppStats, AppRow, AppDetail } from '@/actions/admin/applications-admin'
 import { getApplicationDetail } from '@/actions/admin/applications-admin'
+import { cn } from '@/lib/utils'
 
 function buildQuery(params: { status?: string; userId?: string; search?: string; page: number }) {
   const sp = new URLSearchParams()
@@ -28,20 +29,40 @@ interface Props {
   statusFilter?: string
   userId?: string
   search?: string
+  /** Deep link target from the Documents page (?app=<id>) — pre-selects the application. */
+  initialAppId?: number | null
 }
 
-export function ApplicationsClient({ stats: _stats, rows, total, page, statusFilter, userId, search }: Props) {
+export function ApplicationsClient({ stats: _stats, rows, total, page, statusFilter, userId, search, initialAppId }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detail, setDetail] = useState<AppDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+  // Mobile/tablet (<lg): the detail pane becomes a full-screen mode and the
+  // queue hides behind it. Desktop (lg+) always shows both panes.
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const lastPage = Math.max(1, Math.ceil(total / 10))
   const fetchRef = useRef(0)
+  const detailRef = useRef<HTMLDivElement>(null)
+  const didInitRef = useRef(false)
 
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id)
+    setMobileDetailOpen(true)
   }, [])
+
+  // Hydration-safe initial selection for ?app= deep links. Runs once so a
+  // later manual selection is never overridden. On mobile the deep link lands
+  // directly in the full-screen detail mode.
+  useEffect(() => {
+    if (didInitRef.current) return
+    didInitRef.current = true
+    if (initialAppId != null) {
+      setSelectedId(initialAppId)
+      setMobileDetailOpen(true)
+    }
+  }, [initialAppId])
 
   useEffect(() => {
     if (selectedId === null) { setDetail(null); return }
@@ -54,11 +75,22 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
     })
   }, [selectedId])
 
+  // Scroll the detail pane into view only in the stacked lg–xl range. Below lg
+  // the detail is a full-screen mode (no scrolling needed); at xl+ it sits
+  // side-by-side with the queue.
+  useEffect(() => {
+    if (!detail || !detailRef.current) return
+    if (window.matchMedia('(min-width: 1024px) and (max-width: 1279px)').matches) {
+      detailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [detail])
+
   // Called when the overall application status changes (pending → approved, etc.)
   // Deselects the application because it may no longer be in the current filter.
   const handleAppStatusChange = useCallback(() => {
     setDetail(null)
     setSelectedId(null)
+    setMobileDetailOpen(false)
     router.refresh()
   }, [router])
 
@@ -160,9 +192,11 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
         <FilterClear onClick={handleClear} disabled={isPending} />
       </FilterBar>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-4 flex-1 min-h-0">
+            {/* Grid row constrained (minmax(0,1fr)) so the queue/detail columns
+          scroll internally instead of growing the page */}
+      <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] xl:grid-rows-[minmax(0,1fr)] gap-4 flex-1 min-h-0">
         {isPending ? (
-          <aside className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+          <aside className={cn('flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0', mobileDetailOpen && 'hidden lg:flex')}>
             <div className="px-4 py-3 border-b border-brand-neutral-100">
               <h3 className="text-sm font-semibold text-brand-neutral-900">Applications</h3>
             </div>
@@ -184,31 +218,38 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
             stats={_stats}
             selectedId={selectedId}
             onSelect={handleSelect}
+            className={cn(mobileDetailOpen && 'hidden lg:flex')}
           />
         )}
 
-        {loadingDetail ? (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <div className="flex flex-col items-center gap-2 text-brand-neutral-400">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="text-xs">Loading application details...</span>
+        <div
+          ref={detailRef}
+          className={cn('min-h-0 min-w-0 flex flex-col', !mobileDetailOpen && 'hidden lg:flex')}
+        >
+          {loadingDetail ? (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <div className="flex flex-col items-center gap-2 text-brand-neutral-400">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="text-xs">Loading application details...</span>
+              </div>
             </div>
-          </div>
-        ) : detail ? (
-          <ApplicationDetail
-            detail={detail}
-            onStatusChange={handleAppStatusChange}
-            onDocReviewSaved={handleDocReviewSaved}
-          />
-        ) : selectedId === null ? (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <p className="text-sm text-brand-neutral-400">Select an application to review.</p>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
-            <p className="text-sm text-brand-neutral-400">Application not found.</p>
-          </div>
-        )}
+          ) : detail ? (
+            <ApplicationDetail
+              detail={detail}
+              onStatusChange={handleAppStatusChange}
+              onDocReviewSaved={handleDocReviewSaved}
+              onBack={() => setMobileDetailOpen(false)}
+            />
+          ) : selectedId === null ? (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <p className="text-sm text-brand-neutral-400">Select an application to review.</p>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-brand-neutral-200 bg-white">
+              <p className="text-sm text-brand-neutral-400">Application not found.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <Pagination

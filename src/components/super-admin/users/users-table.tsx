@@ -65,7 +65,74 @@ export function UsersTable({ users }: Props) {
         <FilterClear onClick={handleClear} />
       </FilterBar>
 
-      <div className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
+      {/* ── Mobile cards ── */}
+      <div className="md:hidden space-y-3">
+        {filteredUsers.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-12 text-center">
+            {searchQuery || statusFilter !== 'all' ? (
+              <SearchX className="size-8 text-brand-neutral-300" />
+            ) : (
+              <Inbox className="size-8 text-brand-neutral-300" />
+            )}
+            <p className="text-sm text-brand-neutral-400">
+              {searchQuery || statusFilter !== 'all' ? 'No users match your filters.' : 'No users registered yet.'}
+            </p>
+          </div>
+        ) : (
+          filteredUsers.map((user) => (
+            <div key={user.user_id} className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
+              <div className="px-4 py-3 flex items-center gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-secondary-50 text-brand-secondary-700">
+                  <User className="size-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-brand-neutral-900 truncate">{user.name}</p>
+                  <p className="text-xs text-brand-neutral-500 truncate">{user.email}</p>
+                </div>
+                {user.application_status ? (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium shrink-0 ${
+                      STATUS_STYLES[user.application_status] ?? 'bg-brand-neutral-100 text-brand-neutral-500 border border-brand-neutral-200'
+                    }`}
+                  >
+                    <span className={`size-1.5 rounded-full ${
+                      user.application_status === 'approved' ? 'bg-green-500' :
+                      user.application_status === 'rejected' ? 'bg-red-500' :
+                      user.application_status === 'paused' ? 'bg-blue-500' :
+                      'bg-amber-500'
+                    }`} />
+                    {user.application_status.replace('_', ' ')}
+                  </span>
+                ) : (
+                  <span className="text-xs text-brand-neutral-300 shrink-0">No application</span>
+                )}
+              </div>
+
+              <div className="px-4 py-2.5 flex items-center justify-between gap-2 border-t border-brand-neutral-100 bg-brand-neutral-50/40">
+                <span className="text-xs text-brand-neutral-500 truncate">
+                  <span className="text-brand-neutral-400">Nationality:</span>{' '}
+                  {user.nationality || '\u2014'}
+                </span>
+                <span className="text-xs text-brand-neutral-400 shrink-0">
+                  {new Date(user.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                  })}
+                </span>
+              </div>
+
+              {user.application_code && (
+                <div className="px-4 py-2.5 border-t border-brand-neutral-100 flex items-center gap-1.5 text-xs text-brand-neutral-700">
+                  <FileText className="size-3.5 shrink-0" />
+                  <span className="truncate font-medium">{user.application_code}</span>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── Desktop table ── */}
+      <div className="hidden md:block bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-brand-neutral-100">
           <span className="text-sm font-medium text-brand-neutral-900">Client Records</span>
           <span className="text-xs text-brand-neutral-500">{filteredUsers.length} of {users.length} records</span>

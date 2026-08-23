@@ -1,14 +1,12 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Download, Loader2, Banknote, Clock, CheckCircle2, Undo2 } from 'lucide-react'
+import { Loader2, Banknote, Clock, CheckCircle2, Undo2 } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
 import PaymentTable from '@/components/admin/payments/payments-table'
 import { Pagination } from '@/components/ui/pagination'
-import { downloadCsv } from '@/lib/utils'
-import { getPayments } from '@/actions/admin/payments'
 import type { PaymentRow, PaymentStats } from '@/actions/admin/payments'
 
 const PER_PAGE = 10
@@ -47,39 +45,12 @@ export function PaymentsClient({ rows, total, stats, page, statusFilter, methodF
     navigate({ page: undefined, status: undefined, method: undefined, type: undefined, code: undefined, name: undefined, q: undefined })
   }
 
-  const [isExporting, setIsExporting] = useState(false)
-
-  const handleExport = useCallback(async () => {
-    setIsExporting(true)
-    try {
-      const { rows: all } = await getPayments({ limit: 10000 })
-      const headers = ['id', 'client_name', 'amount', 'status', 'service_type', 'payment_method', 'transaction_code', 'created_at']
-      downloadCsv(all, headers, `payment-logs-${new Date().toISOString().slice(0, 10)}.csv`)
-    } finally {
-      setIsExporting(false)
-    }
-  }, [])
-
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
   const refundRate = stats.total ? ((stats.refunded / stats.total) * 100).toFixed(2) : '0.00'
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Payment Logs"
-        actions={
-          <>
-            <button
-              onClick={handleExport}
-              disabled={isExporting}
-              className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {isExporting ? 'Exporting...' : 'Export CSV'}
-            </button>
-          </>
-        }
-      />
+      <PageHeader title="Payment Logs" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">

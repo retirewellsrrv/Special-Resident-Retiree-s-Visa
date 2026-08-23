@@ -85,7 +85,7 @@ export default function SRRVApplicationPage() {
                     <CalendarX2 className="w-7 h-7 text-amber-500" />
                   </div>
                   <h2 className="text-xl font-bold text-neutral-800 mt-4">
-                    Consultation Required
+                    {hasConsultation ? "Consultation Submitted" : "Consultation Required"}
                   </h2>
                   <p className="text-sm text-neutral-500 leading-relaxed mt-2 max-w-md mx-auto">
                     {hasConsultation
