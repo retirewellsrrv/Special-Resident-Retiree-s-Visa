@@ -179,7 +179,7 @@ export function ConsultationsClient({ stats, rows, total, page, statusFilter, se
         <FilterClear onClick={handleClear} disabled={isPending} />
       </FilterBar>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4 flex-1 lg:min-h-0">
         {isPending ? (
           <aside className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
             <div className="px-4 py-3 border-b border-brand-neutral-100">

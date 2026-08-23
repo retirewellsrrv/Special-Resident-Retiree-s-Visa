@@ -20,7 +20,7 @@ interface Props {
 
 export function ApplicationQueue({ rows, stats, selectedId, onSelect, className }: Props) {
   return (
-    <aside className={cn('flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0', className)}>
+    <aside className={cn('flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-[300px] xl:min-h-0', className)}>
       <div className="px-4 py-3 border-b border-brand-neutral-100">
         <h3 className="text-sm font-semibold text-brand-neutral-900">Applications</h3>
         <p className="text-xs text-brand-neutral-400 mt-0.5">

@@ -31,7 +31,7 @@ interface Props {
 
 export function ConsultationQueue({ rows, stats, selectedId, onSelect }: Props) {
   return (
-    <aside className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0">
+    <aside className="flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-[300px] lg:min-h-0">
       <div className="px-4 py-3 border-b border-brand-neutral-100">
         <h3 className="text-sm font-semibold text-brand-neutral-900">Consultation Queue</h3>
         <p className="text-xs text-brand-neutral-400 mt-0.5">
