@@ -2,7 +2,8 @@ import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { ReactElement, ReactNode } from "react";
 
 export default function ContactInfoSection() {
-    return <div className="lg:col-span-5 space-y-10">
+    return (
+        <div className="lg:col-span-5 space-y-10">
         <div>
             <h2 className="text-3xl font-serif text-[#0F172A] mb-4">Contact Information</h2>
             <p className="text-gray-600 text-sm md:text-base leading-relaxed">
@@ -10,7 +11,7 @@ export default function ContactInfoSection() {
             </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
             <InfoCard icon={<Phone className="w-5 h-5"/>} title="Phone" primaryText="+63 2 888 1234" secondaryText={<>Available Mon-Fri, 9am - 6pm PHT</>} />
 
@@ -21,6 +22,7 @@ export default function ContactInfoSection() {
             <InfoCard icon={<Clock className="w-5 h-5" />} title="Business Hours" primaryText="Monday - Friday" secondaryText={<>9:00 AM - 6:00 PM (PST)</>} />
         </div>
     </div>
+    );
 }
 
 interface InfoCardProps {
@@ -30,7 +32,7 @@ interface InfoCardProps {
     secondaryText?: ReactElement;
 }
 
-export function InfoCard({ icon, title, primaryText, secondaryText }: InfoCardProps) {
+function InfoCard({ icon, title, primaryText, secondaryText }: InfoCardProps) {
     return (
         <div className="flex items-start gap-4">
             <div className="w-12 h-12 shrink-0 bg-[#E2E8F0] rounded-xl flex items-center justify-center text-[#9E1B32]">

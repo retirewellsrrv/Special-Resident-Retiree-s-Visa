@@ -1,5 +1,5 @@
 import { FileText, TrendingUp, MapPin } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import type { LucideIcon } from "lucide-react";
 
 interface Service {
@@ -11,21 +11,21 @@ interface Service {
 const services: Service[] = [
   {
     icon: FileText,
-    title: "SRRV Application Support",
+    title: "SRRV Visa Application Support",
     description:
-      "Expert guidance through the entire visa process, ensuring all documentation meets PRA standards for a hassle-free experience.",
+"Expert guidance through the entire visa process, ensuring all documentation meets PRA standards for a hassle-free experience."
   },
   {
     icon: TrendingUp,
-    title: "Marketing Consulting",
+    title: "VIP On-the-Ground Concierge",
     description:
-      "Strategic growth solutions for retirement-focused businesses looking to reach the expat and retiree demographic effectively.",
+"Strategic marketing solutions designed to help retirement-focused businesses connect with expats, retirees, and international clients through targeted campaigns and effective growth strategies."
   },
-  {
+    {
     icon: MapPin,
     title: "Relocation Concierge",
     description:
-      "Personalized assistance in finding your perfect home and community, navigating local real estate, and setting up utilities.",
+"Personalized assistance in finding your ideal home, exploring retirement-friendly communities, navigating local services, and settling into your new life in the Philippines."
   },
 ];
 
@@ -38,8 +38,7 @@ export function ServicesSection() {
             Our Specialized Services
           </h2>
           <p className="text-ht-body-md text-brand-neutral-500 max-w-md mx-auto">
-            Providing the expertise and support you need for every step of your
-            retirement journey in the Philippines.
+            Indefinite Free Stay: Live, travel, and invest in the Philippines permanently with zero visa renewal hassle.
           </p>
         </div>
 

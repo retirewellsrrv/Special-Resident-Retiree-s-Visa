@@ -48,7 +48,7 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }))
 
-import { createClient } from '../lib/supabase/server'
+import { createClient, createAdminClient } from '../lib/supabase/server'
 vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue({
     get: vi.fn().mockReturnValue('http://localhost:3000'),
@@ -62,11 +62,13 @@ function mockAuth(authOverrides: Partial<{
   signInWithPassword: ReturnType<typeof vi.fn>
   signUp: ReturnType<typeof vi.fn>
   signOut: ReturnType<typeof vi.fn>
+  resend: ReturnType<typeof vi.fn>
 }> = {}) {
   const auth = {
     signInWithPassword: vi.fn(),
     signUp: vi.fn(),
     signOut: vi.fn(),
+    resend: vi.fn().mockResolvedValue({ data: {}, error: null }),
     ...authOverrides,
   }
   const fromChain = {
@@ -86,6 +88,31 @@ function mockRedirectThrows() {
   })
 }
 
+function mockAdminClient(overrides: {
+  superAdminProfile?: { user_id: string } | null
+  adminProfile?: { is_active: boolean } | null
+} = {}) {
+  const { superAdminProfile = null, adminProfile = null } = overrides
+
+  const from = vi.fn((table: string) => ({
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        maybeSingle: vi.fn(() => {
+          if (table === 'super_admin_profiles') {
+            return Promise.resolve({ data: superAdminProfile, error: null })
+          }
+          if (table === 'admin_profiles') {
+            return Promise.resolve({ data: adminProfile, error: null })
+          }
+          return Promise.resolve({ data: null, error: null })
+        }),
+      })),
+    })),
+  }))
+
+  vi.mocked(createAdminClient).mockReturnValue({ from } as any)
+}
+
 describe('loginAction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -100,11 +127,13 @@ describe('loginAction', () => {
             id: 'user-123',
             email: 'admin@example.com',
             user_metadata: { role: 'admin' },
+            email_confirmed_at: '2024-01-01T00:00:00Z',
           },
         },
         error: null,
       }),
     })
+    mockAdminClient({ adminProfile: { is_active: true } })
 
     const input: LoginInput = { email: 'admin@example.com', password: 'password123' }
 
@@ -123,11 +152,13 @@ describe('loginAction', () => {
             id: 'user-456',
             email: 'applicant@example.com',
             user_metadata: { role: 'applicant' },
+            email_confirmed_at: '2024-01-01T00:00:00Z',
           },
         },
         error: null,
       }),
     })
+    mockAdminClient()
 
     const input: LoginInput = { email: 'applicant@example.com', password: 'password123' }
 
@@ -135,20 +166,26 @@ describe('loginAction', () => {
     expect(redirect).toHaveBeenCalledWith('/applicant/dashboard')
   })
 
-  it('redirects to / when user has no role', async () => {
+  it('redirects an unprivileged user to /applicant/dashboard', async () => {
     mockAuth({
       signInWithPassword: vi.fn().mockResolvedValue({
         data: {
-          user: { id: 'user-789', email: 'user@example.com', user_metadata: {} },
+          user: {
+            id: 'user-789',
+            email: 'user@example.com',
+            user_metadata: {},
+            email_confirmed_at: '2024-01-01T00:00:00Z',
+          },
         },
         error: null,
       }),
     })
+    mockAdminClient()
 
     const input: LoginInput = { email: 'user@example.com', password: 'password123' }
 
     await expect(loginAction(input)).rejects.toThrow('NEXT_REDIRECT')
-    expect(redirect).toHaveBeenCalledWith('/')
+    expect(redirect).toHaveBeenCalledWith('/applicant/dashboard')
   })
 
   it('returns error for invalid credentials', async () => {
@@ -185,6 +222,7 @@ describe('registerAction', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRedirectThrows()
+    vi.mocked(createAdminClient).mockReturnValue(createAdminClientMock() as any)
   })
 
   const baseInput: RegisterInput = {

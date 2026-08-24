@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import type { Provider } from '@supabase/supabase-js'
-import { supabaseAdmin } from '@/lib/supabase/client'
 
 import { headers } from 'next/headers'
 
@@ -15,8 +14,6 @@ import {
   type LoginInput,
   type RegisterInput,
 } from '@/schemas/auth'
-import { getUserRole } from '@/utils/auth/getUser'
-
 // Register flow: registerAction() → signUp() → redirect /confirm-email
 // Email flow: user clicks link → Supabase verifies → callback?code=xxx → exchangeCodeForSession() → dashboard
 
@@ -49,40 +46,45 @@ export async function loginAction(input: LoginInput): Promise<ActionResult> {
     return { success: false, error: error.message }
   }
 
-  let role = data.user.user_metadata?.role as string | undefined
+  if (!data.user?.email_confirmed_at) {
+    resendConfirmationAction(parsed.data.email)
+    redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
+  }
 
-  // Check super_admin_profiles first — overrides metadata role
-  const { data: superAdminProfile } = await supabase
-    .from('super_admin_profiles')
-    .select('user_id')
-    .eq('user_id', data.user.id)
-    .maybeSingle()
+  const userId = data.user.id
+
+  const adminSupabase = createAdminClient()
+
+  const [{ data: superAdminProfile }, { data: adminProfile }] = await Promise.all([
+    adminSupabase
+      .from('super_admin_profiles')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    adminSupabase
+      .from('admin_profiles')
+      .select('is_active')
+      .eq('user_id', userId)
+      .maybeSingle(),
+  ])
+
+  let role: 'super_admin' | 'admin' | 'applicant' = 'applicant'
 
   if (superAdminProfile) {
     role = 'super_admin'
-  }
-
-  // revalidatePath must run before any redirect()
-  revalidatePath('/', 'layout')
-
-  if (role === 'admin') {
-    const adminSupabase = createAdminClient()
-    const { data: adminProfile } = await adminSupabase
-      .from('admin_profiles')
-      .select('is_active')
-      .eq('user_id', data.user.id)
-      .maybeSingle()
-
-    if (!adminProfile || !adminProfile.is_active) {
+  } else if (adminProfile) {
+    if (!adminProfile.is_active) {
       await supabase.auth.signOut()
       return { success: false, error: 'ACCOUNT_DISABLED' }
     }
+    role = 'admin'
   }
+
+  revalidatePath('/', 'layout')
 
   if (role === 'super_admin') redirect('/super-admin/dashboard')
   if (role === 'admin') redirect('/admin/dashboard')
-  if (role === 'applicant') redirect('/applicant/dashboard')
-  redirect('/')
+  redirect('/applicant/dashboard')
 }
 
 // ─────────────────────────────────────────────
@@ -101,7 +103,8 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
 
   const firstName = capitalize(parsed.data?.firstName);
   const surname = capitalize(parsed.data?.surname);
-  const fullName = `${firstName} ${surname}`; //? parse and capitize 
+  const suffix = parsed.data?.suffix || '';
+  const fullName = suffix ? `${firstName} ${surname}, ${suffix}` : `${firstName} ${surname}`;
 
   console.log(fullName)
   console.log(parsed.data.email)
@@ -127,12 +130,16 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
         error: 'An account with this email already exists.',
       }
     }
-    return {
-      success: false,
-      error:
-        'This email is already registered but has not been confirmed yet. Please check your inbox.',
-    }
+    // ! needs to resend an confirmation link once the email is taken but not yet verified, the message is useless btw.
+    // return {
+    //   success: false,
+    //   error:
+    //     'This email is already registered but has not been confirmed yet. Please check your inbox.',
+    // }
+    resendConfirmationAction(parsed.data.email)
+    redirect(`/confirm-email?email=${encodeURIComponent(parsed.data.email)}`)
   }
+
 
   // birhtday //? parse it before using 
   const birthday = parsed.data.birthday.split("T")[0]; //? sample output "2026-05-30"
@@ -164,6 +171,7 @@ export async function registerAction(input: RegisterInput): Promise<ActionResult
         birthday: parsed.data.birthday,
         nationality: capitalize(parsed.data.nationality),
         age: userAge,
+        suffix: parsed.data.suffix || null,
       },
     },
   })
@@ -217,14 +225,15 @@ export async function resendConfirmationAction(email: string): Promise<ActionRes
 export async function handleResetRequest(email: string): Promise<ActionResult> {
   const origin = (await headers()).get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL
   // check if email exists in the db
-  const user = await supabaseAdmin().auth.admin.listUsers();
+  const adminSupabase = createAdminClient()
+  const user = await adminSupabase.auth.admin.listUsers();
 
   //! only used for debugging, REMOVE WHEN FEATURE IS DONE
   console.log('email exists, proceeding with reset:', email)
-  console.log('user: ', user.data.users.find((u) => u.email === email))
+  console.log('user: ', user.data?.users.find((u) => u.email === email))
   console.log('user from if: ', user)
 
-  if (!user.data.users.find((u) => u.email === email)) {
+  if (!user.data?.users.find((u) => u.email === email)) {
     return { success: false, error: 'No account found with this email.' }
   }
 

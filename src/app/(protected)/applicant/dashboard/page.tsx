@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useActionState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/status-chip";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   CreditCard,
   ConciergeBell,
@@ -15,12 +18,17 @@ import {
   CheckCircle2,
   AlertTriangle,
   Clock,
+  ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Check, PenLine, Flag, Phone, Mail, MapPin } from "lucide-react";
+import { Check, PenLine, Flag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getApplicantDashboard } from "@/actions/applicant/application";
-import type { DashboardData } from "@/actions/applicant/application";
+import { getApplicantDashboard, retryPaymentAction } from "@/actions/applicant/application";
+import type { DashboardData, RetryPaymentState } from "@/actions/applicant/application";
+import { retryConsultationPaymentAction } from "@/actions/applicant/consultation";
+import type { RetryConsultationPaymentState } from "@/actions/applicant/consultation";
+import { Button } from "@/components/ui/button";
 
 const APPLICATION_STEPS = [
   { id: 1, label: "Initiation" },
@@ -37,14 +45,6 @@ const STATUS_TO_STEP_INDEX: Record<string, number> = {
   rejected: -1,
 };
 
-const CONCIERGE_INFO = {
-  name: "Maria Santos",
-  role: "Senior Concierge Officer",
-  email: "maria.santos@pra.gov.ph",
-  phone: "+63 (2) 8888-1234",
-  location: "PRA Main Office, Makati City",
-};
-
 const DOC_ICONS: Record<string, typeof FileText> = {
   passport: FileText,
   medical: Stethoscope,
@@ -54,11 +54,16 @@ const DOC_ICONS: Record<string, typeof FileText> = {
 };
 
 const DOC_LABELS: Record<string, string> = {
-  passport: "Valid Passport (Main Applicant)",
+  passport: "Valid Passport",
+  photo_2x2: "2×2 ID Photo",
+  pra_application: "PRA Application Form",
   medical: "Medical Clearance Certificate",
-  pension: "Bank Deposit Certification",
-  nbi: "NBI / Police Clearance",
-  visa: "Visa Documentation",
+  police: "Police Clearance",
+  bicc: "Bureau of Immigration Clearance Certificate",
+  bank_cert: "Bank Certification",
+  proof_payment: "Proof of Payment",
+  proof_pension: "Proof of Pension",
+  proof_relationship: "Proof of Relationship (Dependents)",
 };
 
 function documentToStatus(docStatus: string): string {
@@ -68,8 +73,35 @@ function documentToStatus(docStatus: string): string {
 }
 
 export default function ApplicantDashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
+  const consultationSuccess =
+    useSearchParams().get("consultation") === "success";
+  const [showConsultationAlert, setShowConsultationAlert] =
+    useState(consultationSuccess);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryState, retryAction, retryPending] = useActionState<
+    RetryPaymentState,
+    FormData
+  >(retryPaymentAction, { error: null, success: false });
+  const [consultRetryState, consultRetryAction, consultRetryPending] =
+    useActionState<RetryConsultationPaymentState, FormData>(
+      retryConsultationPaymentAction,
+      { error: null, success: false },
+    );
+
+  useEffect(() => {
+    if (!consultationSuccess) return;
+    const timer = setTimeout(() => setShowConsultationAlert(false), 5000);
+    return () => clearTimeout(timer);
+  }, [consultationSuccess]);
 
   useEffect(() => {
     getApplicantDashboard().then((result) => {
@@ -77,6 +109,18 @@ export default function ApplicantDashboardPage() {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (retryState.success && retryState.invoiceUrl) {
+      window.location.href = retryState.invoiceUrl;
+    }
+  }, [retryState]);
+
+  useEffect(() => {
+    if (consultRetryState.success && consultRetryState.invoiceUrl) {
+      window.location.href = consultRetryState.invoiceUrl;
+    }
+  }, [consultRetryState]);
 
   if (loading) {
     return (
@@ -183,6 +227,12 @@ export default function ApplicantDashboardPage() {
   const application = data?.application ?? null;
   const documents = data?.documents ?? [];
   const payment = data?.payment ?? null;
+  const consultationPayment = data?.consultationPayment ?? null;
+  const canRetry = data?.canRetry ?? false;
+  const canRetryConsultationPayment =
+    consultationPayment?.status === "pending" ||
+    consultationPayment?.status === "cancelled" ||
+    consultationPayment?.status === "failed";
   const hasPayment = !!payment;
   const currentStepIndex = application
     ? application.status === "pending" && hasPayment
@@ -198,6 +248,17 @@ export default function ApplicantDashboardPage() {
 
   return (
     <div className="space-y-6">
+      {showConsultationAlert && (
+        <Alert className="border-green-200 bg-green-50 text-green-800">
+          <CheckCircle2 className="w-4 h-4 text-green-600" />
+          <AlertTitle>Consultation submitted successfully</AlertTitle>
+          <AlertDescription>
+            Your consultation request has been received. Our team will get back
+            to you to confirm your schedule.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div>
         <h1 className="text-2xl font-bold text-brand-neutral-800">
           Welcome back!
@@ -225,9 +286,19 @@ export default function ApplicantDashboardPage() {
                 </span>
               </p>
             </div>
-            <span className="text-xs font-semibold text-[#8B1A2B] bg-[#8B1A2B]/10 border border-[#8B1A2B]/20 rounded-md px-3 py-1.5 whitespace-nowrap">
-              {progress}% Complete
-            </span>
+            <div className="flex items-center gap-2">
+              {(application?.status === "pending" || application?.status === "rejected") && (
+                <a
+                  href="/applicant/application"
+                  className="text-xs font-semibold text-white bg-[#8B1A2B] hover:bg-[#6f1522] rounded-md px-3 py-1.5 transition-colors"
+                >
+                  Update
+                </a>
+              )}
+              <span className="text-xs font-semibold text-[#8B1A2B] bg-[#8B1A2B]/10 border border-[#8B1A2B]/20 rounded-md px-3 py-1.5 whitespace-nowrap">
+                {progress}% Complete
+              </span>
+            </div>
           </div>
 
           {!application ? (
@@ -260,21 +331,21 @@ export default function ApplicantDashboardPage() {
                     return (
                       <div
                         key={step.id}
-                        className="flex flex-col items-center gap-2 bg-white px-1"
+                        className="flex flex-col items-center gap-2 bg-white px-0.5 sm:px-1"
                       >
                         <div
                           className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                            "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors",
                             isDone || isCurrent
                               ? "bg-[#8B1A2B] text-white"
                               : "bg-white border border-brand-neutral-200 text-brand-neutral-300",
                           )}
                         >
-                          <StepIcon className="w-4 h-4" />
+                          <StepIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </div>
                         <span
                           className={cn(
-                            "text-xs font-medium whitespace-nowrap",
+                            "hidden sm:inline text-xs font-medium",
                             isCurrent
                               ? "text-[#8B1A2B] font-semibold"
                               : isDone
@@ -329,9 +400,8 @@ export default function ApplicantDashboardPage() {
                 const isVerified = displayStatus === "verified";
                 const isActionRequired = displayStatus === "action_required";
 
-                return (
+                const row = (
                   <div
-                    key={doc.type}
                     className={cn(
                       "flex items-center justify-between gap-3 p-3 rounded-lg border",
                       isActionRequired
@@ -364,11 +434,28 @@ export default function ApplicantDashboardPage() {
                       </div>
                     </div>
 
-                    <StatusChip
-                      status={displayStatus}
-                      icon={isVerified ? CheckCircle2 : isActionRequired ? AlertTriangle : Clock}
-                    />
+                    <div className="flex items-center gap-2">
+                      <StatusChip
+                        status={displayStatus}
+                        icon={isVerified ? CheckCircle2 : isActionRequired ? AlertTriangle : Clock}
+                      />
+                      {isActionRequired && (
+                        <ArrowRight className="w-4 h-4 text-[#8B1A2B]" />
+                      )}
+                    </div>
                   </div>
+                );
+
+                return isActionRequired ? (
+                  <Link
+                    key={doc.type}
+                    href={`/applicant/dashboard/documents/${doc.type}`}
+                    className="block transition-opacity hover:opacity-80"
+                  >
+                    {row}
+                  </Link>
+                ) : (
+                  <div key={doc.type}>{row}</div>
                 );
               })}
             </div>
@@ -387,61 +474,147 @@ export default function ApplicantDashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {!payment ? (
+          {!payment && !consultationPayment ? (
             <p className="text-sm text-brand-neutral-400">No payment information available.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <CreditCard className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                    Amount Paid
-                  </p>
-                  <p className="text-lg font-bold text-brand-neutral-800 mt-0.5">
-                    ₱{Number(payment.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                  </p>
+            <>
+              {payment && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                      <CreditCard className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                          Amount Paid
+                        </p>
+                        <p className="text-lg font-bold text-brand-neutral-800 mt-0.5">
+                          ₱{Number(payment.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                      <Building2 className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                          Payment Method
+                        </p>
+                        <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
+                          {payment.payment_method.replace(/_/g, " ")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                      <FileText className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                          Transaction Code
+                        </p>
+                        <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 font-mono">
+                          {payment.transaction_code}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {canRetry && (
+                    <div className="mt-4 space-y-2">
+                      {retryState.error && (
+                        <p className="text-sm text-red-600">{retryState.error}</p>
+                      )}
+                      <form action={retryAction}>
+                        <Button
+                          type="submit"
+                          disabled={retryPending}
+                          className="w-full"
+                        >
+                          {retryPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Redirecting to payment...
+                            </>
+                          ) : (
+                            "Retry Payment"
+                          )}
+                        </Button>
+                      </form>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {consultationPayment && (
+                <div className="border-t border-brand-neutral-200 pt-4 mt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-brand-neutral-400">
+                      Consultation Fee
+                    </p>
+                    <StatusChip status={consultationPayment.status} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                      <CreditCard className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                          Amount Paid
+                        </p>
+                        <p className="text-base font-bold text-brand-neutral-800 mt-0.5">
+                          ₱{Number(consultationPayment.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
+                      <Building2 className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                          Payment Method
+                        </p>
+                        <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
+                          {consultationPayment.payment_method.replace(/_/g, " ")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50 sm:col-span-2">
+                      <FileText className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
+                          Transaction Code
+                        </p>
+                        <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 font-mono">
+                          {consultationPayment.transaction_code}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {canRetryConsultationPayment && (
+                    <div className="mt-4 space-y-2">
+                      {consultRetryState.error && (
+                        <p className="text-sm text-red-600">
+                          {consultRetryState.error}
+                        </p>
+                      )}
+                      <form action={consultRetryAction}>
+                        <Button
+                          type="submit"
+                          disabled={consultRetryPending}
+                          className="w-full"
+                        >
+                          {consultRetryPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Redirecting to payment...
+                            </>
+                          ) : (
+                            "Retry Consultation Payment"
+                          )}
+                        </Button>
+                      </form>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <Package className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                    Service Type
-                  </p>
-                  <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
-                    {application?.service_type === "basic"
-                      ? "Basic"
-                      : application?.service_type === "premium"
-                        ? "Premium"
-                        : application?.service_type === "vip"
-                          ? "VIP"
-                          : application?.service_type ?? "---"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <Building2 className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                    Payment Method
-                  </p>
-                  <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 capitalize">
-                    {payment.payment_method.replace(/_/g, " ")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <FileText className="w-5 h-5 text-brand-neutral-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium uppercase tracking-wide">
-                    Transaction Code
-                  </p>
-                  <p className="text-sm font-semibold text-brand-neutral-700 mt-0.5 font-mono">
-                    {payment.transaction_code}
-                  </p>
-                </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -460,52 +633,42 @@ export default function ApplicantDashboardPage() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-[#8B1A2B]/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-lg font-bold text-[#8B1A2B]">
-                  {CONCIERGE_INFO.name.split(" ").map((n) => n[0]).join("")}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-brand-neutral-800">
-                  {CONCIERGE_INFO.name}
-                </p>
-                <p className="text-xs text-brand-neutral-500">
-                  {CONCIERGE_INFO.role}
-                </p>
-              </div>
+          {loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <Phone className="w-4 h-4 text-brand-neutral-400" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium">Phone</p>
-                  <p className="text-sm font-medium text-brand-neutral-700">
-                    {CONCIERGE_INFO.phone}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-brand-neutral-50">
-                <Mail className="w-4 h-4 text-brand-neutral-400" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium">Email</p>
-                  <p className="text-sm font-medium text-brand-neutral-700">
-                    {CONCIERGE_INFO.email}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-brand-neutral-50 sm:col-span-2">
-                <MapPin className="w-4 h-4 text-brand-neutral-400" />
-                <div>
-                  <p className="text-xs text-brand-neutral-400 font-medium">Location</p>
-                  <p className="text-sm font-medium text-brand-neutral-700">
-                    {CONCIERGE_INFO.location}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          ) : data?.concierges && data.concierges.length > 0 ? (
+            <ul className="space-y-3">
+              {data.concierges.map((concierge) => (
+                <li
+                  key={concierge.user_id}
+                  className="flex items-start gap-3 rounded-lg border border-brand-neutral-100 bg-brand-neutral-50/50 p-3"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#8B1A2B]/10 text-sm font-semibold text-[#8B1A2B]">
+                    {concierge.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-brand-neutral-800">
+                      {concierge.name}
+                    </p>
+                    <p className="truncate text-sm text-brand-neutral-400">
+                      {concierge.email}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-brand-neutral-400">
+              No concierge information available yet.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

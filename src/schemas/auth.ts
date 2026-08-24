@@ -25,11 +25,16 @@ export const registerSchema = z
     firstName: z
       .string()
       .min(1, 'First Name is required')
-      .min(2, 'First name must be at least 2 characters'),
+      .min(2, 'First name must be at least 2 characters')
+      .regex(/^[^\d]*$/, 'First name must not contain numbers'),
+    suffix: z
+      .string()
+      .optional(),
     surname: z
       .string()
       .min(1, 'surname is required')
-      .min(2, 'Surname must be at least 2 characters'),
+      .min(2, 'Surname must be at least 2 characters')
+      .regex(/^[^\d]*$/, 'Surname must not contain numbers'),
     email: z
       .string()
       .min(1, 'Email is required')

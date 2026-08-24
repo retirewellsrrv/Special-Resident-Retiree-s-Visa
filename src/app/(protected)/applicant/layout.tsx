@@ -2,13 +2,17 @@
 
 import { getSession } from '@/actions/auth'
 import { SidebarLayout } from '@/components/layout/sidebar-layout'
-import { User } from '@supabase/supabase-js'
-import { LayoutDashboard, FileText } from 'lucide-react'
+import { NotificationBell } from '@/components/applicant/notification-bell'
+import type { User } from '@supabase/supabase-js'
+import { LayoutDashboard, FileText, User as UserIcon, CalendarDays, Receipt } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const NAV_ITEMS = [
   { href: '/applicant/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/applicant/consultation', label: 'Consultation', icon: CalendarDays },
   { href: '/applicant/application', label: 'Application', icon: FileText },
+  { href: '/applicant/receipts', label: 'Receipts', icon: Receipt },
+  { href: '/applicant/profile', label: 'Profile', icon: UserIcon },
 ]
 
 export default function ApplicantLayout({
@@ -24,7 +28,7 @@ export default function ApplicantLayout({
   const role = user?.user_metadata.role;
   const userName = user?.user_metadata.name
   return (
-    <SidebarLayout navItems={NAV_ITEMS} title="Applicant" user={{ name: userName || 'Applicant User', role: role || 'Applicant' }}>
+    <SidebarLayout navItems={NAV_ITEMS} title="Applicant" user={{ name: userName || 'Applicant User', role: role || 'Applicant' }} notifications={<NotificationBell userId={user?.id} />}>
       {children}
     </SidebarLayout>
   )

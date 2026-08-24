@@ -1,6 +1,8 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/supabase";
 
 export type PaymentRow = {
   id: number
@@ -9,6 +11,7 @@ export type PaymentRow = {
   status: string
   payment_method: string
   transaction_code: string
+  service_type: string
   created_at: string
 }
 
@@ -19,13 +22,16 @@ export type PaymentStats = {
   refunded: number
   refundAmt: number
   total: number
+  revenueApplication: number
+  revenueConsultation: number
 }
 
-export async function getPaymentStats(): Promise<PaymentStats> {
+export const getPaymentStats = unstable_cache(
+  async (): Promise<PaymentStats> => {
   const supabase = createAdminClient();
 
-  const { data } = await supabase.from("payments").select("status, amount");
-  const all = (data ?? []) as { status: string; amount: number }[];
+  const { data } = await supabase.from("payments").select("status, amount, service_type");
+  const all = (data ?? []) as { status: string; amount: number; service_type: string }[];
   const completed = all.filter((r) => r.status === "success");
   const refunded = all.filter((r) => r.status === "cancelled");
 
@@ -36,7 +42,20 @@ export async function getPaymentStats(): Promise<PaymentStats> {
     refunded: refunded.length,
     refundAmt: refunded.reduce((a, r) => a + Number(r.amount), 0),
     total: all.length,
+    revenueApplication: completed
+      .filter((r) => r.service_type === "application")
+      .reduce((a, r) => a + Number(r.amount), 0),
+    revenueConsultation: completed
+      .filter((r) => r.service_type === "consultation")
+      .reduce((a, r) => a + Number(r.amount), 0),
   };
+},
+  ["admin-payments-stats"],
+  { revalidate: 30, tags: ["admin-payments"] },
+)
+
+function escapeSearch(val: string) {
+  return val.replace(/[%_]/g, '\\$&')
 }
 
 export async function getPayments({
@@ -44,6 +63,7 @@ export async function getPayments({
   limit = 10,
   status,
   method,
+  type,
   code,
   name,
   search,
@@ -52,6 +72,7 @@ export async function getPayments({
   limit?: number
   status?: string
   method?: string
+  type?: string
   code?: string
   name?: string
   search?: string
@@ -60,11 +81,54 @@ export async function getPayments({
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const { data: allData, count } = await supabase
+  let query = supabase
     .from("payments")
-    .select("id, amount, status, payment_method, transaction_code, created_at, user_id", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .select("id, amount, status, payment_method, transaction_code, service_type, created_at, user_id", { count: "exact" })
+
+  if (status && status !== "all") {
+    query = query.eq("status", status as Database["public"]["Enums"]["payment_status"])
+  }
+  if (method && method !== "all") {
+    query = query.eq("payment_method", method as Database["public"]["Enums"]["payment_methods"])
+  }
+  if (type && type !== "all") {
+    query = query.eq("service_type", type as Database["public"]["Enums"]["service_type"])
+  }
+  if (code) {
+    query = query.ilike("transaction_code", `%${escapeSearch(code)}%`)
+  }
+  if (name) {
+    const { data: matchingUsers } = await supabase
+      .from("client_profiles")
+      .select("user_id")
+      .ilike("name", `%${escapeSearch(name)}%`)
+    const targetIds = (matchingUsers ?? []).map((u) => u.user_id)
+    if (targetIds.length > 0) {
+      query = query.in("user_id", targetIds)
+    } else {
+      query = query.in("user_id", [])
+    }
+  }
+  if (search) {
+    const q = escapeSearch(search)
+    const { data: matchingUsers } = await supabase
+      .from("client_profiles")
+      .select("user_id")
+      .ilike("name", `%${q}%`)
+    const targetIds = (matchingUsers ?? []).map((u) => u.user_id)
+    const codeCond = `transaction_code.ilike.%${q}%`
+    const methodCond = `payment_method.ilike.%${q}%`
+    if (targetIds.length > 0) {
+      const userIdConds = targetIds.map((id) => `user_id.eq.${id}`).join(",")
+      query = query.or(`${userIdConds},${codeCond},${methodCond}`)
+    } else {
+      query = query.or(`${codeCond},${methodCond}`)
+    }
+  }
+
+  query = query.order("created_at", { ascending: false }).range(from, to)
+
+  const { data: allData, count } = await query;
 
   if (!allData || allData.length === 0) {
     return { rows: [], total: count ?? 0 };
@@ -78,37 +142,16 @@ export async function getPayments({
 
   const nameMap = Object.fromEntries((profiles ?? []).map((p) => [p.user_id, p.name]));
 
-  let rows: PaymentRow[] = allData.map((r) => ({
+  const rows: PaymentRow[] = allData.map((r) => ({
     id: r.id,
     client_name: nameMap[r.user_id] ?? undefined,
     amount: r.amount,
     status: r.status,
     payment_method: r.payment_method,
     transaction_code: r.transaction_code,
+    service_type: r.service_type,
     created_at: r.created_at,
   }));
-
-  if (status && status !== "all") {
-    rows = rows.filter((r) => r.status === status);
-  }
-  if (method && method !== "all") {
-    rows = rows.filter((r) => r.payment_method === method);
-  }
-  if (code) {
-    rows = rows.filter((r) => r.transaction_code.toLowerCase().includes(code.toLowerCase()));
-  }
-  if (name) {
-    rows = rows.filter((r) => r.client_name?.toLowerCase().includes(name.toLowerCase()));
-  }
-  if (search) {
-    const q = search.toLowerCase();
-    rows = rows.filter(
-      (r) =>
-        r.transaction_code.toLowerCase().includes(q) ||
-        r.client_name?.toLowerCase().includes(q) ||
-        r.payment_method.toLowerCase().includes(q),
-    );
-  }
 
   return { rows, total: count ?? 0 };
 }

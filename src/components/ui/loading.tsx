@@ -36,3 +36,39 @@ export function TableSkeleton({ rows = 5, columns = 5 }: TableSkeletonProps) {
     </>
   )
 }
+
+interface CardListSkeletonProps {
+  rows?: number
+}
+
+/**
+ * Div-based skeleton for mobile card lists. Unlike TableSkeleton this renders
+ * <div> cards (NOT <tr>/<td>), so it can live inside a plain container without
+ * causing hydration errors.
+ */
+export function CardListSkeleton({ rows = 5 }: CardListSkeletonProps) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div
+          key={i}
+          className="bg-white border border-brand-neutral-200 rounded-xl overflow-hidden"
+          aria-hidden
+        >
+          <div className="px-4 py-3 flex items-center gap-3">
+            <Skeleton className="size-8 rounded-full shrink-0" />
+            <div className="flex-1 min-w-0 space-y-2">
+              <Skeleton className="h-3.5 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            <Skeleton className="h-6 w-16 rounded-full shrink-0" />
+          </div>
+          <div className="px-4 py-2 border-t border-brand-neutral-100 bg-brand-neutral-50/40 flex items-center justify-between">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}

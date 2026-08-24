@@ -7,27 +7,24 @@ import {
     type ClientRow,
     type ClientStats,
 } from '@/actions/admin/client-profiles'
-import { Badge } from '@/components/ui/badge'
 import { StatusChip } from '@/components/ui/status-chip'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { TableSkeleton } from '@/components/ui/loading'
+import { TableSkeleton, CardListSkeleton } from '@/components/ui/loading'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { FilterInput, FilterSelect, FilterClear, FilterBar } from '@/components/admin/shared/filters'
 import {
-    Users,
+    Inbox,
+    UserRound,
     Clock,
     CheckCircle2,
     XCircle,
     PauseCircle,
     AlertTriangle,
-    Eye,
-    RotateCcw,
+    ChevronRight,
+    Plus,
     type LucideIcon,
 } from 'lucide-react'
 import { PageHeader } from '@/components/admin/shared/page-header'
 import { Pagination } from '@/components/ui/pagination'
-
-const SERVICE_TYPES = ['basic', 'premium', 'vip'] as const
 
 const STATUS_ICON: Record<string, LucideIcon> = {
     approved: CheckCircle2,
@@ -36,85 +33,52 @@ const STATUS_ICON: Record<string, LucideIcon> = {
     rejected: XCircle,
 }
 
-function initials(name: string) {
-    return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-}
-
-function StatCard({
-    label,
-    value,
-    badge,
-    highlight,
-    icon: Icon,
-}: {
-    label: string
-    value: number
-    badge?: string
-    highlight?: boolean
-    icon: LucideIcon
-}) {
-    return (
-        <Card className={` rounded-2xl border border-neutral-200 shadow-sm bg-white p-5 space-y-4 transition-shadow hover:shadow-md ${highlight ? 'ring-brand-primary-200' : ''}`}>
-            <div className="flex items-start justify-between">
-                <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${highlight ? 'bg-brand-primary-100 text-brand-primary-600' : 'bg-primary/10 text-primary'
-                        }`}
-                >
-                    <Icon className="w-5 h-5" />
-                </div>
-                {badge && (
-                    <Badge variant={highlight ? 'destructive' : 'secondary'} className="font-medium">
-                        {badge}
-                    </Badge>
-                )}
-            </div>
-            <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">{label}</p>
-                <p className="text-3xl font-bold mt-0.5 tabular-nums">{value.toLocaleString()}</p>
-            </div>
-        </Card>
-    )
-}
-
 function ClientDirectoryRow({ row }: { row: ClientRow }) {
-    const StatusIcon = STATUS_ICON[row.status]
+    const StatusIcon = row.status ? STATUS_ICON[row.status] : undefined
+    const href = `/admin/profiles/${row.user_id}`
+    const rowLinkProps = {
+        href,
+        className: 'contents focus-visible:outline-2 focus-visible:outline-brand-primary-500 rounded-sm',
+    }
 
     return (
-        <tr className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-            <td className="py-4 pr-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                        {initials(row.name)}
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold leading-tight">{row.name}</p>
-                        <p className="text-xs text-muted-foreground">{row.application_code}</p>
-                    </div>
-                </div>
-            </td>
-            <td className="py-4 pr-4 text-sm capitalize">{row.service_plan_name ?? row.service_type}</td>
-            <td className="py-4 pr-4">
-                <StatusChip status={row.status} icon={StatusIcon} />
-            </td>
-            <td className="py-4 pr-4 text-sm text-muted-foreground">
-                {row.updated_at
-                    ? new Date(row.updated_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                    })
-                    : '\u2014'}
-            </td>
-            <td className="py-4">
-                <Link
-                    href={`/admin/applications?userId=${row.user_id}`}
-                    className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3 py-1.5 transition-colors"
-                >
-                    <Eye className="w-3.5 h-3.5" />
-                    Review Application
+        <TableRow className="group cursor-pointer">
+            <TableCell>
+                <Link {...rowLinkProps}>
+                    <p className="text-sm font-semibold leading-tight text-brand-neutral-900">{row.name}</p>
+                    <p className="text-xs text-brand-neutral-500">
+                        {row.application_code ?? 'No application yet'}
+                    </p>
                 </Link>
-            </td>
-        </tr>
+            </TableCell>
+            <TableCell>
+                <Link {...rowLinkProps}>
+                    {row.status ? (
+                        <StatusChip status={row.status} icon={StatusIcon} />
+                    ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border border-brand-neutral-200 bg-brand-neutral-100 text-brand-neutral-600 capitalize">
+                            No Application
+                        </span>
+                    )}
+                </Link>
+            </TableCell>
+            <TableCell className="text-sm text-brand-neutral-500">
+                <Link {...rowLinkProps}>
+                    {row.updated_at
+                        ? new Date(row.updated_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                        })
+                        : '\u2014'}
+                </Link>
+            </TableCell>
+            <TableCell className="text-right">
+                <Link {...rowLinkProps} aria-label={`View profile of ${row.name}`}>
+                    <ChevronRight className="ml-auto h-4 w-4 text-brand-neutral-300 transition-all group-hover:text-brand-neutral-600 group-hover:translate-x-0.5" />
+                </Link>
+            </TableCell>
+        </TableRow>
     )
 }
 
@@ -123,15 +87,15 @@ export function ClientProfilesClient({
     rows,
     total,
     page,
-    filter,
-    serviceType,
+    statusFilter,
+    q,
 }: {
     stats: ClientStats
     rows: ClientRow[]
     total: number
     page: number
-    filter: 'all' | 'new'
-    serviceType?: string
+    statusFilter?: string
+    q?: string
 }) {
     const router = useRouter()
     const pathname = usePathname()
@@ -148,120 +112,179 @@ export function ClientProfilesClient({
         startTransition(() => router.push(`${pathname}?${next}`))
     }
 
-    return (
-        <div className="p-6 space-y-6">
-            <PageHeader
-                title="Client Profiles"
-                description="Manage and review existing clients, track application history, and coordinate with the visa processing department for ongoing cases."
-                actions={
-                    <>
-                        <button className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors">
-                            Export CSV
-                        </button>
-                        <button className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors">
-                            + Add New Client
-                        </button>
-                    </>
-                }
-            />
+    function handleClear() {
+        navigate({ status: undefined, q: undefined, page: '1' })
+    }
 
-            {/* Stat Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Total Clients" value={stats.total} badge="+12%" icon={Users} />
-                <StatCard label="Pending" value={stats.pending} icon={Clock} />
-                <StatCard label="Approved" value={stats.approved} icon={CheckCircle2} />
-                <StatCard
-                    label="Rejected"
-                    value={stats.rejected}
-                    badge="High Priority"
-                    highlight
-                    icon={AlertTriangle}
-                />
+    return (
+        <div className="space-y-6">
+            <PageHeader title="Manage Client Profiles" />
+
+            {/* Compact Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-md bg-blue-50 text-blue-600">
+                        <UserRound className="size-4" />
+                    </div>
+                    <div className="min-w-0 leading-none">
+                        <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Total Clients</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.total}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-md bg-amber-50 text-amber-600">
+                        <Clock className="size-4" />
+                    </div>
+                    <div className="min-w-0 leading-none">
+                        <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Pending</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.pending}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-md bg-green-50 text-green-600">
+                        <CheckCircle2 className="size-4" />
+                    </div>
+                    <div className="min-w-0 leading-none">
+                        <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Approved</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.approved}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg border border-brand-neutral-200 bg-white px-3 py-2.5">
+                    <div className="flex size-8 items-center justify-center rounded-md bg-red-50 text-red-600">
+                        <AlertTriangle className="size-4" />
+                    </div>
+                    <div className="min-w-0 leading-none">
+                        <p className="text-[10px] font-medium text-brand-neutral-400 uppercase tracking-wider">Rejected</p>
+                        <p className="text-sm font-semibold text-brand-neutral-900 tabular-nums">{stats.rejected}</p>
+                    </div>
+                </div>
             </div>
 
-            {/* Client Directory */}
-            <Card
-                className="rounded-2xl border border-neutral-200 shadow-sm bg-white">
-                {/* Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-bold mr-3">Client Directory</h2>
-                        {(['all', 'new'] as const).map((f) => (
-                            <button
-                                key={f}
-                                disabled={isPending}
-                                onClick={() => navigate({ filter: f, page: '1' })}
-                                className={`inline-flex items-center gap-1.5 text-sm font-medium rounded-md px-3 py-1.5 transition-colors disabled:opacity-50 ${filter === f
-                                    ? 'bg-brand-primary-800 text-brand-primary-50'
-                                    : 'border border-brand-neutral-300 text-brand-neutral-700 hover:bg-brand-neutral-50'
-                                    }`}
+            {/* Filters */}
+            <FilterBar>
+                <FilterInput
+                    label="Name"
+                    placeholder="Client name"
+                    defaultValue={q ?? ''}
+                    onChange={(v) => navigate({ q: v || undefined, page: '1' })}
+                    disabled={isPending}
+                    isPending={isPending}
+                    debounceMs={400}
+                />
+                <FilterSelect
+                    label="Status"
+                    placeholder="All Status"
+                    value={statusFilter}
+                    options={[
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'approved', label: 'Approved' },
+                        { value: 'rejected', label: 'Rejected' },
+                        { value: 'paused', label: 'Paused' },
+                    ]}
+                    onChange={(v) => navigate({ status: v !== 'all' ? v : undefined, page: '1' })}
+                    disabled={isPending}
+                />
+                <FilterClear onClick={handleClear} disabled={isPending} />
+            </FilterBar>
+
+            {/* ── Mobile cards ── */}
+            <div className="md:hidden space-y-3">
+                {isPending ? (
+                    <CardListSkeleton rows={Math.min(rows.length || limit, limit)} />
+                ) : rows.length === 0 ? (
+                    <div className="flex flex-col items-center gap-3 py-12 text-center">
+                        <Inbox className="size-10 text-brand-neutral-300" />
+                        <p className="text-sm text-brand-neutral-400">No clients found.</p>
+                        <Link
+                            href="/admin/applications"
+                            className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+                        >
+                            <Plus className="h-4 w-4" /> View Applications
+                        </Link>
+                    </div>
+                ) : (
+                    rows.map((row) => {
+                        const StatusIcon = row.status ? STATUS_ICON[row.status] : undefined
+                        return (
+                            <Link
+                                key={row.user_id}
+                                href={`/admin/profiles/${row.user_id}`}
+                                className="block bg-white border border-brand-neutral-200 rounded-xl overflow-hidden transition-colors hover:bg-brand-neutral-50"
                             >
-                                {f === 'all' ? 'All Clients' : 'New (30d)'}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Select
-                            value={serviceType ?? ''}
-                            onValueChange={(v) => navigate({ service_type: v || undefined, page: '1' })}
-                        >
-                            <SelectTrigger className="text-xs h-8 w-44" disabled={isPending}>
-                                <SelectValue placeholder="Filter by Service Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {SERVICE_TYPES.map((v) => (
-                                    <SelectItem key={v} value={v} className="capitalize">
-                                        {v}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <button
-                            disabled={isPending}
-                            onClick={() => navigate({ filter: 'all', service_type: undefined, page: '1' })}
-                            title="Reset filters"
-                            aria-label="Reset filters"
-                            className="inline-flex items-center gap-1.5 border border-brand-primary-800 text-brand-primary-800 hover:bg-brand-primary-50 text-sm font-medium rounded-md px-3 py-1.5 transition-colors disabled:opacity-50"
-                        >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
+                                <div className="px-4 py-3 flex items-center gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold leading-tight text-brand-neutral-900 truncate">{row.name}</p>
+                                        <p className="text-xs text-brand-neutral-500 truncate">
+                                            {row.application_code ?? 'No application yet'}
+                                        </p>
+                                    </div>
+                                    {row.status ? (
+                                        <StatusChip status={row.status} icon={StatusIcon} />
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border border-brand-neutral-200 bg-brand-neutral-100 text-brand-neutral-600 capitalize shrink-0">
+                                            No Application
+                                        </span>
+                                    )}
+                                    <ChevronRight className="h-4 w-4 text-brand-neutral-300 shrink-0" />
+                                </div>
+                                <div className="px-4 py-2 border-t border-brand-neutral-100 bg-brand-neutral-50/40 flex items-center justify-between">
+                                    <span className="text-xs text-brand-neutral-400">Last updated</span>
+                                    <span className="text-xs text-brand-neutral-500">
+                                        {row.updated_at
+                                            ? new Date(row.updated_at).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                            })
+                                            : '\u2014'}
+                                    </span>
+                                </div>
+                            </Link>
+                        )
+                    })
+                )}
+            </div>
+
+            {/* ── Desktop table ── */}
+            <div className="hidden md:block bg-white border border-brand-neutral-200 rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-brand-neutral-100">
+                    <span className="text-sm font-medium text-brand-neutral-900">Client Records</span>
                 </div>
-
-                <Separator />
-
-                {/* Table */}
-                <div className="overflow-x-auto px-5">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b">
-                                {['Client Name & ID', 'Service Type', 'Status', 'Last Updated', 'Actions'].map((h) => (
-                                    <th
-                                        key={h}
-                                        className="py-3 pr-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
-                                    >
-                                        {h}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isPending ? (
-                                <TableSkeleton rows={Math.min(rows.length || limit, limit)} columns={5} />
-                            ) : rows.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
-                                        No clients found.
-                                    </td>
-                                </tr>
-                            ) : (
-                                rows.map((row) => <ClientDirectoryRow key={row.user_id} row={row} />)
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-            </Card>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Last Updated</TableHead>
+                            <TableHead className="text-right">
+                                <span className="sr-only">Open profile</span>
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isPending ? (
+                            <TableSkeleton rows={Math.min(rows.length || limit, limit)} columns={4} />
+                        ) : rows.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center py-12">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Inbox className="size-10 text-brand-neutral-300" />
+                                        <p className="text-sm text-brand-neutral-400">No clients found.</p>
+                                        <Link
+                                            href="/admin/applications"
+                                            className="inline-flex items-center gap-1.5 bg-brand-primary-600 hover:bg-brand-primary-800 text-brand-primary-50 text-sm font-medium rounded-md px-3.5 py-2 transition-colors"
+                                        >
+                                            <Plus className="h-4 w-4" /> View Applications
+                                        </Link>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            rows.map((row) => <ClientDirectoryRow key={row.user_id} row={row} />)
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
 
             <Pagination
                 page={page}
@@ -270,6 +293,7 @@ export function ClientProfilesClient({
                 perPage={limit}
                 onChange={(p) => navigate({ page: String(p) })}
                 maxVisiblePages={3}
+                disabled={isPending}
             />
         </div>
     )

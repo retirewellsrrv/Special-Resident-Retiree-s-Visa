@@ -9,7 +9,9 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { isRedirectError } from 'next/dist/client/components/redirect-error'
+function isRedirectError(error: unknown): boolean {
+  return error instanceof Error && 'digest' in error && String((error as Error & { digest: string }).digest).startsWith('NEXT_REDIRECT')
+}
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, BadgeCheck, AlertCircle, Ban } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -32,9 +34,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 
-//? place holder for now 
-const LOGO_SRC =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuAhr8iSPgv2rvBaNxbMastI29NPlsj3rAAnA5k7xKA-US3je9ux-SB0DqlmZIDC2c3TDnxqmzM-mfutVmRKUOiY1QF-LfVsFb3B1Ej-GKOXlTnlewshBtZiVBw_CnU3K7hC4QT3t8bR_76XZTYnSVUQSSRUcuGSX5PPWXt7jwyuG7wvbB0GWcfaIGwQuOXbcC2RDQ5SC8FLqZ5PFv9v0eg5Ouk5QlhlWQP9B20N9Z6lajJGWNl0_igVCtyvduaofHaDMZA_agV8qrnu'
+import logo from "@/assets/images/logo.jpg"
 
 const ERROR_MESSAGES: Record<string, string> = {
     oauth_failed: 'OAuth sign-in failed. Please try again.',
@@ -112,14 +112,15 @@ export function LoginForm({
                 <CardContent className="p-8 md:p-12">
                     {/* Logo + heading */}
                     <div className="mb-10 flex flex-col items-center">
-                        <Image
-                            src={LOGO_SRC}
-                            alt="Retire Well SRRV Logo"
-                            width={160}
-                            height={80}
-                            unoptimized
-                            className="mb-4 h-16 w-auto object-contain md:h-20"
-                        />
+                        <Link href="/">
+                            <Image
+                                src={logo}
+                                alt="Retire Well SRRV Logo"
+                                width={200}
+                                height={100}
+                                className="mb-4 h-20 w-auto object-contain md:h-24"
+                            />
+                        </Link>
                         <h1 className="text-2xl font-bold tracking-tight text-brand-primary-700">
                             Welcome Back
                         </h1>

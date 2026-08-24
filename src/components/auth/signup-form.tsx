@@ -7,6 +7,7 @@ import { registerSchema, type RegisterInput } from '@/schemas/auth'
 import { registerAction, oauthAction } from '@/actions/auth'
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { toast } from 'sonner'
 import { User, Flag, MapPin, Mail, Lock, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
@@ -53,6 +54,7 @@ export function SignupForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       firstName: '',
+      suffix: '',
       surname: '',
       email: '',
       birthday: '',
@@ -96,6 +98,10 @@ export function SignupForm({
 
   const SEX_OPTIONS = ['male', 'female']
 
+//? place holder for now
+const LOGO_SRC =
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuAhr8iSPgv2rvBaNxbMastI29NPlsj3rAAnA5k7xKA-US3je9ux-SB0DqlmZIDC2c3TDnxqmzM-mfutVmRKUOiY1QF-LfVsFb3B1Ej-GKOXlTnlewshBtZiVBw_CnU3K7hC4QT3t8bR_76XZTYnSVUQSSRUcuGSX5PPWXt7jwyuG7wvbB0GWcfaIGwQuOXbcC2RDQ5SC8FLqZ5PFv9v0eg5Ouk5QlhlWQP9B20N9Z6lajJGWNl0_igVCtyvduaofHaDMZA_agV8qrnu'
+
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card className="overflow-hidden p-0 bg-white w-full max-w-5xl">
@@ -104,14 +110,14 @@ export function SignupForm({
           {/* ── Left panel (branding) ── */}
           <div className="relative hidden bg-brand-primary-800 md:flex flex-col justify-between px-8 py-10 gap-10">
             {/* Logo */}
-            <div className="flex items-center gap-2.5">
+            <Link href="/" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-lg bg-brand-goldAccent-1 flex items-center justify-center font-semibold text-base">
                 S
               </div>
               <span className="text-brand-tertiary-600 text-[15px] font-medium tracking-wide">
                 SRRV Portal
               </span>
-            </div>
+            </Link>
 
             {/* Tagline */}
             <div>
@@ -151,6 +157,18 @@ export function SignupForm({
             className="p-6 md:p-8 w-full min-w-0 md:max-h-[90vh] overflow-y-auto"
           >
             <FieldGroup>
+              {/* Mobile logo link */}
+              <Link href="/" className="flex justify-center md:hidden mb-4">
+                <Image
+                  src={LOGO_SRC}
+                  alt="Retire Well SRRV Logo"
+                  width={140}
+                  height={70}
+                  unoptimized
+                  className="h-14 w-auto object-contain"
+                />
+              </Link>
+
               {/* Header */}
               <div className="flex flex-col items-center gap-2 text-center">
                 <h2 className="text-2xl font-bold">Create your account</h2>
@@ -204,25 +222,37 @@ export function SignupForm({
                     </FieldDescription>
                   )}
                 </Field>
-                <Field>
-                  <FieldLabel htmlFor="surname">Surname</FieldLabel>
-                  <div className="group relative">
-                    <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Field>
+                    <FieldLabel htmlFor="surname">Surname</FieldLabel>
+                    <div className="group relative">
+                      <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-brand-primary-700" />
+                      <Input
+                        id="surname"
+                        type="text"
+                        placeholder="Smith"
+                        autoComplete="family-name"
+                        className="h-11 pl-9"
+                        {...register('surname')}
+                      />
+                    </div>
+                    {errors.surname && (
+                      <FieldDescription className="text-brand-danger-800">
+                        {errors.surname.message}
+                      </FieldDescription>
+                    )}
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="suffix">Suffix</FieldLabel>
                     <Input
-                      id="surname"
+                      id="suffix"
                       type="text"
-                      placeholder="Smith"
-                      autoComplete="family-name"
-                      className="h-11 pl-9"
-                      {...register('surname')}
+                      placeholder="Jr., Sr., III"
+                      className="h-11"
+                      {...register('suffix')}
                     />
-                  </div>
-                  {errors.surname && (
-                    <FieldDescription className="text-brand-danger-800">
-                      {errors.surname.message}
-                    </FieldDescription>
-                  )}
-                </Field>
+                  </Field>
+                </div>
               </Field>
 
               {/* Birthday + Sex //! birthday not using shadcd component due to compatibility issue with tailwind version*/}

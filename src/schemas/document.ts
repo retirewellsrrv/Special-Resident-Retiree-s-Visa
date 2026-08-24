@@ -31,7 +31,7 @@ export const DocumentStatusEnum = z.enum(
 );
 
 export const DocumentTypeEnum = z.enum(
-  ["passport", "visa", "nbi", "pension", "medical"],
+  ["passport", "photo_2x2", "pra_application", "medical", "police", "bicc", "bank_cert", "proof_payment", "proof_pension", "proof_relationship"],
   {
     error: "Please select a valid document type",
   },
@@ -49,6 +49,7 @@ export const documentInsertSchema = z.object({
   name: z.string(),
   path: z.string(),
   status: DocumentStatusEnum.optional(),
+  review_note: z.string().optional().nullable(),
   type: DocumentTypeEnum,
   updated_at: z.string().optional().nullable(),
 });
@@ -76,29 +77,33 @@ export type DocumentRow = z.infer<typeof documentRowSchema>;
 
 export const step4FormSchema = z.object({
   passport: z.object({
-    file: z.instanceof(File, { message: "Passport bio page is required" }),
+    file: z.instanceof(File, { message: "Passport is required" }),
     name: z.string(),
   }),
-  visa: z.object({
-    file: z.instanceof(File, { message: "Valid visa page is required" }),
-    name: z.string(),
-  }),
-  nbi: z.object({
-    file: z.instanceof(File, {
-      message: "NBI or police clearance is required",
-    }),
-    name: z.string(),
-  }),
-  pension: z.object({
-    file: z.instanceof(File, {
-      message: "Pension or bank certification is required",
-    }),
+  photo_2x2: z.object({
+    file: z.instanceof(File, { message: "2x2 photo is required" }),
     name: z.string(),
   }),
   medical: z.object({
     file: z.instanceof(File, {
-      message: "Medical examination report is required",
+      message: "Medical certificate is required",
     }),
+    name: z.string(),
+  }),
+  police: z.object({
+    file: z.instanceof(File, { message: "Police clearance is required" }),
+    name: z.string(),
+  }),
+  bicc: z.object({
+    file: z.instanceof(File, { message: "BICC document is required" }),
+    name: z.string(),
+  }),
+  bank_cert: z.object({
+    file: z.instanceof(File, { message: "Bank certification is required" }),
+    name: z.string(),
+  }),
+  proof_payment: z.object({
+    file: z.instanceof(File, { message: "Proof of payment is required" }),
     name: z.string(),
   }),
 });

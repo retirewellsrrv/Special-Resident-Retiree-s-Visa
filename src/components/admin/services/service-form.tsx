@@ -18,16 +18,7 @@ import {
 import { Loader2, Plus, X, Star } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 
-type ServiceType = 'basic' | 'premium' | 'vip'
-
-const SERVICE_TYPES: { value: ServiceType; label: string }[] = [
-  { value: 'basic', label: 'Basic' },
-  { value: 'premium', label: 'Premium' },
-  { value: 'vip', label: 'VIP' },
-]
-
 interface FieldState {
-  type: ServiceType
   name: string
   subtitle: string
   price: string
@@ -38,7 +29,6 @@ interface FieldState {
 }
 
 const DEFAULT_STATE: FieldState = {
-  type: 'basic',
   name: '',
   subtitle: '',
   price: '',
@@ -48,21 +38,12 @@ const DEFAULT_STATE: FieldState = {
   highlighted: false,
 }
 
-function TypeBadgePreview({ type }: { type: ServiceType }) {
-  const base = 'inline-block rounded-md px-2.5 py-0.5 text-xs font-medium capitalize'
-  if (type === 'vip' || type === 'premium') {
-    return <span className={`${base} bg-brand-primary-50 text-brand-primary-800 border border-brand-primary-100`}>{type}</span>
-  }
-  return <span className={`${base} bg-brand-neutral-100 text-brand-neutral-600 border border-brand-neutral-200`}>{type}</span>
-}
-
 export function ServiceForm() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [fields, setFields] = useState<FieldState>(DEFAULT_STATE)
   const [tagInput, setTagInput] = useState('')
 
-  const typeId = useId()
   const nameId = useId()
   const subtitleId = useId()
   const priceId = useId()
@@ -104,7 +85,6 @@ export function ServiceForm() {
 
     startTransition(async () => {
       const result = await createServicePlan({
-        type: fields.type,
         name: fields.name.trim(),
         subtitle: fields.subtitle.trim(),
         price: parsedPrice,
@@ -138,25 +118,6 @@ export function ServiceForm() {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <label htmlFor={typeId} className="text-sm font-medium text-brand-neutral-700">
-              Service type
-            </label>
-            <div className="flex items-center gap-3">
-              <Select value={fields.type} onValueChange={(v) => set('type', v as ServiceType)}>
-                <SelectTrigger id={typeId} className="w-full">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SERVICE_TYPES.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <TypeBadgePreview type={fields.type} />
-            </div>
-          </div>
-
           <div className="space-y-2">
             <label htmlFor={nameId} className="text-sm font-medium text-brand-neutral-700">Name</label>
             <Input id={nameId} placeholder="e.g. Basic SRRV" value={fields.name} onChange={(e) => set('name', e.target.value)} />

@@ -1,96 +1,23 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, ChevronLeft, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
+import {
+  MessageCircle,
+  X,
+  ChevronLeft,
+  ChevronDown,
+  Search,
+  Newspaper,
+  Sparkles,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { categories, questionMap, type QAPair } from '@/data/chat-content';
 
-interface QAPair {
-  id: string;
-  question: string;
-  answer: string;
-  relatedIds: string[];
-  cta?: { label: string; href: string };
-}
-
-interface Category {
-  name: string;
-  questionIds: string[];
-}
-
-const categories: Category[] = [
-  { name: 'General Information', questionIds: ['what-is-srrv', 'options', 'age-reqs'] },
-  { name: 'Eligibility & Requirements', questionIds: ['age-reqs', 'deposit', 'documents', 'family'] },
-  { name: 'Life After Approval', questionIds: ['work-study', 'processing', 'options'] },
-];
-
-const questions: QAPair[] = [
-  {
-    id: 'what-is-srrv',
-    question: 'What is SRRV?',
-    answer:
-      "The Special Resident Retiree's Visa (SRRV) is a non-immigrant visa for foreign nationals who want to retire in the Philippines. Issued by the Philippines Retirement Authority (PRA), it offers multiple-entry privileges with the right to stay permanently in the country.",
-    relatedIds: ['age-reqs', 'options'],
-    cta: { label: 'View Services', href: '/services' },
-  },
-  {
-    id: 'age-reqs',
-    question: 'What are the age requirements?',
-    answer:
-      'The SRRV has two age categories: (1) Main applicants aged 50 and above require a US$10,000 deposit. (2) Applicants aged 35 to 49 require a US$50,000 deposit. There is no upper age limit.',
-    relatedIds: ['deposit', 'documents'],
-    cta: { label: 'See Pricing', href: '/pricing' },
-  },
-  {
-    id: 'deposit',
-    question: 'What is the minimum deposit?',
-    answer:
-      "For the Classic SRRV (age 50+), the deposit is US$10,000. For those aged 35-49, it's US$50,000. The Smile SRRV (age 50+) with a 1-year validity requires a lower deposit structure. Dependents require an additional US$3,000 each if the main applicant made the minimum deposit.",
-    relatedIds: ['age-reqs', 'options'],
-    cta: { label: 'Calculate Costs', href: '/pricing' },
-  },
-  {
-    id: 'work-study',
-    question: 'Can I work or study with an SRRV?',
-    answer:
-      'Yes, SRRV holders can study or work in the Philippines. However, to work legally, you need to secure an Alien Employment Permit (AEP) from the Department of Labor and Employment (DOLE).',
-    relatedIds: ['what-is-srrv', 'family'],
-  },
-  {
-    id: 'documents',
-    question: 'What documents are required?',
-    answer:
-      'Required documents include: (1) Valid passport with at least 6 months validity, (2) Birth certificate, (3) Marriage certificate (if applicable), (4) NBI or police clearance, (5) Medical certificate, (6) Bank certificate showing the deposit, and (7) 12 passport-sized photos.',
-    relatedIds: ['processing', 'age-reqs'],
-    cta: { label: 'Get Document Help', href: '/contact' },
-  },
-  {
-    id: 'processing',
-    question: 'How long does processing take?',
-    answer:
-      'SRRV processing typically takes 3 to 6 weeks after submission of complete and correct documents. The timeline may vary depending on the completeness of your application and the volume being processed by PRA.',
-    relatedIds: ['documents', 'options'],
-  },
-  {
-    id: 'family',
-    question: 'Can I bring my family?',
-    answer:
-      'Yes! Your spouse and unmarried children under 21 years old can be included as dependents. An additional deposit of US$3,000 per dependent is required if the main applicant made the minimum deposit of US$10,000.',
-    relatedIds: ['age-reqs', 'deposit'],
-  },
-  {
-    id: 'options',
-    question: 'What SRRV options are available?',
-    answer:
-      'PRA offers two main programs: (1) SRRV Classic — indefinite stay with a US$10,000 deposit (age 50+) or US$50,000 (age 35-49). (2) SRRV Smile — a 1-year renewable visa with reduced requirements for applicants aged 50+.',
-    relatedIds: ['deposit', 'what-is-srrv'],
-    cta: { label: 'Compare Plans', href: '/services' },
-  },
-];
-
-const questionMap = new Map(questions.map((q) => [q.id, q]));
+const PULSE_DISMISS_KEY = 'budji-pulse-dismissed';
 
 export default function ChatWidget() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [expandedCats, setExpandedCats] = useState<Set<string>>(
@@ -98,12 +25,19 @@ export default function ChatWidget() {
   );
   const [typing, setTyping] = useState(false);
   const [answerCount, setAnswerCount] = useState(0);
-  const [showNotification, setShowNotification] = useState(true);
+  const [query, setQuery] = useState('');
+  const [showNotification, setShowNotification] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return !sessionStorage.getItem(PULSE_DISMISS_KEY);
+  });
   const [isMobile, setIsMobile] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const currentView = history.length === 0 ? 'questions' : history.at(-1)!;
   const currentQ = currentView !== 'questions' ? questionMap.get(currentView) : null;
+
+  const isSearching = currentView === 'questions' && query.trim().length > 0;
+  const searchResults = useSearchResults(query);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 480);
@@ -146,21 +80,35 @@ export default function ChatWidget() {
     };
     panel.addEventListener('keydown', handler);
     return () => panel.removeEventListener('keydown', handler);
-  }, [isOpen, currentView, typing]);
+  }, [isOpen, currentView, typing, query]);
 
   const reset = () => {
     setHistory([]);
     setTyping(false);
     setAnswerCount(0);
+    setQuery('');
   };
 
   const handleToggle = () => {
     setShowNotification(false);
+    if (!isOpen && typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(PULSE_DISMISS_KEY, '1');
+    }
     if (isOpen) reset();
     setIsOpen((prev) => !prev);
   };
 
+  // Close the widget, then navigate. Since reset() clears the search query and
+  // remounts the panel, navigating inside the same click would cancel the soft
+  // navigation — so we push on the next tick instead.
+  const navigateTo = (href: string) => {
+    reset();
+    setIsOpen(false);
+    setTimeout(() => router.push(href), 0);
+  };
+
   const handleQuestionClick = (id: string) => {
+    setQuery('');
     setTyping(true);
     setHistory((prev) => [...prev, id]);
     setTimeout(() => {
@@ -193,13 +141,6 @@ export default function ChatWidget() {
 
   return (
     <>
-      <style>{`
-        @keyframes budji-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(166,25,46,0.4); }
-          50% { box-shadow: 0 0 0 14px rgba(166,25,46,0); }
-        }
-      `}</style>
-
       <button
         onClick={handleToggle}
         className={cn(
@@ -209,7 +150,7 @@ export default function ChatWidget() {
             : 'bg-[#A6192E] hover:bg-[#81001C] hover:scale-105',
           !isOpen &&
             showNotification &&
-            'animate-[budji-pulse_2.5s_ease-in-out_infinite]',
+            'animate-pulse motion-reduce:animate-none',
         )}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >
@@ -233,13 +174,13 @@ export default function ChatWidget() {
         aria-modal="true"
         aria-label="Budji SRRV Assistant"
         className={cn(
-          'fixed z-50 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl transition-all duration-300 origin-bottom-right',
+          'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl transition-all duration-300 origin-bottom-right',
           isMobile
             ? 'inset-0 rounded-none border-0'
             : 'bottom-24 right-6 w-[360px] max-w-[calc(100vw-40px)]',
           isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none',
         )}
-        style={{ maxHeight: isMobile ? '100dvh' : '580px' }}
+        style={{ height: isMobile ? '100dvh' : '580px' }}
       >
         <div className="flex items-center gap-3 bg-[#A6192E] px-5 py-4 text-white">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
@@ -260,10 +201,8 @@ export default function ChatWidget() {
         </div>
 
         <div
-          className="overflow-y-auto p-4"
-          style={{
-            maxHeight: isMobile ? 'calc(100dvh - 68px)' : '500px',
-          }}
+          className="flex-1 overflow-y-auto p-4"
+          aria-live="polite"
         >
           {currentView === 'questions' ? (
             <div className="space-y-4">
@@ -271,53 +210,100 @@ export default function ChatWidget() {
                 <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#F6F5F2] px-4 py-3 text-sm text-gray-700 leading-relaxed">
                   Hi! I'm{' '}
                   <span className="font-semibold text-gray-900">Budji</span> — your
-                  SRRV assistant. Pick a topic below to get started.
+                  SRRV assistant. Ask a question or pick a topic below.
                 </div>
               </div>
 
-              {categories.map((cat) => {
-                const isExpanded = expandedCats.has(cat.name);
-                const catQuestions = cat.questionIds
-                  .map((id) => questionMap.get(id))
-                  .filter(Boolean) as QAPair[];
-                return (
-                  <div key={cat.name} className="overflow-hidden rounded-xl border border-gray-200">
-                    <button
-                      onClick={() => toggleCategory(cat.name)}
-                      className="flex w-full items-center justify-between bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-100"
-                    >
-                      {cat.name}
-                      <ChevronDown
-                        className={cn(
-                          'h-4 w-4 text-gray-500 transition-transform duration-200',
-                          isExpanded && 'rotate-180',
-                        )}
-                      />
-                    </button>
-                    {isExpanded && (
-                      <div className="divide-y divide-gray-100">
-                        {catQuestions.map((qa) => (
-                          <button
-                            key={qa.id}
-                            onClick={() => handleQuestionClick(qa.id)}
-                            className="w-full px-4 py-3 text-left text-sm text-gray-700 transition-colors hover:bg-[#FFF5F5] hover:text-[#A6192E]"
-                          >
-                            {qa.question}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+              {/* Search */}
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search questions…"
+                  aria-label="Search questions"
+                  className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-[#A6192E] focus:outline-none focus:ring-2 focus:ring-[#A6192E]/20"
+                />
+              </div>
+
+              {searchResults.active ? (
+                searchResults.items.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="pl-1 text-xs font-medium text-gray-500">
+                      {searchResults.items.length} result{searchResults.items.length === 1 ? '' : 's'}
+                    </p>
+                    {searchResults.items.map((q) => (
+                      <button
+                        key={q.id}
+                        onClick={() => handleQuestionClick(q.id)}
+                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm text-gray-700 shadow-sm transition-all hover:border-[#A6192E] hover:bg-[#FFF5F5] hover:text-[#A6192E]"
+                      >
+                        {q.question}
+                      </button>
+                    ))}
                   </div>
-                );
-              })}
+                ) : (
+                  <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-8 text-center">
+                    <Newspaper className="h-7 w-7 text-gray-300" />
+                    <p className="text-sm text-gray-500">
+                      Sorry, I couldn't find an answer for{' '}
+                      <span className="font-medium text-gray-700">"{query.trim()}"</span>.
+                    </p>
+                    <button
+                      onClick={() => navigateTo('/contact')}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#A6192E] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#81001C]"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Talk to an expert
+                    </button>
+                  </div>
+                )
+              ) : (
+                categories.map((cat) => {
+                  const isExpanded = expandedCats.has(cat.name);
+                  const catQuestions = cat.questionIds
+                    .map((id) => questionMap.get(id))
+                    .filter(Boolean) as QAPair[];
+                  return (
+                    <div key={cat.name} className="overflow-hidden rounded-xl border border-gray-200">
+                      <button
+                        onClick={() => toggleCategory(cat.name)}
+                        className="flex w-full items-center justify-between bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-100"
+                      >
+                        {cat.name}
+                        <ChevronDown
+                          className={cn(
+                            'h-4 w-4 text-gray-500 transition-transform duration-200',
+                            isExpanded && 'rotate-180',
+                          )}
+                        />
+                      </button>
+                      {isExpanded && (
+                        <div className="divide-y divide-gray-100">
+                          {catQuestions.map((qa) => (
+                            <button
+                              key={qa.id}
+                              onClick={() => handleQuestionClick(qa.id)}
+                              className="w-full px-4 py-3 text-left text-sm text-gray-700 transition-colors hover:bg-[#FFF5F5] hover:text-[#A6192E]"
+                            >
+                              {qa.question}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           ) : typing ? (
             <div className="flex justify-start">
               <div className="rounded-2xl rounded-tl-sm bg-[#F6F5F2] px-4 py-3 text-sm text-gray-500">
                 <span className="inline-flex gap-1">
-                  <span className="animate-bounce">.</span>
-                  <span className="animate-bounce [animation-delay:0.12s]">.</span>
-                  <span className="animate-bounce [animation-delay:0.24s]">.</span>
+                  <span className="animate-bounce motion-reduce:animate-none">.</span>
+                  <span className="animate-bounce [animation-delay:0.12s] motion-reduce:animate-none">.</span>
+                  <span className="animate-bounce [animation-delay:0.24s] motion-reduce:animate-none">.</span>
                 </span>
               </div>
             </div>
@@ -330,20 +316,19 @@ export default function ChatWidget() {
               </div>
 
               <div className="flex justify-start">
-                <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#F6F5F2] px-4 py-3 text-sm text-gray-700 leading-relaxed">
+                <div className="max-w-[85%] whitespace-pre-line rounded-2xl rounded-tl-sm bg-[#F6F5F2] px-4 py-3 text-sm text-gray-700 leading-relaxed">
                   {currentQ.answer}
                 </div>
               </div>
 
               {currentQ.cta && (
                 <div className="flex justify-start pl-2">
-                  <Link
-                    href={currentQ.cta.href}
-                    onClick={handleToggle}
+                  <button
+                    onClick={() => navigateTo(currentQ.cta!.href)}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-[#A6192E] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#81001C]"
                   >
                     {currentQ.cta.label}
-                  </Link>
+                  </button>
                 </div>
               )}
 
@@ -352,13 +337,12 @@ export default function ChatWidget() {
                   <p className="mb-2 text-sm font-medium text-[#A6192E]">
                     Still have questions?
                   </p>
-                  <Link
-                    href="/contact"
-                    onClick={handleToggle}
+                  <button
+                    onClick={() => navigateTo('/contact')}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-[#A6192E] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#81001C]"
                   >
                     Chat with an Expert
-                  </Link>
+                  </button>
                 </div>
               )}
 
@@ -397,7 +381,45 @@ export default function ChatWidget() {
             </div>
           ) : null}
         </div>
+
+        <div className="border-t border-gray-100 bg-gray-50 px-4 py-2 text-center">
+          <p className="text-[10px] leading-snug text-gray-400">
+            For general information only — not an official statement of the Philippine
+            Retirement Authority.
+          </p>
+        </div>
       </div>
     </>
   );
+}
+
+// ── Search: finds matching questions across categories by question text, answer, or category name ──
+function useSearchResults(rawQuery: string) {
+  const query = rawQuery.trim().toLowerCase();
+  if (!query) return { active: false, items: [] as QAPair[] };
+
+  const matchedCategoryIds = new Set(
+    categories
+      .filter((c) => c.name.toLowerCase().includes(query))
+      .flatMap((c) => c.questionIds),
+  );
+
+  const seen = new Set<string>();
+  const items: QAPair[] = [];
+  for (const cat of categories) {
+    for (const id of cat.questionIds) {
+      const q = questionMap.get(id);
+      if (!q || seen.has(id)) continue;
+      const hitsCategory = matchedCategoryIds.has(id);
+      const hitsText =
+        q.question.toLowerCase().includes(query) ||
+        q.answer.toLowerCase().includes(query);
+      if (hitsCategory || hitsText) {
+        items.push(q);
+        seen.add(id);
+      }
+    }
+  }
+
+  return { active: true, items };
 }
