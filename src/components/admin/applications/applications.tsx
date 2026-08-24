@@ -194,7 +194,7 @@ export function ApplicationsClient({ stats: _stats, rows, total, page, statusFil
 
             {/* Grid row constrained (minmax(0,1fr)) so the queue/detail columns
           scroll internally instead of growing the page */}
-      <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] xl:grid-rows-[minmax(0,1fr)] gap-4 flex-1 min-h-0">
+      <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] xl:grid-rows-[minmax(0,1fr)] gap-4 flex-1 xl:min-h-0">
         {isPending ? (
           <aside className={cn('flex flex-col rounded-xl border border-brand-neutral-200 bg-white overflow-hidden min-h-0', mobileDetailOpen && 'hidden lg:flex')}>
             <div className="px-4 py-3 border-b border-brand-neutral-100">
