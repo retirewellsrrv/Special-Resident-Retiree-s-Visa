@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { SuperAdminDashboardClient } from '@/components/super-admin/dashboard/dashboard-client'
+import { AutoRefresh } from '@/components/shared/auto-refresh'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,5 +82,10 @@ async function getStats() {
 export default async function SuperAdminDashboardPage() {
   const stats = await getStats()
 
-  return <SuperAdminDashboardClient stats={stats} />
+  return (
+    <>
+      <AutoRefresh />
+      <SuperAdminDashboardClient stats={stats} />
+    </>
+  )
 }

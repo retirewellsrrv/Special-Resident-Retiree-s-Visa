@@ -572,6 +572,7 @@ export const resolveReview = withAdmin(async function resolveReview(
 
   revalidatePath("/admin/profiles");
   revalidateTag("admin-profiles", 'seconds');
+  revalidateTag("admin-dashboard", "seconds");
   return { error: null, success: true };
 })
 
@@ -611,6 +612,7 @@ export const createClientProfile = withAdmin(async function createClientProfile(
 
   revalidatePath("/admin/profiles");
   revalidateTag("admin-profiles", 'seconds');
+  revalidateTag("admin-dashboard", "seconds");
   return { error: null, success: true };
 })
 
@@ -641,5 +643,6 @@ export const updateApplicationStatus = withAdmin(async function updateApplicatio
 
   revalidatePath("/admin/profiles");
   revalidateTag("admin-profiles", 'seconds');
+  revalidateTag("admin-dashboard", "seconds");
   return { error: null, success: true };
 })

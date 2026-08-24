@@ -631,5 +631,6 @@ export const updateAppStatus = withAdmin(async function updateAppStatus(
   revalidatePath("/applicant/dashboard");
   revalidatePath("/applicant/application");
   revalidateTag("admin-applications", 'seconds');
+  revalidateTag("admin-dashboard", "seconds");
   return { error: null, success: true };
 });
