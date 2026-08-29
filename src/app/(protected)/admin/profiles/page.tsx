@@ -1,5 +1,6 @@
 import { getClientStats, getClientDirectory } from '@/actions/admin/client-profiles'
 import { ClientProfilesClient } from '@/components/admin/client-profiles/client-profiles-client';
+import { AutoRefresh } from '@/components/shared/auto-refresh'
 
 export default async function ClientProfilesPage({
   searchParams,
@@ -17,7 +18,9 @@ export default async function ClientProfilesPage({
   ])
 
   return (
-    <ClientProfilesClient
+    <>
+      <AutoRefresh intervalMs={45_000} />
+      <ClientProfilesClient
       stats={stats}
       rows={rows}
       total={total}
@@ -25,5 +28,6 @@ export default async function ClientProfilesPage({
       statusFilter={status}
       q={q}
     />
+    </>
   )
 }

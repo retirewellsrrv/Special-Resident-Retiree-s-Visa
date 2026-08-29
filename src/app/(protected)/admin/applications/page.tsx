@@ -1,5 +1,6 @@
 import { getApplicationStats, getApplications } from '@/actions/admin/applications-admin'
 import { ApplicationsClient } from '@/components/admin/applications/applications'
+import { AutoRefresh } from '@/components/shared/auto-refresh'
 
 export default async function ApplicationsPage({
   searchParams,
@@ -21,7 +22,9 @@ export default async function ApplicationsPage({
   ])
 
   return (
-    <ApplicationsClient
+    <>
+      <AutoRefresh intervalMs={30_000} />
+      <ApplicationsClient
       stats={stats}
       rows={rows}
       total={total}
@@ -31,5 +34,6 @@ export default async function ApplicationsPage({
       search={search}
       initialAppId={initialAppId}
     />
+    </>
   )
 }
