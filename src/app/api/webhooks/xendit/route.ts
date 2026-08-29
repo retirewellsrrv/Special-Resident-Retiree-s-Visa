@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { mapPaymentMethod } from "@/lib/xendit";
 import { sendConsultationPaymentEmailToAdmin } from "@/lib/mailer";
@@ -92,6 +93,12 @@ export async function POST(request: Request) {
       .eq("status", "pending")
       .select("user_id, amount, status, payment_method, transaction_code, service_type")
       .maybeSingle();
+
+    // A payment row actually changed → refresh the admin dashboard's cached
+    // revenue/payment KPIs on its next request.
+    if (payment) {
+      revalidateTag("admin-dashboard", "seconds");
+    }
 
     if (payment?.service_type === "consultation" && payment.status === "success") {
       try {

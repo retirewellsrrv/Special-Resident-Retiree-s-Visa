@@ -1,5 +1,6 @@
 import { getDocumentsForReview } from '@/actions/admin/documents'
 import { DocumentsReview } from '@/components/admin/documents/documents-review'
+import { AutoRefresh } from '@/components/shared/auto-refresh'
 
 export default async function DocumentsPage({
   searchParams,
@@ -20,7 +21,9 @@ export default async function DocumentsPage({
   })
 
   return (
-    <DocumentsReview
+    <>
+      <AutoRefresh intervalMs={30_000} />
+      <DocumentsReview
       docs={rows}
       total={total}
       page={page}
@@ -29,5 +32,6 @@ export default async function DocumentsPage({
       sort={sort}
       initialSelectedId={initialSelectedId}
     />
+    </>
   )
 }

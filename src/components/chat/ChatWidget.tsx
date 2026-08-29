@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { categories, questionMap, type QAPair } from '@/data/chat-content';
 
-const PULSE_DISMISS_KEY = 'budji-pulse-dismissed';
+const PULSE_DISMISS_KEY = 'risa-pulse-dismissed';
 
 export default function ChatWidget() {
   const router = useRouter();
@@ -172,7 +172,7 @@ export default function ChatWidget() {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Budji SRRV Assistant"
+        aria-label="RISA SRRV Assistant"
         className={cn(
           'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl transition-all duration-300 origin-bottom-right',
           isMobile
@@ -184,10 +184,10 @@ export default function ChatWidget() {
       >
         <div className="flex items-center gap-3 bg-[#A6192E] px-5 py-4 text-white">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
-            B
+            R
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold">Budji</p>
+            <p className="text-sm font-semibold">RISA</p>
             <p className="text-xs text-white/70">SRRV Assistant</p>
           </div>
           {isMobile && (
@@ -209,7 +209,7 @@ export default function ChatWidget() {
               <div className="flex justify-start">
                 <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#F6F5F2] px-4 py-3 text-sm text-gray-700 leading-relaxed">
                   Hi! I'm{' '}
-                  <span className="font-semibold text-gray-900">Budji</span> — your
+                  <span className="font-semibold text-gray-900">RISA</span> — your
                   SRRV assistant. Ask a question or pick a topic below.
                 </div>
               </div>

@@ -15,7 +15,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardAction } from '@/componen
 import { formatRelativeTime } from '@/lib/format-time'
 import { cn } from '@/lib/utils'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 50
 
 export function NotificationsList() {
   const router = useRouter()

@@ -1303,5 +1303,6 @@ export async function submitApplication(
   revalidatePath("/applicant/application");
   revalidatePath("/admin/applications");
   revalidateTag("admin-applications", "seconds");
+  revalidateTag("admin-dashboard", "seconds");
   return { error: null, success: true, invoiceUrl };
 }

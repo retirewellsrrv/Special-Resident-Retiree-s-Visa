@@ -16,6 +16,12 @@ vi.mock("../lib/mailer", () => ({
   sendConsultationPaymentEmailToAdmin: vi.fn().mockResolvedValue(undefined),
 }));
 
+// revalidateTag requires the Next request store, which doesn't exist under
+// vitest — mock it out (the route calls it after a successful payment update).
+vi.mock("next/cache", () => ({
+  revalidateTag: vi.fn(),
+}));
+
 import { createAdminClient } from "../lib/supabase/server";
 
 type PaymentRow = {
