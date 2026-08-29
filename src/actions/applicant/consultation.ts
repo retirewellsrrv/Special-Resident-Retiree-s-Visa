@@ -178,6 +178,7 @@ export async function submitConsultationAction(
   revalidatePath("/applicant/dashboard");
   revalidatePath("/admin/consultations");
   revalidateTag("admin-consultations", "seconds");
+  revalidateTag("admin-dashboard", "seconds");
 
   // Existing consultations only create a new payment when a retry is needed.
   // Otherwise, the update is complete and we just send the user to the dashboard.

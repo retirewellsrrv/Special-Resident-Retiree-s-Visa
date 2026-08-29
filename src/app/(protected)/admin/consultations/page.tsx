@@ -1,5 +1,6 @@
 import { getConsultationStats, getConsultationsForReview } from '@/actions/admin/consultations'
 import { ConsultationsClient } from '@/components/admin/consultations/consultations'
+import { AutoRefresh } from '@/components/shared/auto-refresh'
 
 export default async function ConsultationsPage({
   searchParams,
@@ -18,7 +19,9 @@ export default async function ConsultationsPage({
   ])
 
   return (
-    <ConsultationsClient
+    <>
+      <AutoRefresh intervalMs={30_000} />
+      <ConsultationsClient
       stats={stats}
       rows={rows}
       total={total}
@@ -26,5 +29,6 @@ export default async function ConsultationsPage({
       statusFilter={status}
       search={search}
     />
+    </>
   )
 }
