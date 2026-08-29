@@ -1,4 +1,4 @@
-// Central content for the "Budji" chat assistant.
+// Central content for the "RISA" chat assistant.
 // Keep answers in sync with the public FAQ page (src/app/(public)/faqs/page.tsx).
 // CTA hrefs must point to existing routes only.
 
