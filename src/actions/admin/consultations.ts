@@ -396,5 +396,6 @@ export const updateConsultationStatus = withAdmin(async function updateConsultat
   revalidatePath("/applicant/consultation");
   revalidatePath("/applicant/dashboard");
   revalidateTag("admin-consultations", "seconds");
+  revalidateTag("admin-dashboard", "seconds");
   return { error: null, success: true };
 });

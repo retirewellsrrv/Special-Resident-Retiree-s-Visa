@@ -30,5 +30,6 @@ export const updateDocumentReview = withAdmin(async function updateDocumentRevie
 
   revalidatePath("/admin/applications");
   revalidateTag("admin-applications", 'seconds');
+  revalidateTag("admin-dashboard", "seconds");
   return { success: true };
 })

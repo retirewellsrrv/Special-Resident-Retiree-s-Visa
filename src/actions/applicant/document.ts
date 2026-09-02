@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getUserServer } from "@/utils/auth/getUser";
 import {
@@ -115,5 +115,6 @@ export async function reuploadDocument(
   }
 
   revalidatePath("/applicant/dashboard");
+  revalidateTag("admin-dashboard", "seconds");
   return { error: null, success: true };
 }

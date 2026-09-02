@@ -195,6 +195,7 @@ export const updateDocumentStatus = withAdmin(async function updateDocumentStatu
 
   revalidatePath("/admin/documents")
   revalidateTag("admin-documents", 'seconds')
+  revalidateTag("admin-dashboard", "seconds")
   return { success: true }
 })
 
@@ -218,6 +219,7 @@ export const bulkUpdateDocumentStatus = withAdmin(async function bulkUpdateDocum
 
   revalidatePath("/admin/documents")
   revalidateTag("admin-documents", 'seconds')
+  revalidateTag("admin-dashboard", "seconds")
   return { success: true }
 })
 

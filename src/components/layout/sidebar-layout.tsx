@@ -13,9 +13,8 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar'
 import { NavItems, type NavItem } from '@/components/layout/sidebar-nav'
-import { SidebarLogout } from '@/components/layout/sidebar-logout'
+import { UserMenu } from '@/components/layout/user-menu'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Plus, Bell } from 'lucide-react'
 import type { ReactNode } from 'react'
 import logo from '@/assets/images/logo.jpg'
@@ -46,13 +45,6 @@ export function SidebarLayout({
   notifications,
   hideNotifications = false,
 }: SidebarLayoutProps) {
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-
   return (
     <TooltipProvider>
       <SidebarProvider
@@ -98,7 +90,6 @@ export function SidebarLayout({
 
             {/* ── Footer ── */}
             <SidebarFooter className="px-3 pb-4 pt-2 gap-2 border-t border-brand-neutral-200">
-              <SidebarLogout />
               {onCta && (
                 <Button
                   onClick={onCta}
@@ -145,25 +136,8 @@ export function SidebarLayout({
 
                 <div className="mx-2 h-6 w-px bg-brand-neutral-200" />
 
-                {/* User info + avatar */}
-                <div className="flex items-center gap-3">
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-semibold text-brand-neutral-800 leading-tight">
-                      {user.name}
-                    </p>
-                    <p className="text-[11px] text-brand-neutral-400 leading-tight">
-                      {user.role}
-                    </p>
-                  </div>
-                  <Avatar className="size-8 ring-2 ring-brand-neutral-200">
-                    <AvatarImage src={user.avatarUrl} alt={user.name} />
-                    <AvatarFallback
-                      className="text-xs font-bold text-white bg-brand-primary-600"
-                    >
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
+                {/* User menu (name/role + avatar, opens dropdown with logout) */}
+                <UserMenu user={user} />
               </div>
             </header>
 

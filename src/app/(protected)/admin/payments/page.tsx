@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getPayments, getPaymentStats } from '@/actions/admin/payments'
 import { PaymentsClient } from '@/components/admin/payments/payments-client'
+import { AutoRefresh } from '@/components/shared/auto-refresh'
 
 export default async function PaymentsPage({
   searchParams,
@@ -23,7 +24,9 @@ export default async function PaymentsPage({
   ])
 
   return (
-    <PaymentsClient
+    <>
+      <AutoRefresh intervalMs={30_000} />
+      <PaymentsClient
       rows={rows}
       total={total}
       stats={stats}
@@ -35,5 +38,6 @@ export default async function PaymentsPage({
       nameFilter={name}
       q={q}
     />
+    </>
   )
 }
