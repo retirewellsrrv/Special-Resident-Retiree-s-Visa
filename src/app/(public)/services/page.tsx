@@ -122,36 +122,42 @@ export default function Services() {
                 </div>
 
                 {/* Fees Section */}
-                <div className="max-w-5xl mx-auto bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-gray-100">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="max-w-5xl mx-auto bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14">
 
                         {/* Processing Fee */}
                         <div>
-                            <h3 className="text-xl font-bold text-[#0F172A] mb-6">
-                                PRA Processing / Service Fee{' '}
-                                <span className="text-base font-normal text-gray-500">(one time)</span>
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                                    <span className="text-gray-700">Principal:</span>
-                                    <span className="font-bold text-[#0F172A]">USD 1,500.00</span>
-                                </div>
-                                <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                                    <span className="text-gray-700">Dependent:</span>
-                                    <span className="font-bold text-[#0F172A]">
-                                        USD 300.00{' '}
-                                        <span className="text-sm font-normal text-gray-500">each dependent</span>
-                                    </span>
-                                </div>
+                            <div className="flex items-start justify-between gap-4 mb-6">
+                                <h3 className="text-lg md:text-xl font-bold text-[#0F172A] leading-snug">
+                                    PRA Processing / Service Fee
+                                </h3>
+                                <span className="shrink-0 text-xs font-semibold text-[#9E1B32] bg-[#9E1B32]/10 px-2.5 py-1 rounded-full whitespace-nowrap">
+                                    One time
+                                </span>
                             </div>
+                            <dl>
+                                <div className="py-3.5 border-b border-gray-100 first:pt-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+                                        <dt className="text-sm text-gray-600">Principal</dt>
+                                        <dd className="text-sm font-bold text-[#0F172A]">USD 1,500.00</dd>
+                                    </div>
+                                </div>
+                                <div className="py-3.5 border-b border-gray-100">
+                                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
+                                        <dt className="text-sm text-gray-600">Dependent</dt>
+                                        <dd className="text-sm font-bold text-[#0F172A]">USD 300.00</dd>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1 sm:text-right">each dependent</p>
+                                </div>
+                            </dl>
                         </div>
 
                         {/* Annual Fee */}
                         <div>
-                            <h3 className="text-xl font-bold text-[#0F172A] mb-6">PRA Annual Fee</h3>
+                            <h3 className="text-lg md:text-xl font-bold text-[#0F172A] mb-6">PRA Annual Fee</h3>
                             <div className="space-y-5">
                                 <div className="flex items-start gap-3">
-                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
+                                    <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
                                     <div>
                                         <p className="text-gray-900">
                                             <span className="font-bold">SRRV Classic</span> — USD 360.00
@@ -162,7 +168,7 @@ export default function Services() {
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
+                                    <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
                                     <div>
                                         <p className="text-gray-900">
                                             <span className="font-bold">SRRV Courtesy for Foreign Nationals</span> — USD 100.00
@@ -173,7 +179,7 @@ export default function Services() {
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
+                                    <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#9E1B32] shrink-0" />
                                     <div>
                                         <p className="text-gray-900">
                                             <span className="font-bold">SRRV Courtesy for Former Filipinos</span> — USD 50.00
