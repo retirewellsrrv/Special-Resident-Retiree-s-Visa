@@ -35,8 +35,8 @@ export function EligibilitySection() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
           {/* Left copy */}
           <div>
-            <h2 className="text-ht-headline-lg font-display text-brand-secondary-500 mb-4">
-              SRRV Eligibility At A Glance
+            <h2 className="text-ht-headline-lg font-display text-brand-secondary-500 mb-4" style={{ fontSize: 25, fontWeight: 800, lineHeight: '40px' }}>
+              Eligibility at a Glance
             </h2>
             <p className="text-ht-body-md text-brand-neutral-600 mb-6">
               Understanding the requirements is the first step toward your new
