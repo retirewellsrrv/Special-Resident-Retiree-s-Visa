@@ -391,9 +391,9 @@ function consultationStatusBody(data: ConsultationStatusEmailData): string {
 }
 
 function paymentBody(data: ConsultationPaymentEmailData): string {
-  const total = new Intl.NumberFormat("en-PH", {
+  const total = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "PHP",
+    currency: "USD",
   }).format(data.payment.amount);
 
   return emailShell(
