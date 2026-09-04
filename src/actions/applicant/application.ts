@@ -696,9 +696,9 @@ export async function retryPaymentAction(
         amount: DEFAULT_FEE,
         description: `SRRV application fee`,
         payerEmail: user.email ?? undefined,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=USD`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
-        currency: "PHP",
+        currency: "USD",
         metadata: {
           application_id: String(app.id),
           service_type: "application",
@@ -1274,9 +1274,9 @@ export async function submitApplication(
         amount: DEFAULT_FEE,
         description: `SRRV application fee`,
         payerEmail: parsed.data.email,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=USD`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
-        currency: "PHP",
+        currency: "USD",
         metadata: {
           application_id: String(appIdToUse),
           service_type: "application",
