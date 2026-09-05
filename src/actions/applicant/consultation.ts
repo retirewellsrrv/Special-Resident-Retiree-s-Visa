@@ -254,9 +254,9 @@ export async function submitConsultationAction(
         amount: CONSULTATION_FEE,
         description: "SRRV consultation fee",
         payerEmail: user.email ?? undefined,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${CONSULTATION_FEE}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${CONSULTATION_FEE}&currency=USD`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
-        currency: "PHP",
+        currency: "USD",
         metadata: {
           consultation_id: String(savedConsultation.id),
           service_type: "consultation",
@@ -364,9 +364,9 @@ export async function retryConsultationPaymentAction(
         amount: CONSULTATION_FEE,
         description: "SRRV consultation fee",
         payerEmail: user.email ?? undefined,
-        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${CONSULTATION_FEE}&currency=PHP`,
+        successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${CONSULTATION_FEE}&currency=USD`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
-        currency: "PHP",
+        currency: "USD",
         metadata: {
           consultation_id: String(consultation.id),
           service_type: "consultation",
