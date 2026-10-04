@@ -12,6 +12,7 @@ import {
 import type { Database } from "@/types/supabase";
 import { getUserServer } from "@/utils/auth/getUser";
 import xenditClient from "@/lib/xendit";
+import { usdToPhp } from "@/lib/usd-conversion";
 import { assertPaymentRedirectsReady } from "@/lib/payment-redirect-check";
 import { voidPendingPaymentsBeforeRetry } from "@/lib/payment-void";
 import { sendApplicationSubmissionEmailToAdmin } from "@/lib/mailer";
@@ -693,12 +694,12 @@ export async function retryPaymentAction(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: DEFAULT_FEE,
+        amount: usdToPhp(DEFAULT_FEE),
         description: `SRRV application fee`,
         payerEmail: user.email ?? undefined,
         successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=USD`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
-        currency: "USD",
+        currency: "PHP",
         metadata: {
           application_id: String(app.id),
           service_type: "application",
@@ -1271,12 +1272,12 @@ export async function submitApplication(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: DEFAULT_FEE,
+        amount: usdToPhp(DEFAULT_FEE),
         description: `SRRV application fee`,
         payerEmail: parsed.data.email,
         successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${DEFAULT_FEE}&currency=USD`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
-        currency: "USD",
+        currency: "PHP",
         metadata: {
           application_id: String(appIdToUse),
           service_type: "application",

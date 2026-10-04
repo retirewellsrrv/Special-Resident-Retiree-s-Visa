@@ -93,9 +93,9 @@ const sections = [
   {
     title: 'Contact',
     items: [
-      'For questions about these terms, please contact us at legal@retirewell.ph',
-      'Phone: +63 2 888 1234',
-      'Retire Well SRRV, Manila, Philippines',
+      'For questions about these terms, please contact us at admin.retirewellsrrv@gmail.com',
+      'Phone: +63 918 367 7645',
+      'Unit 2201 22/F The Peak Bldg. 107 L.P. Leviste Street, Bel Air Makati City, Metro Manila, Philippines 1226',
     ],
   },
 ];

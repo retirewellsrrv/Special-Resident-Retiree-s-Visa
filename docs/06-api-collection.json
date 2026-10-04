@@ -1,0 +1,111 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SRRV Service Platform — HTTP API",
+    "description": "The 3 real HTTP route handlers in this Next.js app. Most application logic runs through Server Actions instead — see 06-api-documentation.md.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "https://YOUR-PRODUCTION-DOMAIN", "description": "Production (fill in actual domain)" },
+    { "url": "http://localhost:3000", "description": "Local development" }
+  ],
+  "paths": {
+    "/api/auth/callback": {
+      "get": {
+        "summary": "Supabase Auth callback (OAuth code exchange / email confirmation)",
+        "parameters": [
+          { "name": "code", "in": "query", "schema": { "type": "string" }, "description": "OAuth authorization code" },
+          { "name": "token_hash", "in": "query", "schema": { "type": "string" }, "description": "Email confirmation token" },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["email"] } },
+          { "name": "next", "in": "query", "schema": { "type": "string" }, "description": "Relative redirect override; non-relative values are ignored" }
+        ],
+        "responses": {
+          "302": { "description": "Redirects to the appropriate role dashboard, profile setup, or login with an error" }
+        }
+      }
+    },
+    "/api/payments/invoice": {
+      "post": {
+        "summary": "Create a Xendit hosted-checkout invoice for the logged-in user",
+        "security": [{ "supabaseSession": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount"],
+                "properties": {
+                  "amount": { "type": "number", "exclusiveMinimum": 0 },
+                  "description": { "type": "string", "maxLength": 500 },
+                  "payerEmail": { "type": "string", "format": "email" },
+                  "successRedirectUrl": { "type": "string", "format": "uri" },
+                  "failureRedirectUrl": { "type": "string", "format": "uri" },
+                  "paymentMethods": { "type": "array", "items": { "type": "string" } },
+                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+                  "metadata": { "type": "object", "additionalProperties": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invoice created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "invoiceUrl": { "type": "string" },
+                        "externalId": { "type": "string" },
+                        "amount": { "type": "number" },
+                        "status": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized — no logged-in Supabase user" },
+          "400": { "description": "Invalid JSON or failed validation" },
+          "500": { "description": "Xendit invoice creation failed" }
+        }
+      }
+    },
+    "/api/webhooks/xendit": {
+      "post": {
+        "summary": "Xendit payment status webhook",
+        "description": "Register this URL in the Xendit dashboard as the invoice callback URL.",
+        "parameters": [
+          { "name": "x-callback-token", "in": "header", "schema": { "type": "string" }, "description": "Must match XENDIT_WEBHOOK_TOKEN" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object" } } }
+        },
+        "responses": {
+          "200": { "description": "Acknowledged", "content": { "application/json": { "schema": { "type": "object", "properties": { "received": { "type": "boolean" } } } } } },
+          "401": { "description": "Missing or invalid webhook token" },
+          "400": { "description": "Body could not be read or parsed" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "supabaseSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sb-access-token",
+        "description": "Supabase Auth session cookie, set on login"
+      }
+    }
+  }
+}

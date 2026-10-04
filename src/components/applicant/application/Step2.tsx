@@ -180,7 +180,7 @@ export function Step2({
           </Label>
           <PhoneInput
             id="telephone_number"
-            placeholder="e.g. 028765432"
+            placeholder="e.g. (02) 8888 1234"
             value={data.telephone_number}
             onChange={(value) => onChange("telephone_number", value)}
             invalid={!!errors.telephone_number}
@@ -229,7 +229,7 @@ export function Step2({
             type="tel"
             inputMode="numeric"
             pattern="[0-9]*"
-            placeholder="Include country code"
+            placeholder="e.g. +63 917 123 4567"
             value={data.mobile_number}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, "");
@@ -253,7 +253,7 @@ export function Step2({
           <Input
             id="email"
             type="email"
-            placeholder="e.g. name@example.com"
+            placeholder="e.g. juan.delacruz@gmail.com"
             value={data.email}
             onChange={(e) => onChange("email", e.target.value)}
             className={cn(INPUT_CLASS, errors.email && "border-red-500")}

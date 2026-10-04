@@ -393,7 +393,7 @@ function consultationStatusBody(data: ConsultationStatusEmailData): string {
 function paymentBody(data: ConsultationPaymentEmailData): string {
   const total = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "PHP",
   }).format(data.payment.amount);
 
   return emailShell(

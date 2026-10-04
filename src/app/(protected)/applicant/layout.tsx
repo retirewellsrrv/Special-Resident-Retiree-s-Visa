@@ -21,12 +21,25 @@ export default function ApplicantLayout({
   children: React.ReactNode
 }) {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
   useEffect(() => {
-    getSession().then(setUser)
+    getSession().then((u) => {
+      setUser(u)
+      setLoading(false)
+    })
   }, [])
 
   const role = user?.user_metadata.role;
   const userName = user?.user_metadata.name
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-pulse text-brand-neutral-400">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <SidebarLayout navItems={NAV_ITEMS} title="Applicant" user={{ name: userName || 'Applicant User', role: role || 'Applicant' }} notifications={<NotificationBell userId={user?.id} />}>
       {children}

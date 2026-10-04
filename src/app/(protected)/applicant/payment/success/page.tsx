@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { getPaymentReceipt } from "@/actions/applicant/application";
 import type { PaymentReceiptData } from "@/actions/applicant/application";
+import { usdToPhp } from "@/lib/usd-conversion";
 
 function ReceiptContent() {
   const searchParams = useSearchParams();
@@ -126,7 +127,7 @@ function ReceiptContent() {
                   : "SRRV Application Fee"}
               </span>
               <span className="text-[#3B2A28] font-medium">
-                ₱{Number(receipt.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                ₱{usdToPhp(Number(receipt.amount)).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
               </span>
             </div>
 
@@ -136,7 +137,7 @@ function ReceiptContent() {
               <div className="flex justify-between w-full max-w-[220px] text-base">
                 <span className="font-semibold text-[#3B2A28]">Total Paid</span>
                 <span className="font-bold text-[#7A1F2B]">
-                  ₱{Number(receipt.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                  ₱{usdToPhp(Number(receipt.amount)).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

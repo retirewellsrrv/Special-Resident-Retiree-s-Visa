@@ -2,6 +2,8 @@
 // Keep answers in sync with the public FAQ page (src/app/(public)/faqs/page.tsx).
 // CTA hrefs must point to existing routes only.
 
+import { usdToPhp } from "@/lib/usd-conversion";
+
 export interface QAPair {
   id: string;
   question: string;
@@ -95,7 +97,7 @@ export const questions: QAPair[] = [
     id: 'pra-fees',
     question: 'What are the PRA government fees?',
     answer:
-      'The PRA government fees are:\n\n\u2022 Principal applicant: $1,400\n\u2022 Each dependent: $300\n\nThese fees are paid directly at the PRA office when you submit your application in person.',
+      'The PRA government fees are:\n\n\u2022 Principal applicant: $1,400 (Approx. PHP {usdToPhp(1400).toLocaleString()})\n\u2022 Each dependent: $300 (Approx. PHP {usdToPhp(300).toLocaleString()})\n\nThese fees are paid directly at the PRA office when you submit your application in person.',
     relatedIds: ['options-deposit', 'processing'],
     cta: { label: 'Start Application', href: '/register' },
   },
@@ -127,7 +129,7 @@ export const questions: QAPair[] = [
     id: 'contact-info',
     question: 'How can I contact Retire Well?',
     answer:
-      'You can reach us through:\n\n\u2022 Phone: +63 2 888 1234\n\u2022 Email: consult@retirewell.ph\n\u2022 Office: 123 Ayala Avenue, Makati City, Metro Manila, Philippines 1226\n\u2022 Hours: Monday \u2013 Friday, 9:00 AM \u2013 6:00 PM (PST)\n\nAlternatively, fill out the contact form on our website and we will get back to you promptly.',
+      'You can reach us through:\n\n\u2022 Phone: +63 918 367 7645\n\u2022 Email: admin.retirewellsrrv@gmail.com\n\u2022 Office: Unit 2201 22/F The Peak Bldg. 107 L.P. Leviste Street, Bel Air, Makati City\n\u2022 Hours: Monday \u2013 Friday, 9:00 AM \u2013 6:00 PM (PST)\n\nAlternatively, fill out the contact form on our website and we will get back to you promptly.',
     relatedIds: ['services-offered', 'concierge'],
     cta: { label: 'Contact Us', href: '/contact' },
   },
@@ -135,7 +137,7 @@ export const questions: QAPair[] = [
     id: 'concierge',
     question: 'Who will assist me with my application?',
     answer:
-      'Each applicant is assigned a dedicated Senior Concierge Officer who guides you from start to finish. For example:\n\n\u2022 Maria Santos, Senior Concierge Officer\n\u2022 Email: maria.santos@pra.gov.ph\n\u2022 Phone: +63 (2) 8888-1234\n\u2022 Location: PRA Main Office, Makati City\n\nYour concierge coordinates appointments, escorts you to PRA and local clinics, and ensures your application moves smoothly through every stage.',
+      'Each applicant is assigned a dedicated Senior Concierge Officer who guides you from start to finish. A sample assignment (for illustration only) looks like this:\n\n\u2022 Sample Officer Name: Maria Santos\n\u2022 Sample Email: example@retirewellsrrv.com\n\u2022 Phone: +63 918 367 7645\n\u2022 Location: RetireWell Philippines, Makati City\n\nYour concierge coordinates appointments, escorts you to PRA and local clinics, and ensures your application moves smoothly through every stage.',
     relatedIds: ['contact-info', 'services-offered'],
     cta: { label: 'Get Started', href: '/register' },
   },
@@ -194,7 +196,7 @@ export const questions: QAPair[] = [
     id: 'full-process',
     question: 'What is the step-by-step application process?',
     answer:
-      'The SRRV application has two phases:\n\nPhase 1 \u2014 Pre-Arrival (Home Country):\n1. Choose your SRRV track (Smile or Classic)\n2. Gather & legalize documents (1\u20132 months)\n3. Wire your visa deposit to a PRA-accredited bank\n\nPhase 2 \u2014 On-the-Ground (Philippines):\n4. Arrive on tourist visa & pre-evaluation at PRA\n5. Complete medical clearances at DOH-accredited clinics\n6. Submit application, pay government fees ($1,400/$300), and capture biometrics at PRA\n7. Immigration endorsement & stamping (7\u201310 working days)\n8. Attend Oath of Affirmation ceremony \u2014 receive your stamped passport, PRA ID, and SRRV Certification',
+      'The SRRV application has two phases:\n\nPhase 1 \u2014 Pre-Arrival (Home Country):\n1. Choose your SRRV track (Smile or Classic)\n2. Gather & legalize documents (1\u20132 months)\n3. Wire your visa deposit to a PRA-accredited bank\n\nPhase 2 \u2014 On-the-Ground (Philippines):\n4. Arrive on tourist visa & pre-evaluation at PRA\n5. Complete medical clearances at DOH-accredited clinics\n6. Submit application, pay government fees ($1,400/$300, Approx. PHP {usdToPhp(1400).toLocaleString()}/{usdToPhp(300).toLocaleString()}), and capture biometrics at PRA\n7. Immigration endorsement & stamping (7\u201310 working days)\n8. Attend Oath of Affirmation ceremony \u2014 receive your stamped passport, PRA ID, and SRRV Certification',
     relatedIds: ['processing', 'application-stages'],
     cta: { label: 'Start Your Journey', href: '/register' },
   },
