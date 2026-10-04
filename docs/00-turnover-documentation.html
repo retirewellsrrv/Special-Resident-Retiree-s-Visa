@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SRRV Service Platform — Turnover Documentation</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  :root{ --brand:#8B1A2B; --brand-soft:#FBF3F4; --ink:#241F1E; --muted:#6B625E; --line:#E3DCD6; --ok:#1F7A46; --warn:#9A6B00; --bad:#A32020; }
+  *{ box-sizing:border-box; }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{ font-family:"Georgia","Times New Roman",serif; color:var(--ink); font-size:10.2pt; line-height:1.55; margin:0; max-width:210mm; }
+  h1,h2,h3,h4{ font-family:"Helvetica Neue",Arial,sans-serif; color:var(--brand); margin:0 0 .35em; line-height:1.25; }
+  h1{ font-size:22pt; }
+  h2{ font-size:16pt; border-bottom:2px solid var(--brand); padding-bottom:5px; margin-top:0; page-break-after:avoid; }
+  h3{ font-size:12.5pt; margin-top:1.3em; color:#5E1220; page-break-after:avoid; }
+  h4{ font-size:10.5pt; margin-top:1.1em; color:#3F3634; text-transform:uppercase; letter-spacing:.04em; page-break-after:avoid; }
+  p{ margin:.45em 0 .7em; }
+  ul,ol{ margin:.35em 0 .8em; padding-left:1.25em; }
+  li{ margin:.2em 0; }
+  code{ font-family:"Consolas","Courier New",monospace; font-size:9pt; background:#F4F1EE; padding:1px 4px; border-radius:3px; }
+  pre{ font-family:"Consolas","Courier New",monospace; font-size:8.6pt; background:#F4F1EE; padding:10px 12px; border-radius:4px; overflow-x:auto; line-height:1.5; page-break-inside:avoid; }
+  pre code{ background:none; padding:0; }
+  a{ color:var(--brand); text-decoration:none; }
+  table{ width:100%; border-collapse:collapse; margin:.6em 0 1em; font-size:9.1pt; font-family:"Helvetica Neue",Arial,sans-serif; page-break-inside:auto; }
+  th{ background:var(--brand); color:#fff; text-align:left; font-weight:600; padding:5px 7px; border:1px solid var(--brand); font-size:8.7pt; }
+  td{ border:1px solid var(--line); padding:5px 7px; vertical-align:top; }
+  tbody tr:nth-child(even) td{ background:#FAF8F6; }
+  tr{ page-break-inside:avoid; }
+  .ok{ color:var(--ok); font-weight:700; }
+  .note, .warn, .rule{ border-left:4px solid var(--brand); background:var(--brand-soft); padding:8px 12px; margin:.8em 0 1.1em; font-size:9.4pt; page-break-inside:avoid; }
+  .warn{ border-left-color:var(--warn); background:#FFF8E8; }
+  .danger{ border-left-color:var(--bad); background:#FCF2F2; }
+  .goodbox{ border-left-color:var(--ok); background:#F1F8F3; }
+
+  /* Cover */
+  .page{ page-break-after:always; }
+  .page:last-child{ page-break-after:auto; }
+  .cover{ height:245mm; display:flex; flex-direction:column; justify-content:space-between; }
+  .cover-top{ border-top:6px solid var(--brand); padding-top:14mm; }
+  .eyebrow{ font-family:"Helvetica Neue",Arial,sans-serif; letter-spacing:.22em; text-transform:uppercase; font-size:9pt; color:var(--muted); }
+  .cover h1{ font-size:32pt; line-height:1.1; margin:6mm 0 3mm; }
+  .cover .sub{ font-size:12.5pt; color:var(--muted); font-style:italic; }
+  .cover-meta{ border-top:1px solid var(--line); padding-top:5mm; font-family:"Helvetica Neue",Arial,sans-serif; font-size:9.5pt; }
+  .cover-meta table{ width:100%; border:0; }
+  .cover-meta td{ border:0; padding:2.5px 0; background:transparent !important; }
+  .cover-meta td:first-child{ color:var(--muted); width:40mm; text-transform:uppercase; letter-spacing:.06em; font-size:8.5pt; }
+  .lead{ font-size:10.6pt; color:var(--muted); font-style:italic; margin-bottom:1.1em; }
+
+  /* TOC */
+  .toc{ font-family:"Helvetica Neue",Arial,sans-serif; font-size:10pt; }
+  .toc ol{ list-style:none; padding-left:0; counter-reset:toc; }
+  .toc > ol > li{ counter-increment:toc; border-bottom:1px dotted var(--line); padding:6px 0; }
+  .toc a{ color:var(--ink); }
+  .toc .num{ display:inline-block; width:8mm; color:var(--brand); font-weight:700; }
+
+  /* Section container: forces a fresh page per major section when printed */
+  section.doc-section{ page-break-before:always; }
+  .diagram{ font-family:"Consolas","Courier New",monospace; font-size:8.3pt; white-space:pre; background:#FAF8F6; border:1px solid var(--line); border-radius:4px; padding:12px 14px; overflow-x:auto; line-height:1.35; page-break-inside:avoid; }
+  .diagram-wrap{ border:1px solid var(--line); border-radius:4px; padding:10px; margin:.8em 0 1.2em; background:#fff; page-break-inside:avoid; overflow-x:auto; text-align:center; }
+  hr{ border:0; border-top:1px solid var(--line); margin:1.4em 0; }
+  .small{ font-size:8.8pt; color:var(--muted); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════ COVER ══════════════════════ -->
+<div class="page cover">
+  <div class="cover-top">
+    <div class="eyebrow">Retire Well &nbsp;·&nbsp; Client Turnover Documentation</div>
+    <h1>SRRV Service Platform<br>Turnover Documentation</h1>
+    <div class="sub">Technical, deployment, database, API, access, maintenance, and support documentation for the SRRV Service Platform.</div>
+  </div>
+  <div class="cover-meta">
+    <table>
+      <tr><td>System</td><td>Special Resident Retiree's Visa (SRRV) Service Platform</td></tr>
+      <tr><td>Prepared for</td><td>Client turnover / handover</td></tr>
+      <tr><td>Client / Project Owner</td><td>Nestor Licanto</td></tr>
+      <tr><td>Contract reference</td><td>Project-Base Web Development Contract, effective May 22, 2026 – July 30, 2026</td></tr>
+      <tr><td>Production domain</td><td><code>retirewellsrrv.com</code></td></tr>
+      <tr><td>Basis</td><td>Application behaviour as implemented on branch <code>develop</code></td></tr>
+      <tr><td>Companion documents</td><td>User Guide, Admin &amp; Super Admin Guide, and the Sign-off / Acceptance Certificate are separate documents — see the last page of this document for links.</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════ TOC ══════════════════════ -->
+<div class="page">
+  <h2>Contents</h2>
+  <div class="toc">
+    <ol>
+      <li><span class="num">2</span> <a href="#sec-2">Technical &amp; System Documentation</a></li>
+      <li><span class="num">3</span> <a href="#sec-3">Deployment Guide</a></li>
+      <li><span class="num">4</span> <a href="#sec-4">Environment Variables</a></li>
+      <li><span class="num">5</span> <a href="#sec-5">Database Schema / ERD</a></li>
+      <li><span class="num">6</span> <a href="#sec-6">API Documentation</a></li>
+      <li><span class="num">7</span> <a href="#sec-7">Access Handover Sheet</a></li>
+      <li><span class="num">8</span> <a href="#sec-8">Credentials Transfer Checklist</a></li>
+      <li><span class="num">10</span> <a href="#sec-10">Maintenance Guide</a></li>
+      <li><span class="num">11</span> <a href="#sec-11">Source Code Repository Access</a></li>
+      <li><span class="num">12</span> <a href="#sec-12">Known Issues / Limitations</a></li>
+      <li><span class="num">13</span> <a href="#sec-13">Support / Warranty Terms</a></li>
+    </ol>
+  </div>
+  <p class="small">Numbering follows the client's original turnover checklist. Items 1 (User Guide), 9 (Admin &amp; Super Admin Guide), and 14 (Sign-off / Acceptance Certificate) are each their own standalone document — see the closing page for links.</p>
+</div>
+
+<!-- ══════════════════════ SECTION 2 ══════════════════════ -->
+<section class="doc-section" id="sec-2">
+<h2>2. Technical &amp; System Documentation</h2>
+<p class="lead">Architecture, technology stack, project structure, and the design decisions behind the SRRV Service Platform.</p>
+
+<h3>Architecture Overview</h3>
+<p>The SRRV Service Platform is a single Next.js application (no separate backend service). It serves three audiences from one codebase:</p>
+<ul>
+  <li><strong>Public site</strong> — informational pages, no auth required.</li>
+  <li><strong>Applicant portal</strong> (<code>/applicant/*</code>) — signed-in retirees managing their SRRV application.</li>
+  <li><strong>Admin portal</strong> (<code>/admin/*</code>) — staff reviewing consultations, applications, documents, payments.</li>
+  <li><strong>Super Admin portal</strong> (<code>/super-admin/*</code>) — manages admin accounts, read-only client register.</li>
+</ul>
+
+<div class="diagram">                       ┌─────────────────────────────┐
+                       │        Browser / User        │
+                       └──────────────┬───────────────┘
+                                      │ HTTPS
+                       ┌──────────────▼───────────────┐
+                       │   Next.js 16 App (Vercel)    │
+                       │                               │
+                       │  Middleware — session refresh │
+                       │  + role-based route guarding  │
+                       │                               │
+                       │  App Router pages / layouts   │
+                       │  Server Actions (src/actions) │◄──── primary "API" surface
+                       │  3 API Route Handlers         │◄──── REST endpoints (OAuth callback,
+                       │  (src/app/api/**/route.ts)    │      Xendit invoice + webhook)
+                       └───────┬───────────┬───────────┘
+                               │           │
+                 ┌─────────────▼──┐   ┌────▼─────────────┐
+                 │    Supabase     │   │      Xendit       │
+                 │ Postgres + Auth │   │  Hosted Checkout   │
+                 │   + Storage     │   │  (payment gateway) │
+                 └─────────────────┘   └────────────────────┘
+                               │
+                       ┌───────▼────────┐
+                       │     Resend      │
+                       │ (transactional  │
+                       │     email)      │
+                       └─────────────────┘</div>
+
+<p>Server Actions (not REST endpoints) are the primary way the UI talks to the backend — this is a Next.js App Router convention, not a gap. See §6 (API Documentation) for the full inventory of both.</p>
+
+<h3>Tech Stack</h3>
+<table>
+  <thead><tr><th style="width:22%">Layer</th><th style="width:44%">Choice</th><th>Version</th></tr></thead>
+  <tbody>
+    <tr><td>Framework</td><td>Next.js (App Router)</td><td>16.2.6</td></tr>
+    <tr><td>UI library</td><td>React</td><td>19.2.6</td></tr>
+    <tr><td>Language</td><td>TypeScript</td><td>5.x</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS + shadcn/ui (Radix primitives)</td><td>Tailwind 3.4, shadcn 4.8</td></tr>
+    <tr><td>Forms/validation</td><td>react-hook-form + Zod</td><td>RHF 7.76, Zod 4.4</td></tr>
+    <tr><td>Data fetching (client)</td><td>TanStack Query</td><td>5.100</td></tr>
+    <tr><td>Database &amp; Auth</td><td>Supabase (Postgres, Auth, Storage) via <code>@supabase/ssr</code></td><td>supabase-js 2.106</td></tr>
+    <tr><td>Payments</td><td>Xendit (hosted checkout) via <code>xendit-node</code></td><td>7.0</td></tr>
+    <tr><td>Email</td><td>Resend (raw REST call, no SDK dependency)</td><td>—</td></tr>
+    <tr><td>Charts</td><td>Recharts</td><td>3.9</td></tr>
+    <tr><td>PDF viewing</td><td><code>pdfjs-dist</code> / <code>react-pdf</code></td><td>5.4 / 10.4</td></tr>
+    <tr><td>Testing</td><td>Vitest + Testing Library + jsdom</td><td>Vitest 2.x</td></tr>
+    <tr><td>Package manager</td><td>pnpm</td><td>—</td></tr>
+    <tr><td>Linting/formatting</td><td>ESLint (<code>eslint-config-next</code>) 10, Biome, Prettier, Husky + lint-staged</td><td>—</td></tr>
+    <tr><td>Hosting</td><td>Vercel</td><td>—</td></tr>
+  </tbody>
+</table>
+<p class="small">Full pinned versions: <code>package.json</code> at the repository root.</p>
+
+<h3>Folder / Project Structure</h3>
+<div class="diagram">src/
+  app/
+    (auth)/                 Public auth routes — login, register, forgot-password
+    (public)/                Public marketing pages
+    (protected)/
+      admin/                 Admin portal (role-gated layout)
+      applicant/             Applicant portal (role-gated layout)
+      super-admin/            Super admin portal (role-gated layout)
+    api/
+      auth/callback/route.ts        Supabase OAuth/email-confirmation callback
+      payments/invoice/route.ts     Creates a Xendit hosted-checkout invoice
+      webhooks/xendit/route.ts      Receives Xendit payment status callbacks
+  actions/                  Server Actions — the application/business logic layer
+    admin/                   Admin-only actions (dashboard, applications, consultations,
+                              documents, payments, services, admin/user management)
+    applicant/                Applicant-only actions (application, consultation, document,
+                              notifications, profile)
+    auth.ts                   Login/register/reset-password actions
+  components/
+    ui/                       shadcn-generated primitives — do not hand-edit
+    shared/                   Components used across portals
+    admin/, applicant/         Portal-specific components
+  schemas/                   Zod validation schemas, one module per domain
+  hooks/                      TanStack Query hooks
+  lib/                        Shared libraries: Supabase clients, Xendit client, mailer,
+                              payment-redirect-check
+  utils/auth/                 Role resolution + Server Action authorization guards
+  types/supabase.ts           Auto-generated Supabase DB types — never hand-edit
+  __tests__/                  Vitest test suite
+supabase/
+  migrations/                 SQL migration history (see §5)
+docs/                          Turnover documentation package + the end-user manual</div>
+
+<h3>Key Design Decisions / Patterns</h3>
+<ul>
+  <li><strong>Server Actions over REST for app logic.</strong> Only 3 real HTTP route handlers exist (see §6); everything else the UI needs — creating an application, reviewing a document, managing admins — is a Server Action in <code>src/actions/</code>, called directly from Server/Client Components. Naming convention: <code>xAction</code> (e.g. <code>loginAction</code>).</li>
+  <li><strong>Role is derived server-side from the database, not trusted from the JWT alone.</strong> A user's role (<code>applicant</code> / <code>admin</code> / <code>super_admin</code>) is resolved by checking <code>super_admin_profiles</code> then <code>admin_profiles.is_active</code> in <code>src/utils/auth/getUser.ts</code> — the same logic is duplicated in <code>middleware.ts</code> and the auth callback route, since <code>user_metadata.role</code> on the Supabase session can be stale or spoofed client-side.</li>
+  <li><strong>Three tiers of authorization enforcement:</strong>
+    <ol>
+      <li><strong>Middleware</strong> (<code>src/lib/supabase/middleware.ts</code>) — redirects users away from route prefixes (<code>/applicant</code>, <code>/admin</code>, <code>/super-admin</code>) their role doesn't match.</li>
+      <li><strong>Page/layout guards</strong> — <code>assertRole()</code> redirects to <code>/unauthorized</code>.</li>
+      <li><strong>Server Action guards</strong> — <code>requireAdmin()</code> / <code>requireSuperAdmin()</code> / <code>requireApplicant()</code> / <code>withAdmin()</code> / <code>withSuperAdmin()</code> return a typed <code>{ authorized: false, error }</code> result instead of throwing, so actions can surface a proper error to the UI.</li>
+    </ol>
+  </li>
+  <li><strong>Zod validation at the Server Action boundary.</strong> Schemas live in <code>src/schemas/</code>, validated with <code>.safeParse()</code> inside the action before touching the database.</li>
+  <li><strong><code>revalidatePath</code> before <code>redirect</code></strong> is a documented convention (<code>AGENTS.md</code>) — since <code>redirect()</code> throws, any cache revalidation must happen first or it's skipped.</li>
+  <li><strong>Two Supabase clients</strong>: a request-scoped client (<code>createClient</code>, publishable key + user cookies, subject to RLS) and an admin client (<code>createAdminClient</code>, service-role key, bypasses RLS) used only in trusted server contexts (webhooks, role lookups, admin actions).</li>
+  <li><strong>Payment status is intended to be provider-authoritative.</strong> <code>payments.status</code> is only ever written by the Xendit webhook handler in application code — the admin UI can only <em>read</em> payment state.
+    <div class="warn"><strong>Caveat.</strong> This is an application-layer convention, not a database-enforced one — the live RLS policy on <code>payments</code> actually lets an authenticated user update their own payment row directly. See §5 and §12.</div>
+  </li>
+  <li><strong>One active payment per user+service.</strong> A partial unique index guarantees a user can't have two simultaneous <code>pending</code>/<code>success</code> payments for the same service, and the webhook handler has an explicit dedup guard against double-counting a paid invoice.</li>
+</ul>
+</section>
+
+<!-- ══════════════════════ SECTION 3 ══════════════════════ -->
+<section class="doc-section" id="sec-3">
+<h2>3. Deployment Guide</h2>
+<p class="lead">Hosting, build commands, deployment steps, rollback procedure, and domain/DNS configuration.</p>
+
+<h3>Hosting Provider</h3>
+<p><strong>Vercel.</strong> The app is a standard Next.js project with no <code>vercel.json</code> overrides — Vercel's default Next.js build/runtime detection applies.</p>
+<div class="note"><strong>To verify.</strong> Confirm in the Vercel dashboard (Project → Settings) whether the branch → environment mapping described below is actually configured that way. This guide was written without live Vercel access at the time — the CLI was logged out, and login is an interactive browser step that has to be done by whoever holds the account.</div>
+
+<h3>Build Commands</h3>
+<pre>pnpm install --frozen-lockfile
+pnpm build       # runs `next build`</pre>
+<p>Local dev: <code>pnpm dev</code>. Production start (only relevant for non-Vercel runs): <code>pnpm start</code>.</p>
+<p>The <code>pnpm build</code> step needs these environment variables available at build time (see §4 for the full list and purpose): <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>, <code>SUPABASE_SECRET_KEY</code>, <code>XENDIT_SECRET_KEY</code>, <code>XENDIT_WEBHOOK_TOKEN</code> — these must be set as Vercel Project → Environment Variables for each environment (Production / Preview / Development), the same way they're set as GitHub Actions secrets for CI.</p>
+
+<h3>Deployment Steps</h3>
+<p><strong>Branch flow</strong> (confirmed by the team): every change is promoted through three branches via PR —</p>
+<pre>feature/* → PR → develop  (dev/QA)
+develop   → PR → staging  (live testing)
+staging   → PR → main     (production)</pre>
+<p><code>.github/workflows/promote-staging.yml</code> provides a manual <code>workflow_dispatch</code> job that opens the <code>develop → staging</code> promotion PR automatically (<code>gh pr create</code>) — run it from the Actions tab rather than opening that PR by hand.</p>
+<p><strong>CI</strong> (<code>.github/workflows/ci.yml</code>) runs on every PR into <code>develop</code>, <code>staging</code>, or <code>main</code>: <code>pnpm install --frozen-lockfile</code> → <code>pnpm tsc --noEmit</code> → <code>pnpm test:coverage</code> → <code>pnpm build</code>. This is a gate, not a deploy — it does not push anything live.</p>
+<div class="warn"><strong>Deploys to Vercel are not wired into GitHub Actions.</strong> <code>.github/workflows/deploy-production.yml</code> exists but is entirely commented out. In practice, deploys almost certainly happen through <strong>Vercel's own native GitHub integration</strong> — Vercel watches the connected repo directly and builds/deploys on push, independent of the Actions workflows above. Confirm this in Vercel Project → Settings → Git, and note there which branches map to which Vercel environment (typically <code>main</code> → Production, other branches → Preview deployments).</div>
+<p><strong>Manual fallback</strong>, if ever needed and the CLI is authenticated:</p>
+<pre>vercel login
+vercel link            # first time only, links this repo to the Vercel project
+vercel deploy --prod   # deploy the current branch to Production</pre>
+
+<h3>Rollback Procedure</h3>
+<p>Vercel keeps every deployment immutable and browsable. To roll back:</p>
+<ol>
+  <li>Vercel dashboard → Project → <strong>Deployments</strong>.</li>
+  <li>Find the last known-good deployment (by commit/branch).</li>
+  <li>Click <strong>⋯ → Promote to Production</strong> (Vercel's "Instant Rollback") — this repoints the production domain to that build with no rebuild required.</li>
+  <li>Alternatively via CLI: <code>vercel rollback [deployment-url]</code>.</li>
+</ol>
+<p>No database rollback tooling exists in this project — a Vercel rollback only affects application code, not Supabase schema/data. See §5 for schema history and §10 for backup/restore.</p>
+
+<h3>Domain / DNS Configuration</h3>
+<table>
+  <thead><tr><th style="width:34%">Setting</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Production domain</td><td><code>retirewellsrrv.com</code></td></tr>
+    <tr><td>Registrar</td><td>Porkbun</td></tr>
+    <tr><td>Points to</td><td>Vercel — standard setup: an <code>A</code>/<code>ALIAS</code> record for the apex domain and/or a <code>CNAME</code> for <code>www</code> pointing at Vercel's edge, configured from Vercel Project → Settings → Domains, which supplies the exact record values to enter in Porkbun.</td></tr>
+  </tbody>
+</table>
+<p class="small"><code>next.config.mjs</code> also lists <code>srrv.vercel.app</code> as a known dev origin, suggesting the Vercel project itself is internally named <code>srrv</code> — that's the default Vercel subdomain, separate from the custom <code>retirewellsrrv.com</code> domain.</p>
+<p>To verify/reconfigure: Vercel dashboard → Domains (shows exact DNS records expected) cross-checked against Porkbun's DNS management panel for <code>retirewellsrrv.com</code>.</p>
+</section>
+
+<!-- ══════════════════════ SECTION 4 ══════════════════════ -->
+<section class="doc-section" id="sec-4">
+<h2>4. Environment Variables</h2>
+<p class="lead">Names and purposes of every environment variable the application uses.</p>
+
+<div class="warn"><strong>Actual secret values belong in the credentials vault</strong> — see §8 — never in this document. Template file in the repository: <code>env.copy.example</code>.</div>
+
+<h3>Variables</h3>
+<table>
+  <thead><tr><th style="width:24%">Variable</th><th style="width:38%">Purpose</th><th style="width:24%">Used in</th><th>Required for</th></tr></thead>
+  <tbody>
+    <tr><td><code>NEXT_PUBLIC_SUPABASE_URL</code></td><td>Supabase project URL</td><td><code>src/lib/supabase/{client,server,middleware}.ts</code></td><td>Build + runtime</td></tr>
+    <tr><td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td><td>Legacy Supabase anon/public key</td><td><code>src/lib/supabase/middleware.ts</code></td><td>Build + runtime (middleware only)</td></tr>
+    <tr><td><code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code></td><td>Current Supabase "publishable" key for browser/server (non-admin) clients</td><td><code>src/lib/supabase/client.ts</code>, <code>server.ts</code> (<code>createClient</code>)</td><td>Build + runtime</td></tr>
+    <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code></td><td>Privileged server-only key, bypasses Row Level Security</td><td><code>src/lib/supabase/server.ts</code> (<code>createAdminClient</code>)</td><td>Runtime (server only — never expose to the browser)</td></tr>
+    <tr><td><code>SUPABASE_SECRET_KEY</code></td><td>Present in env files / CI secrets, but no code reference found in <code>src/</code> — appears unused currently, possibly reserved for a future Supabase key-naming migration</td><td>—</td><td>Set in CI/Vercel for parity, but not currently consumed</td></tr>
+    <tr><td><code>NEXT_PUBLIC_SITE_URL</code></td><td>Base app URL — used to build OAuth/email-confirmation redirect links and for payment-redirect health checks</td><td><code>src/actions/auth.ts</code>, <code>admins.ts</code>, <code>payment-redirect-check.ts</code></td><td>Runtime</td></tr>
+    <tr><td><code>RESEND_API_KEY</code></td><td>Resend transactional email API key</td><td><code>src/lib/mailer.ts</code></td><td>Runtime — without it, emails are skipped and logged as <code>skipped</code> in <code>email_logs</code></td></tr>
+    <tr><td><code>ADMIN_EMAIL</code></td><td>Destination/from address for admin-facing notification emails (defaults to <code>dev@retirewellsrrv.com</code> if unset)</td><td><code>src/lib/mailer.ts</code></td><td>Runtime</td></tr>
+    <tr><td><code>XENDIT_SECRET_KEY</code></td><td>Xendit payment gateway secret key — creates invoices</td><td><code>src/lib/xendit.ts</code></td><td>Runtime</td></tr>
+    <tr><td><code>XENDIT_WEBHOOK_TOKEN</code></td><td>Shared secret validating incoming Xendit webhook calls</td><td><code>src/app/api/webhooks/xendit/route.ts</code></td><td>Runtime — payment status updates are silently rejected (401) without it</td></tr>
+    <tr><td><code>VERCEL_TOKEN</code></td><td>Vercel deploy token</td><td>CI only (currently unused — deploy job is disabled)</td><td>CI/CD, if the deploy workflow is re-enabled</td></tr>
+    <tr><td><code>VERCEL_ORG_ID</code></td><td>Vercel organization ID</td><td>CI only (currently unused)</td><td>CI/CD, if re-enabled</td></tr>
+    <tr><td><code>VERCEL_PROJECT_ID</code></td><td>Vercel project ID</td><td>CI only (currently unused)</td><td>CI/CD, if re-enabled</td></tr>
+  </tbody>
+</table>
+
+<h3>Production vs. Development — Don't Mix These Up</h3>
+<div class="warn">
+<p><code>.env.production</code> points at <strong><code>kpmzzxzbbethfqqrqacd.supabase.co</code></strong> — the real Supabase project linked to the client's account, and the one all the other turnover documents (schema, RLS, etc.) are based on.</p>
+<p><code>.env.local</code> and <code>.env.staging</code> both point at a <strong>different</strong> project, <code>hopxdottqixfacifklka.supabase.co</code> — the personal/development project used during development. Values from those two files (or anything read from that project's dashboard) are <strong>not</strong> representative of the client's production data or schema. When setting Vercel environment variables or troubleshooting production, always work from <code>.env.production</code> / the Vercel Production environment, not the Preview/Development ones.</p>
+</div>
+
+<h3>Where These Need to Be Set</h3>
+<ul>
+  <li><strong>Local development:</strong> <code>.env.local</code> (copy from <code>env.copy.example</code>).</li>
+  <li><strong>CI (GitHub Actions):</strong> repository Settings → Secrets and variables → Actions. <code>ci.yml</code> currently consumes: <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>, <code>SUPABASE_SECRET_KEY</code>, <code>XENDIT_SECRET_KEY</code>, <code>XENDIT_WEBHOOK_TOKEN</code>.</li>
+  <li><strong>Vercel (build + runtime):</strong> Project → Settings → Environment Variables, set per environment (Production / Preview / Development). See §3.</li>
+</ul>
+
+<h3>Security Note</h3>
+<p><code>.env.local</code>, <code>.env.production</code>, and <code>.env.staging</code> exist at the repository root with live values and are correctly listed in <code>.gitignore</code> — verified not tracked in git history as of this handover. Keep it that way: never force-add an env file to git.</p>
+</section>
+
+<!-- ══════════════════════ SECTION 5 ══════════════════════ -->
+<section class="doc-section" id="sec-5">
+<h2>5. Database Schema / ERD</h2>
+<p class="lead">Tables, relationships, enums, RLS policies, and migration history for the SRRV production database.</p>
+
+<div class="note">
+<strong>Source of truth:</strong> a real <code>supabase db dump</code> of the production project (found at <code>docs/backup2/</code> — <code>schema.sql</code>, <code>data.sql</code>, <code>roles.sql</code>). Cross-checked against <code>src/types/supabase.ts</code> — the two agree on all 20 tables and their relationships.
+<p><strong>Confirmed production project:</strong> ref <code>kpmzzxzbbethfqqrqacd</code> — this matches the <code>NEXT_PUBLIC_SUPABASE_URL</code> in <code>.env.production</code>. <strong><code>.env.local</code> and <code>.env.staging</code> both point to a different project</strong> (ref <code>hopxdottqixfacifklka</code>) — the personal/dev project used during development, not what's documented here.</p>
+</div>
+
+<h3>Tables</h3>
+<p>20 tables in the <code>public</code> schema, all keyed off Supabase's built-in <code>auth.users</code>.</p>
+<table>
+  <thead><tr><th style="width:22%">Table</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>client_profiles</code></td><td>One row per applicant: name, sex, birthday, nationality, marital status (default <code>single</code>). Primary applicant identity record.</td></tr>
+    <tr><td><code>admin_profiles</code></td><td>One row per admin: name, <code>is_active</code> (default <code>true</code>) — disables login/notifications without deleting the account.</td></tr>
+    <tr><td><code>super_admin_profiles</code></td><td>One row per super admin: name. Presence in this table overrides any other role.</td></tr>
+    <tr><td><code>consultations</code></td><td>An applicant's consultation request: meeting date, communication mode, purpose, status (default <code>pending</code>), linked payment, <code>approved_by</code>/<code>approved_at</code>.</td></tr>
+    <tr><td><code>applications</code></td><td>The SRRV application itself: application code, status (default <code>pending</code>), linked consultation and payment, <code>approved_by</code>/<code>approved_at</code>.</td></tr>
+    <tr><td><code>applicant_profiles</code></td><td>Detailed personal info for one application (civil status, DOB, nationality, physical description).</td></tr>
+    <tr><td><code>passports</code></td><td>Passport details for one application.</td></tr>
+    <tr><td><code>visa_details</code></td><td>Entry visa / tourist visa details for one application.</td></tr>
+    <tr><td><code>contacts</code></td><td>Contact info (addresses, phone, email) for one application.</td></tr>
+    <tr><td><code>emergency_contacts</code></td><td>Emergency contact for one application.</td></tr>
+    <tr><td><code>dependents</code></td><td>Dependents/family members included in an application (many per application).</td></tr>
+    <tr><td><code>family_backgrounds</code></td><td>Parents' info for one application.</td></tr>
+    <tr><td><code>educations</code></td><td>Education history entries for an application (many per application).</td></tr>
+    <tr><td><code>employments</code></td><td>Employment history entries for an application (many per application).</td></tr>
+    <tr><td><code>documents</code></td><td>Uploaded files for an application (many per application) — status (default <code>pending</code>), type, format, reviewer note.</td></tr>
+    <tr><td><code>payments</code></td><td>A single payment transaction (consultation or application fee) — amount, status, method, transaction code.</td></tr>
+    <tr><td><code>notifications</code></td><td>In-portal notifications for an applicant.</td></tr>
+    <tr><td><code>admin_notifications</code></td><td>In-portal notifications for an admin.</td></tr>
+    <tr><td><code>email_logs</code></td><td>Audit log of every outbound email attempt (sent/failed/skipped).</td></tr>
+    <tr><td><code>service_plans</code></td><td>Public-facing service/package listings shown on the marketing site.</td></tr>
+  </tbody>
+</table>
+<p class="small">All primary keys are <code>bigint</code> identity columns except the four profile tables, which use the Supabase Auth <code>uuid</code> as their primary key directly.</p>
+
+<h3>Relationships</h3>
+<p>Every foreign key below is <code>ON DELETE CASCADE</code> unless noted otherwise.</p>
+<div class="diagram-wrap">
+<pre class="mermaid">
+erDiagram
+    client_profiles ||--o| consultations : "user_id (1:1)"
+    client_profiles ||--o{ applications : "user_id"
+    client_profiles ||--o{ payments : "user_id"
+    client_profiles ||--o{ notifications : "user_id"
+    admin_profiles ||--o{ admin_notifications : "admin_user_id"
+    consultations ||--o| payments : "payment_id (no cascade)"
+    applications ||--o| consultations : "consultation_id (1:1)"
+    applications ||--o| payments : "payment_id (no cascade)"
+    applications ||--o| applicant_profiles : "application_id (1:1)"
+    applications ||--o| passports : "application_id (1:1)"
+    applications ||--o| visa_details : "application_id (1:1)"
+    applications ||--o| contacts : "application_id (1:1)"
+    applications ||--o| emergency_contacts : "application_id (1:1)"
+    applications ||--o| family_backgrounds : "application_id (1:1)"
+    applications ||--o{ dependents : "application_id"
+    applications ||--o{ educations : "application_id"
+    applications ||--o{ employments : "application_id"
+    applications ||--o{ documents : "application_id"
+
+    client_profiles {
+        uuid user_id PK
+        string name
+        string sex
+        string marital_status
+        string birthday
+        string nationality
+        smallint age
+    }
+    admin_profiles {
+        uuid user_id PK
+        string name
+        boolean is_active
+    }
+    consultations {
+        bigint id PK
+        uuid user_id FK
+        bigint payment_id FK
+        string status
+        date meeting_date
+        uuid approved_by FK
+    }
+    applications {
+        bigint id PK
+        uuid user_id FK
+        bigint consultation_id FK
+        bigint payment_id FK
+        string application_code
+        string status
+        uuid approved_by FK
+    }
+    payments {
+        bigint id PK
+        uuid user_id FK
+        string status
+        string service_type
+        double amount
+        string transaction_code
+    }
+    documents {
+        bigint id PK
+        bigint application_id FK
+        string type
+        string status
+        string review_note
+    }
+    notifications {
+        bigint id PK
+        uuid user_id FK
+        string notification
+        boolean is_read
+    }
+    admin_notifications {
+        bigint id PK
+        uuid admin_user_id FK
+        string notification
+        boolean is_read
+    }
+</pre>
+</div>
+<p class="small">Single-row-per-application tables and multi-row child tables are simplified in the boxes above for readability, but their FK relationships to <code>applications</code> are shown. <code>service_plans</code> and <code>email_logs</code> have no foreign keys. <code>applications.approved_by</code> and <code>consultations.approved_by</code> also reference <code>auth.users</code> directly — not shown, since <code>auth.users</code> lives outside the <code>public</code> schema.</p>
+
+<h3>Enums</h3>
+<table>
+  <thead><tr><th style="width:24%">Enum</th><th>Values</th></tr></thead>
+  <tbody>
+    <tr><td><code>application_status</code></td><td><code>processing</code>, <code>paused</code>, <code>approved</code>, <code>rejected</code>, <code>pending</code>, <code>payment_failed</code></td></tr>
+    <tr><td><code>consultation_status</code></td><td><code>processing</code>, <code>accepted</code>, <code>rejected</code>, <code>pending</code></td></tr>
+    <tr><td><code>document_status</code></td><td><code>processing</code>, <code>accepted</code>, <code>rejected</code>, <code>action need</code>, <code>pending</code></td></tr>
+    <tr><td><code>document_type</code></td><td><code>passport</code>, <code>photo_2x2</code>, <code>pra_application</code>, <code>police</code>, <code>medical</code>, <code>bicc</code>, <code>bank_cert</code>, <code>proof_payment</code>, <code>proof_pension</code>, <code>proof_relationship</code></td></tr>
+    <tr><td><code>document_format</code></td><td><code>pdf</code>, <code>doc</code>, <code>docx</code>, <code>jpg</code>, <code>png</code>, <code>gif</code>, <code>bmp</code>, <code>webp</code>, <code>tiff</code>, <code>tif</code>, <code>jpeg</code></td></tr>
+    <tr><td><code>payment_status</code></td><td><code>processing</code>, <code>pending</code>, <code>cancelled</code>, <code>success</code>, <code>failed</code></td></tr>
+    <tr><td><code>payment_methods</code></td><td><code>pool</code>, <code>callback_virtual_account</code>, <code>credit_card</code>, <code>retail_outlet</code>, <code>qr_code</code>, <code>qris</code>, <code>ewallet</code>, <code>direct_debit</code>, <code>bank_transfer</code>, <code>paylater</code>, <code>cryptocurrency</code></td></tr>
+    <tr><td><code>service_type</code></td><td><code>application</code>, <code>consultation</code></td></tr>
+    <tr><td><code>communication_mode</code></td><td><code>zoom_meeting</code>, <code>google_meet</code>, <code>whatsApp</code>, <code>face_2_face</code>, <code>phone_call</code></td></tr>
+    <tr><td><code>marital_status</code></td><td><code>single</code>, <code>married</code>, <code>widowed</code>, <code>divorced</code></td></tr>
+    <tr><td><code>sex</code></td><td><code>male</code>, <code>female</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Database Functions</h3>
+<table>
+  <thead><tr><th style="width:26%">Function</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>public.insert_client_profile()</code></td><td>Trigger function: on a new <code>auth.users</code> row, creates an <code>admin_profiles</code> row if <code>raw_user_meta_data->>'role' = 'admin'</code>, otherwise creates a <code>client_profiles</code> row seeded from signup metadata. The dump only captures <code>public</code>-schema objects, so the actual <code>CREATE TRIGGER ... ON auth.users</code> attaching this function isn't visible — worth confirming directly in the Supabase SQL editor that it's still attached.</td></tr>
+    <tr><td><code>public.set_updated_at()</code></td><td>Standard <code>NEW.updated_at = NOW()</code> trigger function. Same caveat about trigger attachment visibility.</td></tr>
+  </tbody>
+</table>
+
+<h3>Row Level Security — Pattern and Exceptions</h3>
+<p>Most tables (<code>applications</code>, <code>consultations</code>, <code>contacts</code>, <code>dependents</code>, <code>documents</code>, <code>educations</code>, <code>emergency_contacts</code>, <code>employments</code>, <code>family_backgrounds</code>, <code>passports</code>, <code>visa_details</code>, <code>client_profiles</code>) follow the same RLS pattern: <strong>owner (<code>user_id</code>/via their application) OR any row in <code>admin_profiles</code> OR any row in <code>super_admin_profiles</code></strong> can select/insert/update/delete. <code>notifications</code> and <code>admin_notifications</code> are scoped strictly to their own <code>user_id</code>/<code>admin_user_id</code>. <code>admin_profiles</code>, <code>super_admin_profiles</code>, and <code>email_logs</code> have RLS enabled with no or near-no policies — access goes through the service-role admin client only.</p>
+
+<div class="warn">
+<strong>Two things worth flagging</strong> (also listed in §12):
+<ol>
+  <li><strong><code>payments</code> RLS allows an authenticated user to INSERT/UPDATE/SELECT their own payment row directly</strong> — no restriction on which columns or values. The application's own Server Actions/webhook never let a user set their own payment to <code>success</code>, but RLS doesn't stop a client from calling the Supabase REST/JS API directly to do exactly that.</li>
+  <li><strong>The "is admin" RLS check doesn't look at <code>admin_profiles.is_active</code>.</strong> The app's own authorization treats a disabled admin as a plain applicant, but the RLS policies only check row <em>existence</em> in <code>admin_profiles</code>, not <code>is_active</code>. A disabled admin who retains a valid session could still read/write anything the "any admin" RLS branch allows.</li>
+</ol>
+Neither of these was caught by application-level testing since the app never issues the requests that would exploit them — they only show up by reading the RLS policy definitions directly.
+</div>
+
+<h3>Indexes</h3>
+<table>
+  <thead><tr><th style="width:38%">Index</th><th style="width:20%">Table</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>payments_one_active_per_user_service_idx</code></td><td><code>payments</code></td><td>Unique, partial (<code>WHERE status IN ('pending','success')</code>) — one active payment per user+service.</td></tr>
+    <tr><td><code>admin_notifications_admin_user_id_idx</code></td><td><code>admin_notifications</code></td><td><code>(admin_user_id, id DESC)</code> — feed lookups.</td></tr>
+    <tr><td><code>email_logs_created_at_idx</code></td><td><code>email_logs</code></td><td><code>(created_at DESC)</code> — audit log browsing.</td></tr>
+  </tbody>
+</table>
+
+<h3>Realtime</h3>
+<p><code>supabase_realtime</code> publication includes <code>admin_notifications</code> and <code>notifications</code> — powers the live notification bell in both portals.</p>
+
+<h3>Migration History / Notes</h3>
+<p>Location: <code>supabase/migrations/</code></p>
+<table>
+  <thead><tr><th style="width:32%">Migration</th><th style="width:14%">Date</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>20260526144951_initial_migration.sql</code></td><td>2026-05-26</td><td>Defines an early/legacy schema — <code>SERIAL</code> integer user IDs, a hand-rolled <code>users</code> table, different enum names/values, a <code>messages</code> table that no longer exists. Does not match the live schema.</td></tr>
+    <tr><td><code>20260811000002_notifications_rls_realtime.sql</code></td><td>2026-08-11</td><td>Adds <code>notifications</code>/<code>admin_notifications</code> to Realtime; enables RLS with user-scoped policies. Matches the live dump.</td></tr>
+    <tr><td><code>20260813000001_email_logs.sql</code></td><td>2026-08-13</td><td>Creates <code>email_logs</code>. Matches the live dump.</td></tr>
+    <tr><td><code>20260814000001_unique_active_payment.sql</code></td><td>2026-08-14</td><td>Adds <code>payments_one_active_per_user_service_idx</code>. Matches the live dump.</td></tr>
+  </tbody>
+</table>
+<p><strong>Gap:</strong> only the first migration is out of date — everything from 2026-08-11 onward matches the live dump exactly. The bulk of the schema (all the application/profile/document tables and their RLS policies) predates the earliest migration file and was evidently built directly via the Supabase dashboard/SQL editor before migration tracking started. Recommend committing a trimmed version of the production <code>schema.sql</code> as a baseline migration so <code>supabase migration list</code> and the real schema agree going forward.</p>
+
+<h3>Storage</h3>
+<p>Supabase Storage bucket <code>documents</code> holds applicant-uploaded files, referenced by <code>documents.path</code>. Upload/access logic: <code>src/actions/applicant/document.ts</code>, <code>src/actions/applicant/application.ts</code>.</p>
+</section>
+
+<!-- ══════════════════════ SECTION 6 ══════════════════════ -->
+<section class="doc-section" id="sec-6">
+<h2>6. API Documentation</h2>
+<p class="lead">The application's HTTP endpoints and Server Actions.</p>
+
+<div class="note">This app is a Next.js App Router application. Its real "API" surface for the UI is almost entirely <strong>Server Actions</strong> (<code>src/actions/</code>), not REST endpoints — these are called directly from React components over Next.js's internal RPC mechanism, not <code>fetch</code>, and have no URL, method, or public contract in the traditional sense. Only <strong>3 genuine HTTP route handlers</strong> exist under <code>src/app/api/</code>. Both are documented below; a companion OpenAPI file (<code>06-api-collection.json</code>) covers just those 3 routes, since that's what OpenAPI/Postman are meant to describe.</div>
+
+<h3>REST Endpoints</h3>
+
+<h4>GET /api/auth/callback</h4>
+<p><strong>File:</strong> <code>src/app/api/auth/callback/route.ts</code><br>
+<strong>Purpose:</strong> Supabase Auth callback — completes an OAuth login (<code>?code=</code>) or an email-confirmation link (<code>?token_hash=&amp;type=email</code>). Assigns the default <code>applicant</code> role and seeds a <code>client_profiles</code> row on first login, checks <code>super_admin_profiles</code> to override role, and redirects to the correct role dashboard (or to profile completion if required fields are missing).<br>
+<strong>Auth:</strong> None required to call it — it <em>establishes</em> the session from the Supabase code/token itself. Only relative <code>next</code> redirect targets are honored (prevents open-redirect abuse).<br>
+<strong>Query params:</strong> <code>code</code> (OAuth), <code>token_hash</code> + <code>type=email</code> (email confirmation), <code>next</code> (optional relative redirect override).<br>
+<strong>Response:</strong> HTTP redirect (302), never a JSON body.</p>
+
+<h4>POST /api/payments/invoice</h4>
+<p><strong>File:</strong> <code>src/app/api/payments/invoice/route.ts</code><br>
+<strong>Purpose:</strong> Creates a Xendit hosted-checkout invoice for the logged-in user.<br>
+<strong>Auth:</strong> <strong>Required</strong> — validates <code>supabase.auth.getUser()</code>; returns 401 if not authenticated.</p>
+<p><strong>Request body</strong> (validated with <code>createInvoiceSchema</code>):</p>
+<pre>{
+  "amount": 300,
+  "description": "SRRV application fee",
+  "payerEmail": "optional, defaults to the logged-in user's email",
+  "successRedirectUrl": "optional",
+  "failureRedirectUrl": "optional",
+  "paymentMethods": ["optional array of strings"],
+  "currency": "optional, 3-letter code",
+  "metadata": { "optional": "string map" }
+}</pre>
+<p><strong>Response 200:</strong></p>
+<pre>{ "success": true, "data": { "id": "...", "invoiceUrl": "...", "externalId": "...", "amount": 300, "status": "PENDING" } }</pre>
+<p><strong>401:</strong> <code>{ "success": false, "error": "Unauthorized" }</code> &nbsp; <strong>400:</strong> invalid JSON or failed validation &nbsp; <strong>500:</strong> Xendit invoice creation failed.</p>
+
+<h4>POST /api/webhooks/xendit</h4>
+<p><strong>File:</strong> <code>src/app/api/webhooks/xendit/route.ts</code><br>
+<strong>Purpose:</strong> Receives payment status callbacks from Xendit and updates the matching <code>payments</code> row. Also sends a confirmation email to the admin mailbox when a consultation payment succeeds.<br>
+<strong>Auth:</strong> Shared-secret token, not a user session — the <code>x-callback-token</code> (or <code>Xendit-Webhook-Token</code>) header must match <code>XENDIT_WEBHOOK_TOKEN</code>; returns 401 otherwise. This is the endpoint to register as the webhook URL in the Xendit dashboard.<br>
+<strong>Safeguards:</strong> only updates payments still in <code>pending</code> status (a late <code>EXPIRED</code>/<code>FAILED</code> event can never downgrade an already-<code>success</code> payment); dedups so a duplicate <code>PAID</code> event for the same user+service can't create two successful payments.<br>
+<strong>Response:</strong> always <code>{ "received": true }</code> on 200, or 401/400 for auth/parsing failures.</p>
+
+<h3>Server Actions (not REST — listed for completeness)</h3>
+<table>
+  <thead><tr><th style="width:24%">Module</th><th style="width:34%">File</th><th>Covers</th></tr></thead>
+  <tbody>
+    <tr><td>Auth</td><td><code>src/actions/auth.ts</code></td><td>Login, register, password reset</td></tr>
+    <tr><td>Admin — dashboard</td><td><code>src/actions/admin/dashboard.ts</code></td><td>KPI stats for the admin dashboard</td></tr>
+    <tr><td>Admin — consultations</td><td><code>src/actions/admin/consultations.ts</code></td><td>Accept/reject/process consultations</td></tr>
+    <tr><td>Admin — applications</td><td><code>src/actions/admin/applications-admin.ts</code></td><td>Review + approve/reject applications</td></tr>
+    <tr><td>Admin — documents</td><td><code>documents.ts</code>, <code>document-review.ts</code></td><td>Document queue + review decisions</td></tr>
+    <tr><td>Admin — payments</td><td><code>src/actions/admin/payments.ts</code></td><td>Read-only payment monitoring</td></tr>
+    <tr><td>Admin — client profiles</td><td><code>client-profiles.ts</code></td><td>Client register, profile correction</td></tr>
+    <tr><td>Admin — services</td><td><code>src/actions/admin/service.ts</code></td><td>Service/package CRUD</td></tr>
+    <tr><td>Admin — notifications</td><td><code>notifications.ts</code></td><td>Mark read / clear admin notifications</td></tr>
+    <tr><td>Admin — admin/user mgmt</td><td><code>admins.ts</code>, <code>users.ts</code></td><td>Create/disable/delete admin accounts (super admin only)</td></tr>
+    <tr><td>Applicant — application</td><td><code>src/actions/applicant/application.ts</code></td><td>The multi-step SRRV application form</td></tr>
+    <tr><td>Applicant — consultation</td><td><code>consultation.ts</code></td><td>Request/update a consultation</td></tr>
+    <tr><td>Applicant — document</td><td><code>document.ts</code></td><td>Upload/re-upload documents</td></tr>
+    <tr><td>Applicant — profile</td><td><code>profile.ts</code></td><td>Personal details</td></tr>
+    <tr><td>Applicant — notifications</td><td><code>notifications.ts</code></td><td>Mark read / clear notifications</td></tr>
+  </tbody>
+</table>
+<p class="small">Every admin-scoped action is guarded by <code>requireAdmin()</code>/<code>requireSuperAdmin()</code>/<code>withAdmin()</code>/<code>withSuperAdmin()</code> from <code>src/utils/auth/getUser.ts</code> and <code>with-admin.ts</code>; applicant actions by <code>requireApplicant()</code>.</p>
+<p class="small">Full request/response schema also available as OpenAPI 3.0: <code>docs/06-api-collection.json</code>.</p>
+</section>
+
+<!-- ══════════════════════ SECTION 7 ══════════════════════ -->
+<section class="doc-section" id="sec-7">
+<h2>7. Access Handover Sheet</h2>
+<p class="lead">Every third-party account the platform depends on, and who owns it going forward.</p>
+
+<p>Per the client's confirmation: <strong>all accounts below are owned by the client going forward.</strong></p>
+
+<table>
+  <thead><tr><th style="width:16%">Service</th><th style="width:30%">Purpose</th><th style="width:12%">Owner</th><th>Account status</th></tr></thead>
+  <tbody>
+    <tr><td>Vercel</td><td>Application hosting/deployment</td><td>Client</td><td>Placeholder — confirm login works</td></tr>
+    <tr><td>Porkbun</td><td>Domain registrar / DNS for <code>retirewellsrrv.com</code></td><td>Client</td><td>Placeholder — confirm login works</td></tr>
+    <tr><td>Supabase</td><td>Database, Auth, Storage — production project ref <code>kpmzzxzbbethfqqrqacd</code></td><td>Client</td><td>Placeholder — confirm login works. Do not confuse with the dev project <code>hopxdottqixfacifklka</code> used in <code>.env.local</code>/<code>.env.staging</code>, which is not the client's.</td></tr>
+    <tr><td>Xendit</td><td>Payment gateway</td><td>Client</td><td>Placeholder — confirm login works</td></tr>
+    <tr><td>Resend</td><td>Transactional email</td><td>Client</td><td>Placeholder — confirm login works</td></tr>
+    <tr><td>Analytics/monitoring</td><td>—</td><td>N/A</td><td><strong>None configured.</strong> No Sentry, Google Analytics, Vercel Analytics, or similar tooling exists in the codebase. Confirmed expected — not a gap.</td></tr>
+    <tr><td>GitHub repository</td><td>Source code</td><td>Client</td><td><span class="ok">Done</span> — repository already transferred to the client's GitHub account; they log in with their own email.</td></tr>
+  </tbody>
+</table>
+
+<h3>Notes</h3>
+<ul>
+  <li>Per the contract (§7 Client Responsibilities), the client is responsible for all third-party subscription costs (Vercel, Supabase, Xendit transaction fees, domain registration) going forward.</li>
+  <li>Actual credential values are not in this document — see §8 for how those move to the client.</li>
+  <li>Placeholder rows above should be checked off once someone has actually logged into each service with the client's own credentials.</li>
+</ul>
+</section>
+
+<!-- ══════════════════════ SECTION 8 ══════════════════════ -->
+<section class="doc-section" id="sec-8">
+<h2>8. Credentials Transfer Checklist</h2>
+<p class="lead">A procedure to follow, not a place secrets are stored.</p>
+
+<div class="note">No live credential values are handled in this document or by any automated process — everything below is a manual step for whoever currently holds each account.</div>
+
+<h3>1. Set Up a Shared Vault</h3>
+<ul>
+  <li>Create a shared vault (e.g. <strong>Bitwarden</strong> — an Organization or a shared Collection so access can be revoked per-person later) that both the provider team and the client can access.</li>
+  <li>Invite the client's designated account holder.</li>
+</ul>
+
+<h3>2. Entries to Create in the Vault</h3>
+<ul>
+  <li><strong>Supabase</strong> — project dashboard login (or org invite), plus the 4 keys/URLs currently in <code>.env.production</code>: <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>SUPABASE_SECRET_KEY</code></li>
+  <li><strong>Vercel</strong> — dashboard login (or team invite), plus <code>VERCEL_TOKEN</code>/<code>VERCEL_ORG_ID</code>/<code>VERCEL_PROJECT_ID</code> if CI deploys are ever re-enabled</li>
+  <li><strong>Xendit</strong> — dashboard login, <code>XENDIT_SECRET_KEY</code>, <code>XENDIT_WEBHOOK_TOKEN</code></li>
+  <li><strong>Resend</strong> — dashboard login, <code>RESEND_API_KEY</code></li>
+  <li><strong>Porkbun</strong> — registrar account login for <code>retirewellsrrv.com</code></li>
+  <li><strong>GitHub</strong> (<span class="ok">done</span>) — repository already transferred to the client's GitHub account (they log in with their own email); no vault entry needed beyond noting this is done</li>
+  <li><code>ADMIN_EMAIL</code> mailbox credentials (whatever inbox receives staff notification emails)</li>
+</ul>
+
+<h3>3. Move the Values</h3>
+<ul>
+  <li>Copy each value out of <code>.env.production</code> (and the equivalent Vercel dashboard entries) into its vault entry.</li>
+  <li><strong>Rotate every key/secret after transfer</strong> — anyone who had prior access (contractors, former team members) should not retain working credentials. This is standard practice for a handover, not a sign anything leaked.</li>
+  <li>Delete or restrict any old vault/password-manager entries that held these values pre-transfer.</li>
+</ul>
+
+<h3>4. Confirm the Client Can Actually Log In</h3>
+<ul>
+  <li>Client can access Supabase project dashboard</li>
+  <li>Client can access Vercel project dashboard</li>
+  <li>Client can access Xendit dashboard</li>
+  <li>Client can access Resend dashboard</li>
+  <li>Client can access Porkbun account</li>
+  <li>Client can access the GitHub repository with appropriate permissions (<span class="ok">already transferred</span>)</li>
+</ul>
+<p>Only mark item 8 complete once every item above is checked off.</p>
+</section>
+
+<!-- ══════════════════════ SECTION 10 ══════════════════════ -->
+<section class="doc-section" id="sec-10">
+<h2>10. Maintenance Guide</h2>
+<p class="lead">Common issues, how to check logs, how to restart services, and backup/restore.</p>
+
+<h3>Common Issues and Fixes</h3>
+<p>See §12 for the full list of known limitations and cleanup items. Highlights relevant to day-to-day maintenance:</p>
+<ul>
+  <li><strong>A fee amount needs to change</strong> — ₱50/₱300 fees are hardcoded in source, not admin-configurable. Requires a code change and redeploy (see §3).</li>
+  <li><strong>A payment looks stuck as "pending"</strong> — payment status is only ever updated by the Xendit webhook (<code>src/app/api/webhooks/xendit/route.ts</code>). If a payment never transitions, check that Xendit's webhook is actually configured to call <code>/api/webhooks/xendit</code> with the correct <code>XENDIT_WEBHOOK_TOKEN</code>, and check Xendit's own dashboard for the invoice's real status.</li>
+  <li><strong>A refund was issued</strong> — there's no in-portal refund action; refunds happen directly in the Xendit console. The portal will only reflect it once the payment is cancelled there.</li>
+  <li><strong>Emails aren't sending</strong> — check <code>RESEND_API_KEY</code> is set; if missing, sends are skipped (not retried) and logged as <code>skipped</code> in the <code>email_logs</code> table.</li>
+</ul>
+
+<h3>How to Check Logs</h3>
+<table>
+  <thead><tr><th style="width:32%">Source</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>Application/server logs (Server Actions, API routes)</td><td>Vercel dashboard → Project → <strong>Logs</strong> (or Deployments → [deployment] → Functions) for real-time and recent runtime logs</td></tr>
+    <tr><td>Build logs</td><td>Vercel dashboard → Project → Deployments → [deployment] → Build Logs</td></tr>
+    <tr><td>Database/Auth logs</td><td>Supabase dashboard → Project → Logs (separate sections for Postgres, Auth, API)</td></tr>
+    <tr><td>Email delivery attempts</td><td><code>email_logs</code> table in Supabase — every send attempt (sent/failed/skipped) with the error message if any. Query via Supabase Table Editor or SQL Editor.</td></tr>
+    <tr><td>Payment events</td><td>Xendit dashboard → Invoices — shows the authoritative status of every invoice, independent of what's recorded locally</td></tr>
+  </tbody>
+</table>
+
+<h3>How to "Restart" Services</h3>
+<p>There are no long-running servers to restart — this is a serverless Next.js app on Vercel.</p>
+<ul>
+  <li><strong>App:</strong> trigger a new deployment (push a commit, or Deployments → ⋯ → Redeploy in the Vercel dashboard) — this is the equivalent of a restart.</li>
+  <li><strong>Database:</strong> Supabase is a managed Postgres instance; nothing to restart under normal operation. If the project appears paused/inactive (e.g. on a free tier after inactivity), resume it from the Supabase dashboard.</li>
+</ul>
+
+<h3>Backup and Restore</h3>
+<p>Supabase provides automated backups on paid plans (daily backups + optional Point-in-Time Recovery, depending on plan tier). <strong>Confirm the actual plan and retention window in the Supabase dashboard → Project Settings → Backups</strong> for the production project (ref <code>kpmzzxzbbethfqqrqacd</code>, matching <code>.env.production</code>) — this wasn't verified live during this documentation pass since it requires an interactive dashboard login. A schema-and-data dump of this project already exists at <code>docs/backup2/</code> as of the dump date, which can serve as a point-in-time reference independent of Supabase's own backup retention.</p>
+<p>To restore: Supabase dashboard → Database → Backups → select a backup point → restore. This is a destructive operation on the target project — confirm with the client before triggering one.</p>
+<p>For file storage (<code>documents</code> bucket), Supabase Storage backups follow the same project-level backup policy as the database.</p>
+</section>
+
+<!-- ══════════════════════ SECTION 11 ══════════════════════ -->
+<section class="doc-section" id="sec-11">
+<h2>11. Source Code Repository Access</h2>
+<p class="lead">Ownership and setup instructions for the SRRV codebase.</p>
+
+<div class="note goodbox"><strong>Status: Done.</strong> Repository already transferred to the client's GitHub account. The client logs in with their own email/account — no separate credential to hand over for this one.</div>
+
+<h3>Remaining Housekeeping</h3>
+<ul>
+  <li>Confirm branch protection rules on <code>main</code>/<code>staging</code>/<code>develop</code> still make sense under the new access model (who can merge, required checks, etc.).</li>
+  <li>Revoke access for any contractors/former team members no longer involved, once the client confirms they're fully set up (unless retained for the post-launch support window — see §13).</li>
+</ul>
+
+<h3>README</h3>
+<ul>
+  <li>Already covers setup instructions — clone, <code>pnpm install</code>, env var setup, dev server, DB type generation, migrations. See <code>README.md</code> at the repository root. No changes needed for turnover.</li>
+</ul>
+</section>
+
+<!-- ══════════════════════ SECTION 12 ══════════════════════ -->
+<section class="doc-section" id="sec-12">
+<h2>12. Known Issues / Limitations</h2>
+<p class="lead">Outstanding items, code-level cleanup, and intentionally deferred scope.</p>
+
+<h3>Security Findings (from Reading the Live Database's RLS Policies Directly)</h3>
+<div class="warn danger">These were found by reading the actual RLS policy SQL in the production database dump (<code>docs/backup2/schema.sql</code>), not by testing the app's UI — the app's own code never exercises these paths, which is exactly why they're easy to miss.</div>
+<table>
+  <thead><tr><th style="width:26%">Item</th><th style="width:56%">Detail</th><th>Location</th></tr></thead>
+  <tbody>
+    <tr><td><strong>A user can set their own payment to "success" without paying</strong></td><td>The <code>payments</code> table's RLS policies let an authenticated user INSERT/UPDATE/SELECT their own payment row with no restriction on which columns or values — including <code>status</code>. The app's Server Actions and webhook handler never expose this, but nothing in the database stops a user from calling the Supabase client directly to mark their own payment as <code>success</code>, bypassing Xendit entirely. <strong>Recommended fix:</strong> restrict the UPDATE policy to only the columns a user should legitimately touch (or drop it entirely and let all writes go through the service-role webhook).</td><td><code>docs/backup2/schema.sql</code> payments policies; see §5</td></tr>
+    <tr><td><strong>A disabled admin's RLS access doesn't actually get revoked</strong></td><td>The "is this user an admin" RLS check used across most tables never checks <code>admin_profiles.is_active</code> — only row existence. The app's own authorization correctly treats a disabled admin as an applicant, but that's an application-layer check; the database-layer RLS would still grant admin-level access to a disabled admin who retains a valid session. <strong>Recommended fix:</strong> change the RLS admin-check subqueries to also filter <code>is_active = true</code>.</td><td><code>docs/backup2/schema.sql</code> — every table policy</td></tr>
+    <tr><td><strong>Password logged in plaintext</strong></td><td>The password-reset flow logs the new password to the server console via <code>console.log</code>. Should be removed before production traffic.</td><td><code>src/actions/auth.ts:284</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Outstanding Items to Resolve Before/Soon After Go-Live</h3>
+<table>
+  <thead><tr><th style="width:26%">Item</th><th style="width:56%">Detail</th><th>Location</th></tr></thead>
+  <tbody>
+    <tr><td>Leftover debug logging</td><td>Several <code>console.log</code> calls print user IDs, roles, and full user/session objects during auth and password-reset flows. Noisy in production logs; one of them dumps a full user object.</td><td><code>src/lib/supabase/middleware.ts:51-53</code>, <code>src/actions/auth.ts:109-111,232-234,247</code></td></tr>
+    <tr><td>"Fill Test Data" dev helper</td><td>A button that autofills the application form with test data is still visible on steps 1–2 of the live application form. Should be removed before real applicants use the portal.</td><td><code>src/app/(protected)/applicant/application/page.tsx:222</code></td></tr>
+    <tr><td>Fee amounts are hardcoded</td><td>The ₱50 consultation fee and ₱300 application fee are set in application source code, not an admin-configurable setting. Changing a fee requires a code change + redeploy.</td><td>Referenced in the User Manual §3.2</td></tr>
+    <tr><td>No in-portal refund control</td><td>Refunds must be issued directly in the Xendit console. The admin portal only reflects cancelled payments as "refunded" in its statistics.</td><td>Referenced in the User Manual Appendix D</td></tr>
+    <tr><td>Payment method is provisional at creation</td><td><code>payments.payment_method</code> is set to a placeholder value when the row is created and only corrected to the real method once Xendit's webhook callback arrives. Expected behavior, not a bug.</td><td><code>src/app/api/webhooks/xendit/route.ts</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Code-Level Cleanup Items (Not User-Facing, but Worth Doing)</h3>
+<table>
+  <thead><tr><th style="width:26%">Item</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td><code>SUPABASE_SECRET_KEY</code> env var is unused</td><td>Present in <code>.env*</code> files, <code>env.copy.example</code>, and CI secrets, but no code reference exists anywhere in <code>src/</code>. Either reserved for a future Supabase key-naming migration, or dead config.</td></tr>
+    <tr><td><code>src/lib/supabase/database.types.ts</code> is an empty leftover file</td><td>0 lines. Superseded by <code>src/types/supabase.ts</code>, which is the one actually imported throughout the app. Safe to delete once confirmed nothing references it.</td></tr>
+    <tr><td>First migration file is stale</td><td><code>supabase/migrations/20260526144951_initial_migration.sql</code> describes an early schema design that doesn't match the live database. See §5 for the reconciliation recommendation.</td></tr>
+    <tr><td>CI deploy job is fully commented out</td><td><code>.github/workflows/deploy-production.yml</code> — production deploys currently happen outside of GitHub Actions (presumably Vercel's native Git integration). See §3.</td></tr>
+  </tbody>
+</table>
+
+<h3>Intentionally Deferred (Out of Contracted Scope)</h3>
+<p>Per the contract (§1 Scope of Work), anything not listed as a delivered module is out of scope and would require a separate written agreement — e.g. no analytics/monitoring module was built (that's listed in the contract §8 as a paid add-on, PHP 15,000), and messaging is described as "chatbot-ready architecture," not a working chatbot.</p>
+</section>
+
+<!-- ══════════════════════ SECTION 13 ══════════════════════ -->
+<section class="doc-section" id="sec-13">
+<h2>13. Support / Warranty Terms</h2>
+<p class="lead">Sourced directly from the signed Project-Base Web Development Contract, §5.</p>
+
+<p class="small">Contract: Project-Base Web Development Contract — SRRV Service Platform, effective May 22, 2026 – July 30, 2026.</p>
+
+<h3>Free Support Window</h3>
+<div class="note goodbox"><strong>45 calendar days of free post-launch support</strong>, starting from the date of system turnover (i.e. from the date this documentation package and full system access are handed over — not from the contract signing date).</div>
+
+<h3>What's Covered</h3>
+<p>Bug fixes <strong>directly related to the delivered scope</strong> — the modules listed in contract §1 (Scope of Work): public site, auth/RBAC, applicant dashboard, application form, document upload, application tracking, payment module, messaging/chatbot-ready architecture, admin dashboard, service/package management, notifications, infrastructure/deployment.</p>
+
+<h3>What's Not Covered</h3>
+<ul>
+  <li>New features or functionality not in the original scope (contract §1 — these require a separate written agreement and quotation).</li>
+  <li>Issues arising from third-party service outages (Vercel, Supabase, Xendit, etc.) — contract §10.</li>
+  <li>Data loss due to the client's failure to maintain proper backups after turnover — contract §10.</li>
+  <li>Security issues caused by the client's own misuse of credentials or failure to follow security recommendations — contract §10.</li>
+  <li>Revisions beyond the 2 free revisions already used pre-launch (contract §4 — additional revisions are PHP 3,000.00 each; separate from the post-launch support window).</li>
+</ul>
+
+<h3>After the Free Support Window Ends</h3>
+<p>Two optional paths, per contract §5 (must be confirmed in writing to activate either):</p>
+<table>
+  <thead><tr><th style="width:28%">Option</th><th style="width:22%">Cost</th><th>Covers</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Monthly Retainer</strong></td><td>PHP 3,000.00/month</td><td>Routine monitoring, minor fixes, dependency updates. New features/major changes quoted separately.</td></tr>
+    <tr><td><strong>Ad-Hoc / Pay-Per-Fix</strong></td><td>PHP 1,500.00 per reported issue</td><td>For clients who don't want an ongoing monthly commitment.</td></tr>
+  </tbody>
+</table>
+<p>Neither is automatic — the contract requires written confirmation to start either arrangement.</p>
+
+<h3>Contact Process for Support Requests</h3>
+<p>The contract's convention for change/revision requests (§4) is a written request via email or the agreed messaging platform, clearly describing the issue. The same process applies to support requests during and after the free window.</p>
+
+<h3>Related Terms</h3>
+<ul>
+  <li><strong>Liability is capped</strong> at the total amount paid under the contract (§10).</li>
+  <li><strong>Confidentiality</strong> obligations continue to apply to both parties regarding credentials and sensitive data shared during the project (§9).</li>
+</ul>
+</section>
+
+<!-- ══════════════════════ CLOSING / COMPANION DOCS ══════════════════════ -->
+<section class="doc-section">
+<h2>Companion Documents</h2>
+<p>These are separate, standalone documents — not part of this file:</p>
+<table>
+  <thead><tr><th style="width:8%">#</th><th style="width:38%">Document</th><th>File</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>User Guide</td><td><code>SRRV-User-Manual.html</code> / <code>.pdf</code></td></tr>
+    <tr><td>9</td><td>Admin &amp; Super Admin Guide</td><td><code>09-admin-user-guide.html</code> / <code>.pdf</code></td></tr>
+    <tr><td>14</td><td>Sign-off / Acceptance Certificate</td><td><code>14-sign-off-acceptance-form.html</code> / <code>.pdf</code> — the official document to print and sign</td></tr>
+  </tbody>
+</table>
+<p class="small">This document, the API collection (<code>06-api-collection.json</code>), and the three companion documents above together make up the full turnover package.</p>
+</section>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
+</html>

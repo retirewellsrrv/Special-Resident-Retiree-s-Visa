@@ -19,7 +19,7 @@ const services: Service[] = [
     icon: TrendingUp,
     title: "VIP On-the-Ground Concierge",
     description:
-"Strategic marketing solutions designed to help retirement-focused businesses connect with expats, retirees, and international clients through targeted campaigns and effective growth strategies."
+"Hands-on concierge assistance for applicants and their businesses — housing, local services, appointments, and everything in between, so your move into Philippine retirement life is fully taken care of."
   },
     {
     icon: MapPin,

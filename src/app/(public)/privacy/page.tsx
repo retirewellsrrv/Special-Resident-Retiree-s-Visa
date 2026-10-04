@@ -60,7 +60,7 @@ const sections = [
       'The right to request deletion of your personal data, subject to legal retention requirements',
       'The right to withdraw consent for data processing at any time',
       'The right to data portability in a commonly used electronic format',
-      'To exercise these rights, please contact us at privacy@retirewell.ph',
+      'To exercise these rights, please contact us at admin.retirewellsrrv@gmail.com',
     ],
   },
   {
@@ -94,9 +94,9 @@ const sections = [
   {
     title: 'Contact Us',
     items: [
-      'Email: privacy@retirewell.ph',
-      'Phone: +63 2 888 1234',
-      'Address: Retire Well SRRV, Manila, Philippines',
+      'Email: admin.retirewellsrrv@gmail.com',
+      'Phone: +63 918 367 7645',
+      'Address: Unit 2201 22/F The Peak Bldg. 107 L.P. Leviste Street, Bel Air Makati City, Metro Manila, Philippines 1226',
       'For data protection inquiries, you may also contact the Philippine National Privacy Commission',
     ],
   },

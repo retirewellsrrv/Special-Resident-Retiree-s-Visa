@@ -209,7 +209,7 @@ export default function SRRVApplicationPage() {
                 <Step5 data={existingApplication} onEdit={startEditing} />
               )}
 
-              {/* ── TEST: auto-fill button (remove after testing) ── */}
+              {/* ── TEST: auto-fill button — commented out for staging/prod review ──
               {currentStep >= 1 && currentStep <= 2 && (
                 <div className="flex justify-end mt-4">
                   <Button
@@ -222,7 +222,7 @@ export default function SRRVApplicationPage() {
                     Fill Test Data
                   </Button>
                 </div>
-              )}
+              )} */}
 
               {/* Submit error banner */}
               {submitError && (

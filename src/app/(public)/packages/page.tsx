@@ -123,7 +123,7 @@ export default function Services() {
                                         price_note={service.price_note}
                                         tags={service.tags}
                                         icon={<IconComponent className="w-6 h-6 text-[#9E1B32]" />}
-                                        onConsultClick={() => router.push('/consult')}
+                                        onConsultClick={() => router.push('/contact')}
                                     />
                                 </div>
                             );

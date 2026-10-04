@@ -57,7 +57,7 @@ export function ContactSection() {
                     <Phone className="w-4 h-4 text-brand-primary-500" />
                   </div>
                   <span className="text-ht-body-md text-brand-secondary-500">
-                    +63 2 888 1234
+                    +63 918 367 7645
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export function ContactSection() {
                     <Mail className="w-4 h-4 text-brand-primary-500" />
                   </div>
                   <span className="text-ht-body-md text-brand-secondary-500">
-                    consult@retirewell.ph
+                    admin.retirewellsrrv@gmail.com
                   </span>
                 </div>
               </div>

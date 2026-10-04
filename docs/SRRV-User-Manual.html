@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SRRV Service Platform — User Manual</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+
+  :root{
+    --brand:#8B1A2B;
+    --brand-soft:#FBF3F4;
+    --ink:#241F1E;
+    --muted:#6B625E;
+    --line:#E3DCD6;
+    --ok:#1F7A46;
+    --warn:#9A6B00;
+    --bad:#A32020;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  body{
+    font-family:"Georgia","Times New Roman",serif;
+    color:var(--ink);
+    font-size:10.2pt;
+    line-height:1.55;
+    margin:0;
+  }
+
+  h1,h2,h3,h4{ font-family:"Helvetica Neue",Arial,sans-serif; color:var(--brand); margin:0 0 .35em; line-height:1.25; }
+  h1{ font-size:20pt; }
+  h2{ font-size:15pt; border-bottom:2px solid var(--brand); padding-bottom:4px; margin-top:0; }
+  h3{ font-size:12pt; margin-top:1.2em; color:#5E1220; }
+  h4{ font-size:10.5pt; margin-top:1em; color:#3F3634; text-transform:uppercase; letter-spacing:.04em; }
+  p{ margin:.45em 0 .7em; }
+  ul,ol{ margin:.35em 0 .8em; padding-left:1.25em; }
+  li{ margin:.18em 0; }
+  code{ font-family:"Consolas","Courier New",monospace; font-size:9pt; background:#F4F1EE; padding:1px 4px; border-radius:3px; }
+
+  .page{ page-break-after:always; }
+  .page:last-child{ page-break-after:auto; }
+  section{ page-break-inside:auto; }
+  h2,h3{ page-break-after:avoid; }
+  table{ page-break-inside:auto; }
+  tr{ page-break-inside:avoid; }
+
+  /* Cover */
+  .cover{ height:245mm; display:flex; flex-direction:column; justify-content:space-between; }
+  .cover-top{ border-top:6px solid var(--brand); padding-top:14mm; }
+  .cover .eyebrow{ font-family:"Helvetica Neue",Arial,sans-serif; letter-spacing:.22em; text-transform:uppercase; font-size:9pt; color:var(--muted); }
+  .cover h1{ font-size:34pt; line-height:1.1; margin:6mm 0 3mm; }
+  .cover .sub{ font-size:13pt; color:var(--muted); font-style:italic; }
+  .cover-meta{ border-top:1px solid var(--line); padding-top:5mm; font-family:"Helvetica Neue",Arial,sans-serif; font-size:9.5pt; }
+  .cover-meta table{ width:100%; border:0; }
+  .cover-meta td{ border:0; padding:2.5px 0; background:transparent; }
+  .cover-meta tbody tr:nth-child(even) td{ background:transparent; }
+  .cover-meta td:first-child{ color:var(--muted); width:38mm; text-transform:uppercase; letter-spacing:.06em; font-size:8.5pt; }
+
+  /* Tables */
+  table{ width:100%; border-collapse:collapse; margin:.6em 0 1em; font-size:9.2pt; font-family:"Helvetica Neue",Arial,sans-serif; }
+  th{ background:var(--brand); color:#fff; text-align:left; font-weight:600; padding:5px 7px; border:1px solid var(--brand); font-size:8.8pt; letter-spacing:.02em; }
+  td{ border:1px solid var(--line); padding:5px 7px; vertical-align:top; }
+  tbody tr:nth-child(even) td{ background:#FAF8F6; }
+  td.center{ text-align:center; }
+
+  /* Callouts */
+  .note, .warn, .rule{
+    border-left:4px solid var(--brand);
+    background:var(--brand-soft);
+    padding:7px 11px;
+    margin:.7em 0 1em;
+    font-size:9.4pt;
+    page-break-inside:avoid;
+  }
+  .warn{ border-left-color:var(--warn); background:#FFF8E8; }
+  .rule{ border-left-color:var(--ok); background:#F1F8F3; }
+  .note strong, .warn strong, .rule strong{ font-family:"Helvetica Neue",Arial,sans-serif; }
+
+  /* Step list */
+  ol.steps{ counter-reset:step; list-style:none; padding-left:0; }
+  ol.steps > li{
+    counter-increment:step;
+    position:relative;
+    padding-left:9mm;
+    margin:.5em 0 .75em;
+    page-break-inside:avoid;
+  }
+  ol.steps > li::before{
+    content:counter(step);
+    position:absolute; left:0; top:.1em;
+    width:6mm; height:6mm; border-radius:50%;
+    background:var(--brand); color:#fff;
+    font-family:"Helvetica Neue",Arial,sans-serif; font-size:8.5pt; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* Badges */
+  .b{ font-family:"Helvetica Neue",Arial,sans-serif; font-size:8pt; font-weight:600; padding:1px 6px; border-radius:9px; white-space:nowrap; border:1px solid; }
+  .b-pend{ color:var(--warn); border-color:#E4CD92; background:#FFF8E8; }
+  .b-ok{ color:var(--ok); border-color:#B4D9C2; background:#F1F8F3; }
+  .b-bad{ color:var(--bad); border-color:#E6BDBD; background:#FCF2F2; }
+  .b-proc{ color:#1E5C8A; border-color:#B7D2E5; background:#F1F7FB; }
+
+  /* TOC */
+  .toc{ font-family:"Helvetica Neue",Arial,sans-serif; font-size:10pt; }
+  .toc ol{ list-style:none; padding-left:0; counter-reset:toc; }
+  .toc > ol > li{ counter-increment:toc; border-bottom:1px dotted var(--line); padding:5px 0; }
+  .toc > ol > li::before{ content:counter(toc) ". "; color:var(--brand); font-weight:700; }
+  .toc ol ol{ padding-left:7mm; margin:.25em 0 0; font-size:9.2pt; color:var(--muted); }
+  .toc ol ol li{ border:0; padding:1.5px 0; }
+  .toc ol ol li::before{ content:"— "; color:var(--line); }
+
+  .flow{ font-family:"Helvetica Neue",Arial,sans-serif; font-size:9pt; text-align:center; margin:1em 0 1.2em; page-break-inside:avoid; }
+  .flow span{ display:inline-block; border:1px solid var(--line); border-top:3px solid var(--brand); background:#fff; padding:5px 9px; margin:3px 1px; border-radius:3px; }
+  .flow i{ color:var(--brand); font-style:normal; margin:0 1px; }
+
+  .lead{ font-size:10.6pt; color:var(--muted); font-style:italic; margin-bottom:1.1em; }
+  .kicker{ font-family:"Helvetica Neue",Arial,sans-serif; text-transform:uppercase; letter-spacing:.18em; font-size:8pt; color:var(--muted); margin-bottom:2mm; }
+  hr{ border:0; border-top:1px solid var(--line); margin:1.4em 0; }
+  .small{ font-size:8.8pt; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ COVER ══════════════════════ -->
+<div class="page cover">
+  <div class="cover-top">
+    <div class="eyebrow">Retire Well &nbsp;·&nbsp; Client Turnover Documentation</div>
+    <h1>SRRV Service Platform<br>User Manual</h1>
+    <div class="sub">An end-to-end guide — from account creation and consultation,<br>through payment, to administrative approval.</div>
+  </div>
+
+  <div>
+    <div class="kicker">What this covers</div>
+    <div class="flow">
+      <span>Register</span><i>▸</i><span>Confirm e-mail</span><i>▸</i><span>Log in</span><i>▸</i><span>Request consultation</span><i>▸</i><span>Pay ₱50</span><i>▸</i>
+      <span>Admin accepts</span><i>▸</i><span>Submit application</span><i>▸</i><span>Pay ₱300</span><i>▸</i><span>Document review</span><i>▸</i><span>Admin approval</span>
+    </div>
+  </div>
+
+  <div class="cover-meta">
+    <table>
+      <tr><td>Document</td><td>User Manual &amp; Operating Guide</td></tr>
+      <tr><td>System</td><td>Special Resident Retiree’s Visa (SRRV) Service Platform</td></tr>
+      <tr><td>Audience</td><td>Applicants (clients), Administrators, Super Administrators</td></tr>
+      <tr><td>Prepared for</td><td>Client turnover / handover</td></tr>
+      <tr><td>Basis</td><td>Application behaviour as implemented on branch <code>develop</code></td></tr>
+      <tr><td>Date issued</td><td>26 August 2026</td></tr>
+      <tr><td>Revision</td><td>1.0</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════ TOC ══════════════════════ -->
+<div class="page">
+  <h2>Table of Contents</h2>
+  <div class="toc">
+    <ol>
+      <li>About This Manual
+        <ol><li>Purpose and audience</li><li>How to read the rules boxes</li></ol>
+      </li>
+      <li>System Overview
+        <ol><li>What the platform does</li><li>The three portals and who may enter them</li><li>The end-to-end journey at a glance</li></ol>
+      </li>
+      <li>Before You Begin
+        <ol><li>Requirements</li><li>Fees charged by the platform</li></ol>
+      </li>
+      <li>Part A — The Applicant’s Journey
+        <ol>
+          <li>A1 Creating an account (Register)</li>
+          <li>A2 Confirming your e-mail address</li>
+          <li>A3 Logging in</li>
+          <li>A4 Forgotten password</li>
+          <li>A5 The applicant dashboard</li>
+          <li>A6 Requesting a consultation</li>
+          <li>A7 Paying the consultation fee</li>
+          <li>A8 Payment outcomes and retrying</li>
+          <li>A9 Waiting for the consultation decision</li>
+          <li>A10 Filling in the SRRV application</li>
+          <li>A11 Paying the application fee</li>
+          <li>A12 Following the review &amp; re-uploading documents</li>
+          <li>A13 Notifications, receipts and profile</li>
+        </ol>
+      </li>
+      <li>Part B — The Administrator’s Journey
+        <ol>
+          <li>B1 Signing in and the admin dashboard</li>
+          <li>B2 Consultations queue — accepting or rejecting</li>
+          <li>B3 Applications queue — reviewing and approving</li>
+          <li>B4 Document review</li>
+          <li>B5 Payments monitoring</li>
+          <li>B6 Client profiles</li>
+          <li>B7 Services and packages</li>
+          <li>B8 Admin notifications</li>
+        </ol>
+      </li>
+      <li>Part C — The Super Administrator
+        <ol><li>C1 Dashboard</li><li>C2 Managing admin accounts</li><li>C3 Viewing client accounts</li></ol>
+      </li>
+      <li>Reference — Statuses, Rules and Conditions
+        <ol><li>Consultation statuses</li><li>Application statuses</li><li>Document statuses</li><li>Payment statuses</li><li>Documents checklist</li><li>Approval pre-conditions</li></ol>
+      </li>
+      <li>How Payments Work Behind the Scenes</li>
+      <li>Notifications and E-mails Sent by the System</li>
+      <li>Troubleshooting — Messages and What They Mean</li>
+      <li>Appendices
+        <ol><li>A. Route map</li><li>B. Environment configuration</li><li>C. Glossary</li><li>D. Notes for the project team</li></ol>
+      </li>
+    </ol>
+  </div>
+</div>
+
+<!-- ══════════════════════ 1 ══════════════════════ -->
+<div class="page">
+  <h2>1. About This Manual</h2>
+
+  <h3>1.1 Purpose and audience</h3>
+  <p>This manual describes how to use the SRRV Service Platform from the very first click to the final approval of an
+  application. It is written for three groups of readers:</p>
+  <ul>
+    <li><strong>Applicants</strong> — foreign retirees applying for a Special Resident Retiree’s Visa. Read Part A.</li>
+    <li><strong>Administrators</strong> — staff who review consultations, documents, payments and applications. Read Part B.</li>
+    <li><strong>Super Administrators</strong> — the owner account that creates and controls admin accounts. Read Part C.</li>
+  </ul>
+  <p>Sections 7 to 10 are reference material for all readers, and are the sections that support staff will use most
+  often once the system is live. Appendix D collects a small number of housekeeping items intended for the technical
+  team rather than for day-to-day users.</p>
+
+  <h3>1.2 How to read the rules boxes</h3>
+  <p>Throughout the manual, three kinds of boxes appear. They describe conditions that the software enforces — not
+  suggestions. If a condition is not met, the system refuses the action and shows the message quoted in the box.</p>
+
+  <div class="rule"><strong>Rule.</strong> A condition the system checks and enforces. Example: a consultation can only be
+  accepted after the consultation fee has been paid.</div>
+
+  <div class="note"><strong>Note.</strong> Helpful behaviour worth knowing — such as the application form saving your
+  progress if the browser tab is closed.</div>
+
+  <div class="warn"><strong>Caution.</strong> An action that cannot easily be undone, or a state that locks a record so it
+  can no longer be edited.</div>
+</div>
+
+<!-- ══════════════════════ 2 ══════════════════════ -->
+<div class="page">
+  <h2>2. System Overview</h2>
+
+  <h3>2.1 What the platform does</h3>
+  <p>The SRRV Service Platform is a web portal that carries a retiree’s visa application from first enquiry to approval.
+  It replaces e-mail-and-spreadsheet handling with a single record per applicant: one consultation, one application,
+  a set of uploaded documents, and a payment history — all visible to both the applicant and the staff who process it.</p>
+
+  <p>The public part of the site (Services, Packages, FAQs, About, Contact) is open to anyone. Everything else sits
+  behind a login and is restricted by role.</p>
+
+  <h3>2.2 The three portals and who may enter them</h3>
+  <p>A user’s role decides which portal they land in after logging in, and the system actively blocks entry to the other
+  portals. Attempting to open a portal you do not belong to silently redirects you back to your own dashboard.</p>
+
+  <table>
+    <thead><tr><th style="width:26%">Role</th><th style="width:24%">Landing page after login</th><th>What the role can do</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Applicant</strong><br><span class="small">Created by self-registration</span></td>
+        <td><code>/applicant/dashboard</code></td>
+        <td>Request a consultation, pay fees, submit and edit their own SRRV application, upload and re-upload documents, view receipts and notifications, edit their profile.</td>
+      </tr>
+      <tr>
+        <td><strong>Admin</strong><br><span class="small">Created by a Super Admin</span></td>
+        <td><code>/admin/dashboard</code></td>
+        <td>Review all consultations, applications, documents and payments; change statuses; maintain client profiles and service packages.</td>
+      </tr>
+      <tr>
+        <td><strong>Super Admin</strong><br><span class="small">Provisioned in the database</span></td>
+        <td><code>/super-admin/dashboard</code></td>
+        <td>Everything an Admin can do, plus creating, disabling and deleting admin accounts, and viewing the full client register.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="rule"><strong>Rule — access control.</strong> Visiting any page under <code>/applicant</code>, <code>/admin</code> or
+  <code>/super-admin</code> without being logged in redirects you to the login page, remembering where you were headed so you
+  are returned there after signing in.</div>
+
+  <div class="rule"><strong>Rule — disabled admins.</strong> An admin whose account has been de-activated by the Super Admin
+  cannot log in. The attempt is refused and the session is signed out immediately.</div>
+
+  <h3>2.3 The end-to-end journey at a glance</h3>
+  <p>Every applicant follows the same sequence. Each arrow below is a gate: the next step only becomes available when the
+  previous one is complete.</p>
+
+  <table>
+    <thead><tr><th style="width:6%">#</th><th style="width:28%">Stage</th><th style="width:22%">Who acts</th><th>Gate that must be satisfied to move on</th></tr></thead>
+    <tbody>
+      <tr><td class="center">1</td><td>Register an account</td><td>Applicant</td><td>E-mail address must be confirmed via the link sent by e-mail.</td></tr>
+      <tr><td class="center">2</td><td>Log in</td><td>Applicant</td><td>Confirmed account; correct password.</td></tr>
+      <tr><td class="center">3</td><td>Request a consultation</td><td>Applicant</td><td>Preferred date, mode of communication and purpose supplied.</td></tr>
+      <tr><td class="center">4</td><td>Pay the consultation fee (₱50)</td><td>Applicant</td><td>Payment must reach <span class="b b-ok">success</span> at the payment gateway.</td></tr>
+      <tr><td class="center">5</td><td>Accept the consultation</td><td>Admin</td><td>Admin cannot accept until the consultation fee is paid.</td></tr>
+      <tr><td class="center">6</td><td>Submit the SRRV application</td><td>Applicant</td><td>The consultation must be <span class="b b-ok">accepted</span>; all required fields and required documents supplied.</td></tr>
+      <tr><td class="center">7</td><td>Pay the application fee (₱300)</td><td>Applicant</td><td>Payment must reach <span class="b b-ok">success</span>.</td></tr>
+      <tr><td class="center">8</td><td>Review each document</td><td>Admin</td><td>Every document must be marked <span class="b b-ok">accepted</span>.</td></tr>
+      <tr><td class="center">9</td><td>Approve the application</td><td>Admin</td><td>Five separate pre-conditions — see section 7.6.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════ 3 ══════════════════════ -->
+<div class="page">
+  <h2>3. Before You Begin</h2>
+
+  <h3>3.1 Requirements</h3>
+  <table>
+    <thead><tr><th style="width:30%">Item</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr><td>Web browser</td><td>Any current desktop or mobile browser (Chrome, Edge, Safari, Firefox). The portal is responsive and usable on a phone, though the application form is more comfortable on a laptop.</td></tr>
+      <tr><td>E-mail address</td><td>Mandatory and must be reachable — the account cannot be used until the confirmation link is clicked. One account per e-mail address.</td></tr>
+      <tr><td>Documents</td><td>Digital copies (scan or clear photograph) of the documents listed in section 7.5, saved as PDF, JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF or TIF.</td></tr>
+      <tr><td>Means of payment</td><td>Any method offered on the hosted checkout page (e-wallet, card, bank transfer, over-the-counter and similar, depending on what is enabled for the merchant account).</td></tr>
+      <tr><td>Currency</td><td>All charges are in Philippine Pesos (PHP).</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.2 Fees charged by the platform</h3>
+  <p>Two fees are collected inside the portal. They are separate transactions with separate receipts, and each is tied to
+  a different stage of the journey.</p>
+
+  <table>
+    <thead><tr><th style="width:26%">Fee</th><th class="center" style="width:14%">Amount</th><th style="width:26%">When it is charged</th><th>What it unlocks</th></tr></thead>
+    <tbody>
+      <tr><td>Consultation fee</td><td class="center">₱50.00</td><td>Immediately after the consultation request form is submitted.</td><td>Allows staff to process and accept the consultation request.</td></tr>
+      <tr><td>Application fee</td><td class="center">₱300.00</td><td>Immediately after the SRRV application form is submitted.</td><td>Is a pre-condition for the application to be approved.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><strong>Note.</strong> These two amounts are the platform’s own service charges. Government and third-party
+  costs — medical examination, police clearance, Bureau of Immigration clearance, the PRA visa deposit and so on — are paid
+  outside the portal, and proof of those payments is uploaded as part of the document checklist.</div>
+
+  <div class="warn"><strong>Caution.</strong> The portal permits only <em>one active payment per applicant per fee type</em>. If a
+  checkout is abandoned and later retried, the earlier unpaid invoice is cancelled automatically so the same fee can never
+  be charged twice.</div>
+</div>
+
+<!-- ══════════════════════ PART A ══════════════════════ -->
+<div class="page">
+  <h2>Part A — The Applicant’s Journey</h2>
+  <p class="lead">Sections A1 to A13 follow one applicant from an empty browser window to an approved application.
+  Follow them in order; the platform will not let you skip ahead.</p>
+
+  <h3>A1. Creating an account (Register)</h3>
+  <ol class="steps">
+    <li>Open the site and choose <strong>Register</strong> (direct address: <code>/register</code>).</li>
+    <li>Complete every field of the registration form. The rules the system applies are listed in the table below.</li>
+    <li>Choose a password of at least eight characters and repeat it in <strong>Confirm password</strong>.</li>
+    <li>Submit the form. You are taken to a confirmation-pending page and an e-mail is sent to the address you entered.</li>
+  </ol>
+
+  <table>
+    <thead><tr><th style="width:24%">Field</th><th style="width:12%">Required</th><th>Rule enforced</th></tr></thead>
+    <tbody>
+      <tr><td>First name</td><td class="center">Yes</td><td>At least two characters; must not contain digits. Capitalisation is normalised automatically.</td></tr>
+      <tr><td>Surname</td><td class="center">Yes</td><td>At least two characters; must not contain digits.</td></tr>
+      <tr><td>Suffix</td><td class="center">No</td><td>Free text (Jr., III, and similar). Appended to the display name after a comma.</td></tr>
+      <tr><td>E-mail</td><td class="center">Yes</td><td>Must be a valid address and must not already belong to a confirmed account.</td></tr>
+      <tr><td>Sex</td><td class="center">No</td><td>Male or female.</td></tr>
+      <tr><td>Birthday</td><td class="center">Yes</td><td>Used to calculate your age automatically; you never type an age.</td></tr>
+      <tr><td>Nationality</td><td class="center">Yes</td><td>Stored with normalised capitalisation.</td></tr>
+      <tr><td>Phone number</td><td class="center">Yes</td><td>Must not be blank.</td></tr>
+      <tr><td>Password</td><td class="center">Yes</td><td>Minimum of eight characters.</td></tr>
+      <tr><td>Confirm password</td><td class="center">Yes</td><td>Must match the password exactly, otherwise “Passwords do not match”.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule"><strong>Rule — duplicate e-mail addresses.</strong> If the address already belongs to a <em>confirmed</em>
+  account, registration is refused with “An account with this email already exists.” If it belongs to an account that was
+  never confirmed, the system quietly re-sends the confirmation link instead of refusing, and takes you to the
+  confirmation page.</div>
+
+  <h3>A2. Confirming your e-mail address</h3>
+  <ol class="steps">
+    <li>Open the e-mail from the platform and click the confirmation link. Check the spam folder if it has not arrived within a few minutes.</li>
+    <li>The link returns you to the site, verifies the account and signs you in.</li>
+    <li>If the link has expired or was lost, return to the confirmation page and request that it be re-sent.</li>
+  </ol>
+
+  <div class="rule"><strong>Rule.</strong> Logging in before confirming does not fail with an error — the system re-sends the
+  confirmation e-mail and returns you to the confirmation-pending page. The account stays unusable until the link is clicked.</div>
+</div>
+
+<div class="page">
+  <h3>A3. Logging in</h3>
+  <ol class="steps">
+    <li>Go to <code>/login</code> and enter your e-mail address and password.</li>
+    <li>Submit. The system identifies your role and sends you to the matching dashboard — applicants to <code>/applicant/dashboard</code>.</li>
+  </ol>
+  <div class="note"><strong>Note.</strong> If you tried to open a protected page before logging in, you are returned to that page
+  automatically after a successful sign-in.</div>
+
+  <h3>A4. Forgotten password</h3>
+  <ol class="steps">
+    <li>On the login page choose <strong>Forgot password</strong> and enter your registered e-mail address.</li>
+    <li>If the address is not on file the system replies “No account found with this email.” — no e-mail is sent.</li>
+    <li>If it is on file, a reset link is e-mailed to you. Click it; you are taken to the change-password page with an active session.</li>
+    <li>Enter a new password of at least eight characters and save. You are returned to the login page to sign in with the new password.</li>
+  </ol>
+  <div class="warn"><strong>Caution.</strong> The reset link creates a temporary session. If you leave the page without setting a
+  new password, request a fresh link — the message “No active session. Please request a new password reset link.” means the
+  link has already lapsed.</div>
+
+  <h3>A5. The applicant dashboard</h3>
+  <p>The dashboard at <code>/applicant/dashboard</code> is the home screen for everything that follows. It shows, in one view:</p>
+  <ul>
+    <li><strong>Application status and code</strong> — the reference beginning <code>SRRV-</code> that identifies your file.</li>
+    <li><strong>Progress of the review</strong> — where the application currently sits.</li>
+    <li><strong>Your documents</strong> — each with its own review status, and a re-upload control on any document that needs attention.</li>
+    <li><strong>Payments</strong> — the consultation payment and the application payment, each with amount, method, transaction code and status; a <strong>Retry payment</strong> button appears when a fee is still unpaid.</li>
+    <li><strong>Your concierge contacts</strong> — the active staff members assigned to help you.</li>
+  </ul>
+  <p>The left-hand menu gives access to <strong>Dashboard</strong>, <strong>Consultation</strong>, <strong>Application</strong>,
+  <strong>Receipts</strong> and <strong>Profile</strong>, with a bell icon for notifications.</p>
+
+  <h3>A6. Requesting a consultation</h3>
+  <p>The consultation is the compulsory first step: no application may be started until a consultation has been requested,
+  paid for and accepted by staff.</p>
+
+  <ol class="steps">
+    <li>Open <strong>Consultation</strong> in the menu (<code>/applicant/consultation</code>).</li>
+    <li>Select a <strong>mode of communication</strong>: Zoom, Google Meet, WhatsApp call, phone call, or a face-to-face meeting.</li>
+    <li>Choose a <strong>preferred date</strong>. Earlier dates cannot be selected — the date must be today or later.</li>
+    <li>Describe the <strong>purpose</strong> of the consultation in the free-text box. It must not be empty.</li>
+    <li>Press <strong>Submit Request</strong>. The request is saved, staff are notified by e-mail and in the portal, and you are
+    sent straight to the secure checkout page to pay the ₱50 consultation fee.</li>
+  </ol>
+
+  <div class="rule"><strong>Rule — one consultation per applicant.</strong> Each account holds a single consultation record. Submitting
+  the form again updates that record rather than creating a second one; the button then reads <strong>Update Consultation</strong>.</div>
+
+  <div class="warn"><strong>Caution — the record locks.</strong> Once staff move your consultation to <span class="b b-proc">processing</span>
+  or <span class="b b-ok">accepted</span>, the form is replaced by a read-only notice and no further edits are possible. Editing is
+  only available while the consultation is <span class="b b-pend">pending</span> or <span class="b b-bad">rejected</span>.</div>
+</div>
+
+<div class="page">
+  <h3>A7. Paying the consultation fee</h3>
+  <ol class="steps">
+    <li>After submitting the consultation you are redirected automatically to the hosted checkout page of the payment provider.</li>
+    <li>Choose a payment method and complete the payment there. The portal never sees or stores your card or wallet details.</li>
+    <li>On success you are returned to a receipt page showing the transaction code, date, description, amount and a <strong>Paid</strong> mark.</li>
+    <li>Choose <strong>Return to Dashboard</strong> to continue.</li>
+  </ol>
+
+  <div class="note"><strong>Note.</strong> When you merely edit an already-paid consultation, no new invoice is raised — you are
+  returned to the dashboard with a success message. A fresh invoice is created only when the previous payment did not succeed.</div>
+
+  <h3>A8. Payment outcomes and retrying</h3>
+  <table>
+    <thead><tr><th style="width:22%">Outcome</th><th style="width:30%">What you see</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-ok">success</span></td><td>Receipt page, and the payment appears as paid on the dashboard.</td><td>Nothing. Wait for staff to act on your consultation.</td></tr>
+      <tr><td><span class="b b-pend">pending</span></td><td>Checkout was opened but never completed.</td><td>Use <strong>Retry payment</strong> on the dashboard. The unpaid invoice is cancelled and a new one is issued.</td></tr>
+      <tr><td><span class="b b-bad">failed</span></td><td>Failure page; the invoice expired or was declined.</td><td>Use <strong>Retry payment</strong>.</td></tr>
+      <tr><td><span class="b b-bad">cancelled</span></td><td>The payment was voided.</td><td>Use <strong>Retry payment</strong>.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule"><strong>Rule — no double charging.</strong> Retrying is refused with “Payment has already been completed” if a
+  successful payment for that fee already exists. Whenever a retry is allowed, any older unpaid invoice is expired first, so
+  a stale checkout page left open in another tab can no longer be paid.</div>
+
+  <h3>A9. Waiting for the consultation decision</h3>
+  <p>Staff review the request and set one of three outcomes. You are informed both by e-mail and by an in-portal notification,
+  and the consultation page reflects the change.</p>
+
+  <table>
+    <thead><tr><th style="width:22%">Decision</th><th>Meaning for you</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-proc">processing</span></td><td>Staff have taken up your request and are arranging the meeting. The form is now locked.</td></tr>
+      <tr><td><span class="b b-ok">accepted</span></td><td>Your consultation is confirmed. <strong>This is the moment the SRRV application form unlocks.</strong></td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>The request was declined. You may edit the consultation and submit it again.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule"><strong>Rule.</strong> Attempting to open the application form before your consultation is accepted shows
+  “Consultation Required” (if you have never requested one) or “Consultation Submitted” (if one is awaiting a decision),
+  with a button leading back to the consultation page.</div>
+</div>
+
+<div class="page">
+  <h3>A10. Filling in the SRRV application</h3>
+  <p>The application at <code>/applicant/application</code> is a five-step form. Steps 1 to 3 collect information, step 4 is a
+  review of everything you entered, and step 5 is the read-only view of a submitted application.</p>
+
+  <table>
+    <thead><tr><th style="width:8%">Step</th><th style="width:26%">Name</th><th>What it collects</th></tr></thead>
+    <tbody>
+      <tr><td class="center">1</td><td>Personal Details</td><td>Name, birthday, place of birth, sex, religion, citizenship, civil status, height and weight; passport number, place and date of issue and validity; entry-visa details; educational history; employment history; your future plans in the Philippines.</td></tr>
+      <tr><td class="center">2</td><td>Contact Information</td><td>E-mail, mobile, telephone and fax; home-country address; primary and secondary Philippine addresses; parents’ names and ages; dependants to be included; emergency contact.</td></tr>
+      <tr><td class="center">3</td><td>Document Checklist</td><td>Upload of each required and optional document (section 7.5).</td></tr>
+      <tr><td class="center">4</td><td>Review Application</td><td>A full read-back of steps 1 to 3 before submission.</td></tr>
+      <tr><td class="center">5</td><td>Under Review</td><td>The submitted application as staff see it, with an <strong>Edit</strong> option where permitted.</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Field rules worth knowing before you start</h4>
+  <table>
+    <thead><tr><th style="width:30%">Field</th><th>Rule enforced</th></tr></thead>
+    <tbody>
+      <tr><td>Names, citizenship, place of issue, parents’ and emergency-contact names</td><td>Must not contain digits.</td></tr>
+      <tr><td>Birthday</td><td>Must be a date in the past.</td></tr>
+      <tr><td>Passport number</td><td>5 to 20 characters, capital letters and digits only.</td></tr>
+      <tr><td>Passport validity</td><td>Must be later than today — an expired passport, or one expiring today, is refused. The date of issue must fall before the expiry date.</td></tr>
+      <tr><td>Mobile number</td><td>10 to 15 digits, numerals only.</td></tr>
+      <tr><td>Telephone / fax / emergency phone</td><td>Optional; when supplied, 7 to 15 digits.</td></tr>
+      <tr><td>E-mail</td><td>Valid address, at most 254 characters.</td></tr>
+      <tr><td>Education and employment rows</td><td>Each row is all-or-nothing: leave it entirely blank, or fill every field in it. The “from” date must precede the “to” date, and the “to” date cannot be in the future.</td></tr>
+      <tr><td>Dependants</td><td>Each row is all-or-nothing: full name, relationship, age and passport number together, with the passport number in the same 5–20 character format.</td></tr>
+      <tr><td>Date of arrival</td><td>Cannot be in the past.</td></tr>
+      <tr><td>Tourist-visa expiry</td><td>Must be later than today.</td></tr>
+      <tr><td>Future plans</td><td>Tourism, investment, employment or others. Choosing “others” requires you to describe them.</td></tr>
+    </tbody>
+  </table>
+
+  <ol class="steps">
+    <li>Work through steps 1 and 2, pressing <strong>Save &amp; Continue</strong> at the foot of each. Errors are shown beneath the
+    offending field and the form will not advance until they are cleared.</li>
+    <li>At step 3, upload each document. Accepted file types are PDF, JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF and TIF.</li>
+    <li>At step 4, read the summary carefully and use <strong>Back</strong> to correct anything that is wrong.</li>
+    <li>Press <strong>Submit Application</strong>. A confirmation dialogue appears — confirm to proceed, or choose <strong>Review Again</strong>.</li>
+    <li>The application is saved with a reference code of the form <code>SRRV-…</code>, staff are notified, and you are taken to the
+    checkout page for the ₱300 application fee.</li>
+  </ol>
+
+  <div class="note"><strong>Note — your progress is saved.</strong> Entries and uploaded files are held in the browser as you type, so
+  closing the tab by accident does not lose your work. Reopening the form restores the step you were on.</div>
+
+  <div class="rule"><strong>Rule — missing documents send you back.</strong> If a required document is missing when you try to submit
+  from step 4, the form jumps back to step 3 and marks what is missing.</div>
+</div>
+
+<div class="page">
+  <h3>A11. Paying the application fee</h3>
+  <ol class="steps">
+    <li>You are redirected to the hosted checkout page immediately after submission.</li>
+    <li>Pay ₱300 by any offered method. A receipt page confirms the transaction on success.</li>
+    <li>If you abandon or fail the payment, open the dashboard and use <strong>Retry payment</strong> in the payment card. The rules in A8 apply identically.</li>
+  </ol>
+
+  <div class="warn"><strong>Caution.</strong> An application is never approved while its fee is unpaid. Staff are blocked from approving
+  it, so an unpaid fee stalls the entire file.</div>
+
+  <h3>A12. Following the review and re-uploading documents</h3>
+  <p>Staff examine each document individually and may attach a note explaining a decision. Your dashboard shows the status of
+  every document.</p>
+
+  <table>
+    <thead><tr><th style="width:24%">Document status</th><th>What it means and what to do</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>Uploaded and waiting to be examined. Nothing to do.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>Currently being checked. Nothing to do.</td></tr>
+      <tr><td><span class="b b-ok">accepted</span></td><td>Approved. No further action.</td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>Not acceptable. Read the reviewer’s note and upload a corrected file.</td></tr>
+      <tr><td><span class="b b-pend">action need</span></td><td>Something must be fixed or supplied. Read the note and re-upload.</td></tr>
+    </tbody>
+  </table>
+
+  <ol class="steps">
+    <li>On the dashboard, find the document marked <em>rejected</em> or <em>action need</em> and choose the re-upload control.</li>
+    <li>Select the corrected file. The old file is removed and replaced.</li>
+    <li>The document returns to <span class="b b-pend">pending</span> and re-enters the review queue.</li>
+  </ol>
+
+  <p>The application itself moves through its own statuses, and each change reaches you as a notification and an e-mail:</p>
+  <table>
+    <thead><tr><th style="width:24%">Application status</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>Submitted and awaiting review. This is the state in which you may still edit and re-submit.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>Under active review by staff. Editing is closed.</td></tr>
+      <tr><td><span class="b b-pend">paused</span></td><td>Review has been suspended pending something from you or from a third party.</td></tr>
+      <tr><td><span class="b b-bad">payment_failed</span></td><td>The application fee did not go through. Retry the payment from the dashboard.</td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>Declined. You may edit the application and submit it again.</td></tr>
+      <tr><td><span class="b b-ok">approved</span></td><td>Approved. The record shows who approved it and when.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule"><strong>Rule — when editing is possible.</strong> An application can only be edited while it is
+  <span class="b b-pend">pending</span> or <span class="b b-bad">rejected</span>. At any other status the attempt is refused with
+  “Your application cannot be modified at this stage.” Re-submitting an edited application returns it to <em>pending</em>.</div>
+
+  <h3>A13. Notifications, receipts and profile</h3>
+  <ul>
+    <li><strong>Notifications</strong> (bell icon, or <code>/applicant/notifications</code>) — every consultation and application status
+    change is recorded here and links to the page it concerns. Items can be marked as read, individually or all at once, and cleared.</li>
+    <li><strong>Receipts</strong> (<code>/applicant/receipts</code>) — the full payment history: transaction code, amount, method, type of
+    fee and status, newest first. Individual receipts can be reopened.</li>
+    <li><strong>Profile</strong> (<code>/applicant/profile</code>) — name, sex, birthday, nationality and civil status. Your age is
+    recalculated from the birthday whenever you save. Names and nationality must not contain digits.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════ PART B ══════════════════════ -->
+<div class="page">
+  <h2>Part B — The Administrator’s Journey</h2>
+  <p class="lead">Part B describes the staff side of the same journey: the queues, the decisions available at each stage, and
+  the conditions the system enforces before it will let a decision be recorded.</p>
+
+  <h3>B1. Signing in and the admin dashboard</h3>
+  <p>Admins sign in at the same <code>/login</code> page as applicants and are routed to <code>/admin/dashboard</code>. The sidebar
+  offers <strong>Dashboard</strong>, <strong>Client Profiles</strong>, <strong>Consultations</strong>, <strong>Applications</strong>,
+  <strong>Payments</strong>, <strong>Documents</strong> and <strong>Services</strong>.</p>
+  <p>The dashboard summarises the whole operation: applications by status, revenue collected and revenue by month, payments
+  succeeded, pending and refunded, documents awaiting review, consultations by status, total registered users, and lists of the
+  most recent applications, consultations and pending documents.</p>
+
+  <h3>B2. Consultations queue — accepting or rejecting</h3>
+  <ol class="steps">
+    <li>Open <strong>Consultations</strong>. The header shows counts of total, pending, processing, accepted and rejected requests.</li>
+    <li>Filter by status or search by the applicant’s name; results are paginated ten to a page, newest first. A badge marks
+    consultations that already have an application attached.</li>
+    <li>Open a request to see the applicant’s name and e-mail, preferred date, mode of communication, purpose, the consultation
+    payment, and the linked application if one exists.</li>
+    <li>Set the status to <strong>Processing</strong>, <strong>Accepted</strong> or <strong>Rejected</strong>.</li>
+  </ol>
+
+  <div class="rule"><strong>Rule — payment first.</strong> A consultation cannot be set to <em>processing</em> or <em>accepted</em>
+  until its ₱50 fee has been paid. The attempt is refused with “Cannot accept: the consultation fee has not been paid yet.”
+  Rejecting is always available.</div>
+
+  <div class="note"><strong>Note.</strong> Accepting stamps the record with your identity and the time of acceptance, and the detail
+  page then shows “Accepted by …”. If the consultation is later moved out of <em>accepted</em>, that stamp is cleared.</div>
+
+  <div class="warn"><strong>Caution.</strong> Accepting a consultation is what unlocks the SRRV application form for that applicant.
+  Do not accept until the consultation has genuinely taken place or been agreed.</div>
+
+  <h3>B3. Applications queue — reviewing and approving</h3>
+  <ol class="steps">
+    <li>Open <strong>Applications</strong>. Counts of total, paused, pending, approved and rejected are shown at the top.</li>
+    <li>Filter by status, or search by applicant name or application code.</li>
+    <li>Open an application to see the complete file: personal details, passport, entry visa, education, employment, dependants,
+    family background, contact and emergency contact, the linked consultation, the application payment, and every uploaded document.</li>
+    <li>Review each document (section B4) before deciding on the application as a whole.</li>
+    <li>Set the application status. Every change notifies the applicant in the portal and by e-mail.</li>
+  </ol>
+
+  <div class="rule"><strong>Rule — five conditions must hold before an application can be approved.</strong> The system checks each in
+  turn and names the first one that fails:
+  <ol>
+    <li>Contact details are complete — mobile number and home-country address are both present.</li>
+    <li>A successful <em>application</em> payment exists (the consultation fee does not count).</li>
+    <li>Every uploaded document carries the status <em>accepted</em>; otherwise it reports how many are outstanding.</li>
+    <li>The applicant profile section of the application is present.</li>
+    <li>Passport information is present.</li>
+  </ol></div>
+
+  <div class="rule"><strong>Rule — setting an application to <em>processing</em></strong> requires the mobile number and home-country
+  address to be present.</div>
+
+  <div class="note"><strong>Note.</strong> Approving stamps the file with the approver and the timestamp; both are cleared if the
+  application later leaves the approved state. Setting a status to the value it already holds is ignored, so the applicant is
+  never sent a duplicate notification.</div>
+</div>
+
+<div class="page">
+  <h3>B4. Document review</h3>
+  <p>Documents can be reviewed either inside an application, or in bulk from the <strong>Documents</strong> queue, which lists every
+  uploaded file across all applications with counts by status.</p>
+
+  <ol class="steps">
+    <li>Open the document to view it. Viewing generates a temporary secure link that expires after one hour.</li>
+    <li>Set its status: <strong>pending</strong>, <strong>processing</strong>, <strong>accepted</strong>, <strong>rejected</strong> or <strong>action need</strong>.</li>
+    <li>When rejecting or asking for action, write a review note. The applicant reads this note and it is the only guidance they receive.</li>
+    <li>Where several documents share the same outcome, select them and apply the status in one operation.</li>
+  </ol>
+
+  <div class="note"><strong>Note.</strong> When an applicant re-uploads, the replacement file overwrites the old one and the status
+  returns to <em>pending</em>, so it reappears in your queue.</div>
+
+  <h3>B5. Payments monitoring</h3>
+  <p>The <strong>Payments</strong> page lists every transaction with the client’s name, amount, status, method, transaction code, fee
+  type and date, newest first. Filters cover status, method and fee type, and you can search by transaction code, client name
+  or method. Summary figures show total revenue, revenue split between application and consultation fees, counts of successful
+  and pending payments, and the number and value of refunded (cancelled) payments.</p>
+
+  <div class="note"><strong>Note.</strong> Payment records are written by the payment provider’s callback, not by hand. Statuses on this
+  page are a reflection of the gateway, which is why there is no control to edit them.</div>
+
+  <h3>B6. Client profiles</h3>
+  <p><strong>Client Profiles</strong> is the client register: name, sex, birthday, nationality, age, civil status, and the state of that
+  client’s application. Opening a client shows their full record including the approved-application detail where it exists.
+  Admins may correct profile details (the no-digits rules apply here too), return an application to <em>pending</em> so it can be
+  reviewed again, and set the application status directly from the client’s record.</p>
+
+  <h3>B7. Services and packages</h3>
+  <p>The <strong>Services</strong> page maintains the service plans shown to the public on the Services and Packages pages. Admins can
+  create a plan, edit it, delete it, mark one plan as featured, and switch a plan’s availability on or off. Changes appear on
+  the public site.</p>
+
+  <h3>B8. Admin notifications</h3>
+  <p>The bell icon collects staff notifications. Two events raise them, and they are sent to every <em>active</em> admin:</p>
+  <ul>
+    <li>A new or updated consultation request — linking to the consultations queue.</li>
+    <li>A new or re-submitted application — linking to that applicant’s application.</li>
+  </ul>
+  <p>Notifications can be marked read individually or all at once, and cleared. The same two events also generate e-mails to the
+  administrative mailbox, as does a paid consultation fee.</p>
+</div>
+
+<!-- ══════════════════════ PART C ══════════════════════ -->
+<div class="page">
+  <h2>Part C — The Super Administrator</h2>
+  <p class="lead">The Super Admin account owns the system. It can do everything an admin can do, and is the only role that can
+  create or remove admin accounts.</p>
+
+  <h3>C1. Dashboard</h3>
+  <p>Signing in as Super Admin lands on <code>/super-admin/dashboard</code>, with menu entries for <strong>Dashboard</strong>,
+  <strong>Admins</strong> and <strong>Clients</strong>.</p>
+
+  <h3>C2. Managing admin accounts</h3>
+  <p>On <strong>Admins</strong> (<code>/super-admin/manage-admins</code>) every admin is listed with name, e-mail address, whether the
+  account is active, whether the e-mail has been confirmed, and the date it was created.</p>
+
+  <h4>Creating an admin</h4>
+  <ol class="steps">
+    <li>Choose <strong>New Admin</strong> and enter the name, e-mail address and an initial password.</li>
+    <li>Submit. All three fields are required and the password must be at least eight characters.</li>
+    <li>The account is created as active, and a confirmation e-mail is sent. The message “Admin created. They need to check their
+    email to confirm their account.” confirms this.</li>
+    <li>The new admin clicks the link in that e-mail, then signs in at <code>/login</code>.</li>
+  </ol>
+
+  <div class="rule"><strong>Rule.</strong> If the e-mail address already belongs to a confirmed user, creation is refused with “A user
+  with this email already exists.” If it belongs to an unconfirmed user, that account is updated with the new password and name
+  and the confirmation e-mail is sent again.</div>
+
+  <h4>Disabling and deleting admins</h4>
+  <ul>
+    <li><strong>Disable</strong> — switch the account to inactive. The person can no longer log in, stops receiving staff notifications,
+    and no longer appears to applicants as a concierge contact. The account and its history are retained, and it can be switched
+    back on at any time.</li>
+    <li><strong>Delete</strong> — removes the admin profile and the underlying login permanently.</li>
+  </ul>
+
+  <div class="warn"><strong>Caution.</strong> Deletion cannot be undone. Where a member of staff has simply left or is temporarily away,
+  disable the account rather than deleting it.</div>
+
+  <h3>C3. Viewing client accounts</h3>
+  <p><strong>Clients</strong> (<code>/super-admin/manage-clients</code>) is a read-only register of every applicant: name, e-mail, nationality,
+  sex, age, civil status, the status and code of their application, and the date they registered.</p>
+</div>
+
+<!-- ══════════════════════ 7 ══════════════════════ -->
+<div class="page">
+  <h2>7. Reference — Statuses, Rules and Conditions</h2>
+
+  <h3>7.1 Consultation statuses</h3>
+  <table>
+    <thead><tr><th style="width:20%">Status</th><th style="width:20%">Set by</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>Applicant (on submit)</td><td>Awaiting staff. The applicant may still edit and re-submit.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>Admin</td><td>Locks the consultation form. Requires the fee to be paid.</td></tr>
+      <tr><td><span class="b b-ok">accepted</span></td><td>Admin</td><td>Locks the form and unlocks the SRRV application. Requires the fee to be paid. Records approver and time.</td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>Admin</td><td>The applicant may edit and re-submit the request.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.2 Application statuses</h3>
+  <table>
+    <thead><tr><th style="width:22%">Status</th><th style="width:18%">Editable by applicant</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>Yes</td><td>The state on first submission and on re-submission.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>No</td><td>Requires mobile number and home-country address to be present.</td></tr>
+      <tr><td><span class="b b-pend">paused</span></td><td>No</td><td>Review suspended.</td></tr>
+      <tr><td><span class="b b-bad">payment_failed</span></td><td>No</td><td>The application fee did not complete.</td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>Yes</td><td>The applicant can correct and re-submit.</td></tr>
+      <tr><td><span class="b b-ok">approved</span></td><td>No</td><td>All five pre-conditions in 7.6 were satisfied. Approver and time recorded.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.3 Document statuses</h3>
+  <table>
+    <thead><tr><th style="width:22%">Status</th><th style="width:26%">Applicant must act?</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>No</td><td>Awaiting review; also the status after any re-upload.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>No</td><td>Being checked.</td></tr>
+      <tr><td><span class="b b-ok">accepted</span></td><td>No</td><td>Counts towards the approval pre-condition.</td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>Yes — re-upload</td><td>A review note should explain why.</td></tr>
+      <tr><td><span class="b b-pend">action need</span></td><td>Yes — re-upload</td><td>Something is missing or must be corrected.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.4 Payment statuses</h3>
+  <table>
+    <thead><tr><th style="width:22%">Status</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>An invoice exists but has not been paid. Retrying is allowed.</td></tr>
+      <tr><td><span class="b b-ok">success</span></td><td>Paid and confirmed by the gateway. Blocks any further invoice for that fee.</td></tr>
+      <tr><td><span class="b b-bad">failed</span></td><td>Expired, declined, or superseded by a retry.</td></tr>
+      <tr><td><span class="b b-bad">cancelled</span></td><td>Voided; counted as refunded in the admin statistics.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>Transitional state supported by the data model.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.5 Documents checklist</h3>
+  <table>
+    <thead><tr><th style="width:6%">#</th><th style="width:32%">Document</th><th class="center" style="width:14%">Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td class="center">1</td><td>Original passport</td><td class="center">Yes</td><td>With valid tourist-visa entry stamp.</td></tr>
+      <tr><td class="center">2</td><td>2×2 photo</td><td class="center">Yes</td><td>Recent colour photograph on a white background.</td></tr>
+      <tr><td class="center">3</td><td>PRA application form</td><td class="center">Optional</td><td>Duly accomplished SRRV application form.</td></tr>
+      <tr><td class="center">4</td><td>Medical examination report</td><td class="center">Yes</td><td>From a licensed physician.</td></tr>
+      <tr><td class="center">5</td><td>Police clearance</td><td class="center">Yes</td><td>From the country of origin or last residence; NBI clearance is required for stays in the Philippines longer than 90 days.</td></tr>
+      <tr><td class="center">6</td><td>Bureau of Immigration clearance (BICC)</td><td class="center">Yes</td><td>Official clearance certificate.</td></tr>
+      <tr><td class="center">7</td><td>Bank certificate / inward remittance</td><td class="center">Yes</td><td>Proof of the required visa deposit in an accredited bank.</td></tr>
+      <tr><td class="center">8</td><td>Processing and annual fees</td><td class="center">Yes</td><td>Receipt or proof of payment of application fees.</td></tr>
+      <tr><td class="center">9</td><td>Proof of pension</td><td class="center">Optional</td><td>Official document proving a monthly pension, where the chosen SRRV option requires it.</td></tr>
+      <tr><td class="center">10</td><td>Proof of relationship</td><td class="center">Optional</td><td>Marriage certificate, birth certificate or household registry for each dependant.</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Accepted file types: PDF, JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF, TIF. DOC and DOCX are additionally accepted when
+  re-uploading a document from the dashboard. Files are stored privately and are only reachable through a temporary link.</p>
+
+  <h3>7.6 Approval pre-conditions, in one place</h3>
+  <table>
+    <thead><tr><th style="width:34%">Action</th><th>Conditions that must all hold</th></tr></thead>
+    <tbody>
+      <tr><td>Applicant submits an application</td><td>Their consultation exists and is <em>accepted</em>; every required field passes validation; every required document is attached.</td></tr>
+      <tr><td>Applicant edits an application</td><td>Its status is <em>pending</em> or <em>rejected</em>.</td></tr>
+      <tr><td>Applicant edits a consultation</td><td>Its status is <em>pending</em> or <em>rejected</em>.</td></tr>
+      <tr><td>Admin sets a consultation to <em>processing</em> or <em>accepted</em></td><td>The consultation fee is paid.</td></tr>
+      <tr><td>Admin sets an application to <em>processing</em></td><td>Mobile number and home-country address present.</td></tr>
+      <tr><td>Admin approves an application</td><td>Contact details present; application fee paid; all documents accepted; applicant profile present; passport present.</td></tr>
+      <tr><td>Applicant retries a fee</td><td>No successful payment exists yet for that fee.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════ 8 ══════════════════════ -->
+<div class="page">
+  <h2>8. How Payments Work Behind the Scenes</h2>
+  <p class="lead">This section is for the staff who will answer payment questions. It explains why the portal behaves as it does
+  when a payment goes wrong.</p>
+
+  <h3>8.1 The path of a payment</h3>
+  <ol class="steps">
+    <li>The applicant submits a consultation or an application.</li>
+    <li>Before anything is charged, the portal checks that its own payment callback and its success and failure pages are
+    reachable. If they are not, no invoice is created and the applicant is told “Payment processing is unavailable… Please contact
+    support.” This prevents a payment being taken that the portal could not then record.</li>
+    <li>Any earlier unpaid invoice for the same fee is expired and marked failed.</li>
+    <li>A payment record is written with a unique transaction code beginning <code>srrv-</code> and the status <em>pending</em>.</li>
+    <li>An invoice is raised with the payment provider and the applicant is redirected to the hosted checkout page.</li>
+    <li>When the payment concludes, the provider calls back to the portal, and that callback — not the applicant’s browser — is
+    what sets the final status. A payment marked <em>paid</em> becomes <em>success</em>; expired or failed invoices become <em>failed</em>.</li>
+  </ol>
+
+  <h3>8.2 The safeguards</h3>
+  <table>
+    <thead><tr><th style="width:34%">Safeguard</th><th>What it prevents</th></tr></thead>
+    <tbody>
+      <tr><td>One active payment per applicant per fee</td><td>Two open or two successful invoices for the same fee cannot exist at the same time.</td></tr>
+      <tr><td>Old invoices expired before a retry</td><td>A checkout page left open in another tab cannot be paid after a new invoice is issued.</td></tr>
+      <tr><td>Only pending payments are updated by the callback</td><td>A late “expired” message cannot downgrade a payment that already succeeded.</td></tr>
+      <tr><td>Duplicate success detection</td><td>If a second invoice is somehow paid, it is recorded as failed rather than counted twice in revenue.</td></tr>
+      <tr><td>Signed callback</td><td>Callbacks that do not carry the agreed secret token are rejected outright.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><strong>Note for support staff.</strong> Because the final status comes from the provider’s callback, a payment can
+  briefly appear as <em>pending</em> on the dashboard even though the applicant has just paid. Refreshing after a few moments is the
+  correct advice; a payment that is still pending after several minutes should be checked against the provider’s own dashboard
+  using the transaction code.</div>
+
+  <h2 style="margin-top:12mm">9. Notifications and E-mails Sent by the System</h2>
+  <table>
+    <thead><tr><th style="width:30%">Event</th><th style="width:22%">In-portal notification</th><th>E-mail</th></tr></thead>
+    <tbody>
+      <tr><td>Consultation requested or updated</td><td>To every active admin</td><td>To the administrative mailbox</td></tr>
+      <tr><td>Consultation fee paid</td><td>—</td><td>To the administrative mailbox, with the payment details</td></tr>
+      <tr><td>Consultation accepted, rejected or set to processing</td><td>To the applicant</td><td>To the applicant</td></tr>
+      <tr><td>Application submitted or re-submitted</td><td>To every active admin</td><td>To the administrative mailbox</td></tr>
+      <tr><td>Application status changed</td><td>To the applicant</td><td>To the applicant</td></tr>
+      <tr><td>Registration, e-mail confirmation, password reset</td><td>—</td><td>To the applicant, from the authentication service</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Every outbound e-mail attempt is recorded in an audit log with its recipient, subject, status and any error, for
+  record-keeping. In-portal notifications are best-effort: if a notification or e-mail fails, the underlying action (the
+  submission, or the status change) still completes.</p>
+</div>
+
+<!-- ══════════════════════ 10 ══════════════════════ -->
+<div class="page">
+  <h2>10. Troubleshooting — Messages and What They Mean</h2>
+
+  <h3>10.1 Messages an applicant may see</h3>
+  <table>
+    <thead><tr><th style="width:46%">Message</th><th>Cause and remedy</th></tr></thead>
+    <tbody>
+      <tr><td>“An account with this email already exists.”</td><td>The address belongs to a confirmed account. Log in instead, or use the forgotten-password flow.</td></tr>
+      <tr><td>“Passwords do not match”</td><td>The two password boxes differ. Re-type both.</td></tr>
+      <tr><td>“Password must be at least 8 characters.”</td><td>Choose a longer password.</td></tr>
+      <tr><td>“No account found with this email.”</td><td>The reset was requested for an address that is not registered. Check the spelling.</td></tr>
+      <tr><td>“No active session. Please request a new password reset link.”</td><td>The reset link has lapsed. Request a new one.</td></tr>
+      <tr><td>“Preferred date must be today or in the future”</td><td>A past date was chosen for the consultation.</td></tr>
+      <tr><td>“Your consultation is currently being processed and can no longer be modified.”</td><td>Staff have moved the consultation to processing or accepted. Contact your concierge for changes.</td></tr>
+      <tr><td>“Your consultation request must be accepted before you can submit an application.”</td><td>Wait for the consultation decision. If it has not been paid, pay the fee first.</td></tr>
+      <tr><td>“Your application cannot be modified at this stage.”</td><td>The application is no longer pending or rejected. Contact your concierge.</td></tr>
+      <tr><td>“Payment has already been completed”</td><td>The fee is already paid; no second invoice will be issued.</td></tr>
+      <tr><td>“Payment processing is unavailable… Please contact support.”</td><td>The portal could not verify its payment callbacks. This is a configuration or connectivity problem — report it to the technical team.</td></tr>
+      <tr><td>“Passport is expired or expires today”</td><td>The passport validity date must be later than today.</td></tr>
+      <tr><td>“Invalid passport number format”</td><td>Use 5 to 20 characters, capital letters and digits only.</td></tr>
+      <tr><td>“All fields in this row must be filled”</td><td>An education, employment or dependant row is partly filled. Complete it or clear it entirely.</td></tr>
+      <tr><td>“Receipt not found.”</td><td>The reference in the address does not match a payment. Check the dashboard for the current status.</td></tr>
+      <tr><td>“Invalid file format. Accepted: PDF, DOC, DOCX, JPG, PNG, GIF, BMP, WEBP, TIFF.”</td><td>Convert the file and upload again.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>10.2 Messages an administrator may see</h3>
+  <table>
+    <thead><tr><th style="width:46%">Message</th><th>Cause and remedy</th></tr></thead>
+    <tbody>
+      <tr><td>“Cannot accept: the consultation fee has not been paid yet.”</td><td>Ask the applicant to pay, or to retry the payment from their dashboard.</td></tr>
+      <tr><td>“Cannot approve: missing required contact fields (Phone Number, Address)”</td><td>The application lacks a mobile number or home-country address. Ask the applicant to edit and re-submit.</td></tr>
+      <tr><td>“Cannot approve: no successful payment found”</td><td>The ₱300 application fee is unpaid.</td></tr>
+      <tr><td>“Cannot approve: N document(s) not yet accepted”</td><td>Finish reviewing every document first.</td></tr>
+      <tr><td>“Cannot approve: applicant profile is missing” / “passport information is missing”</td><td>The submission is incomplete; have the applicant edit and re-submit.</td></tr>
+      <tr><td>“A user with this email already exists.”</td><td>Creating an admin on an address that already belongs to a confirmed user.</td></tr>
+      <tr><td>Login refused for an admin</td><td>The account has been de-activated by the Super Admin. Re-activate it on the Admins page.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>10.3 First checks when something looks wrong</h3>
+  <ol>
+    <li><strong>An applicant cannot start their application.</strong> Check the consultation: does it exist, is the fee paid, and is it accepted?</li>
+    <li><strong>An application cannot be approved.</strong> Work down the five conditions in section 7.6 in order.</li>
+    <li><strong>A payment says pending but the client says they paid.</strong> Wait a moment and refresh; then match the transaction code against the payment provider’s dashboard.</li>
+    <li><strong>A client is not receiving e-mail.</strong> Check the spam folder, confirm the address on the profile, and check the e-mail audit log.</li>
+    <li><strong>An admin sees nothing in their notification bell.</strong> Only <em>active</em> admins receive staff notifications.</li>
+  </ol>
+</div>
+
+<!-- ══════════════════════ APPENDICES ══════════════════════ -->
+<div class="page">
+  <h2>11. Appendices</h2>
+
+  <h3>Appendix A — Route map</h3>
+  <table>
+    <thead><tr><th style="width:34%">Address</th><th style="width:18%">Who may open it</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>/</code>, <code>/services</code>, <code>/packages</code>, <code>/about</code>, <code>/faqs</code>, <code>/contact</code></td><td>Anyone</td><td>Public information pages.</td></tr>
+      <tr><td><code>/privacy</code>, <code>/terms</code>, <code>/cookies</code></td><td>Anyone</td><td>Legal pages.</td></tr>
+      <tr><td><code>/register</code>, <code>/login</code>, <code>/confirm-email</code></td><td>Signed-out visitors</td><td>Account creation and sign-in. Signed-in users are redirected to their dashboard.</td></tr>
+      <tr><td><code>/applicant/dashboard</code></td><td>Applicant</td><td>Status, documents, payments, concierge contacts.</td></tr>
+      <tr><td><code>/applicant/consultation</code></td><td>Applicant</td><td>Request or update the consultation.</td></tr>
+      <tr><td><code>/applicant/application</code></td><td>Applicant</td><td>The five-step SRRV application.</td></tr>
+      <tr><td><code>/applicant/receipts</code></td><td>Applicant</td><td>Payment history.</td></tr>
+      <tr><td><code>/applicant/profile</code></td><td>Applicant</td><td>Personal details.</td></tr>
+      <tr><td><code>/applicant/notifications</code></td><td>Applicant</td><td>Status-change notifications.</td></tr>
+      <tr><td><code>/applicant/payment/success</code>, <code>/applicant/payment/failed</code></td><td>Applicant</td><td>Return pages from the checkout.</td></tr>
+      <tr><td><code>/admin/dashboard</code></td><td>Admin, Super Admin</td><td>Operational statistics.</td></tr>
+      <tr><td><code>/admin/consultations</code></td><td>Admin, Super Admin</td><td>Consultation queue and decisions.</td></tr>
+      <tr><td><code>/admin/applications</code></td><td>Admin, Super Admin</td><td>Application queue, full file view, approval.</td></tr>
+      <tr><td><code>/admin/documents</code></td><td>Admin, Super Admin</td><td>Document review queue.</td></tr>
+      <tr><td><code>/admin/payments</code></td><td>Admin, Super Admin</td><td>Payment monitoring.</td></tr>
+      <tr><td><code>/admin/profiles</code></td><td>Admin, Super Admin</td><td>Client register and records.</td></tr>
+      <tr><td><code>/admin/services</code></td><td>Admin, Super Admin</td><td>Service plans shown publicly.</td></tr>
+      <tr><td><code>/super-admin/dashboard</code></td><td>Super Admin</td><td>Overview.</td></tr>
+      <tr><td><code>/super-admin/manage-admins</code></td><td>Super Admin</td><td>Create, disable and delete admins.</td></tr>
+      <tr><td><code>/super-admin/manage-clients</code></td><td>Super Admin</td><td>Read-only client register.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Appendix B — Environment configuration</h3>
+  <p>For the technical staff who will run the deployment. These values are set once per environment and are not visible to users.</p>
+  <table>
+    <thead><tr><th style="width:42%">Setting</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>NEXT_PUBLIC_SUPABASE_URL</code></td><td>Address of the database and authentication service.</td></tr>
+      <tr><td><code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td><td>Public keys used by the browser and by request routing.</td></tr>
+      <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>SUPABASE_SECRET_KEY</code></td><td>Privileged server-side keys. Never expose these.</td></tr>
+      <tr><td><code>NEXT_PUBLIC_SITE_URL</code></td><td>Public address of the site; used to build confirmation, reset and payment-return links.</td></tr>
+      <tr><td><code>RESEND_API_KEY</code></td><td>Credential for sending e-mail. Without it, e-mails are skipped and logged as skipped.</td></tr>
+      <tr><td><code>ADMIN_EMAIL</code></td><td>The administrative mailbox that receives staff e-mails and is used as the sender address.</td></tr>
+      <tr><td><code>XENDIT_SECRET_KEY</code></td><td>Credential for raising invoices with the payment provider.</td></tr>
+      <tr><td><code>XENDIT_WEBHOOK_TOKEN</code></td><td>Shared secret that authenticates the provider’s callbacks. Callbacks without it are rejected.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Appendix C — Glossary</h3>
+  <table>
+    <thead><tr><th style="width:26%">Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>SRRV</td><td>Special Resident Retiree’s Visa, issued by the Philippine Retirement Authority.</td></tr>
+      <tr><td>PRA</td><td>Philippine Retirement Authority, the government agency responsible for the SRRV.</td></tr>
+      <tr><td>BICC</td><td>Bureau of Immigration Clearance Certificate.</td></tr>
+      <tr><td>NBI clearance</td><td>Clearance from the National Bureau of Investigation, required where the applicant has stayed in the Philippines for more than 90 days.</td></tr>
+      <tr><td>Application code</td><td>The reference beginning <code>SRRV-</code> that identifies an application.</td></tr>
+      <tr><td>Transaction code</td><td>The reference beginning <code>srrv-</code> that identifies a single payment.</td></tr>
+      <tr><td>Concierge</td><td>An active administrator shown to the applicant as their point of contact.</td></tr>
+      <tr><td>Dependant</td><td>A family member included in the applicant’s SRRV application.</td></tr>
+      <tr><td>Hosted checkout</td><td>The payment provider’s own secure page where the payment is actually made.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Appendix D — Notes for the project team</h3>
+  <p>The following items were observed in the delivered build. They do not affect the instructions above, but they should be
+  settled between the client and the development team as part of the handover.</p>
+  <table>
+    <thead><tr><th style="width:34%">Item</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Fee amounts are fixed in code</td><td>₱50 and ₱300 are set in the application source, not in an administrative setting. Changing a fee currently requires a code change and re-deployment.</td></tr>
+      <tr><td>“Fill Test Data” button</td><td>A development helper is visible on steps 1 and 2 of the application form. It should be removed before the portal is opened to real applicants.</td></tr>
+      <tr><td>Payment method recorded at creation</td><td>Payments are recorded with a provisional method and corrected to the real method when the provider’s callback arrives.</td></tr>
+      <tr><td>Consultation fee refunds</td><td>There is no in-portal refund control. Refunds are handled in the payment provider’s own console; the portal counts cancelled payments as refunded in its statistics.</td></tr>
+      <tr><td>Diagnostic logging</td><td>Some authentication routines still write diagnostic output to the server log. This should be reviewed before production use.</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+  <p class="small">End of manual. Prepared from the behaviour of the delivered application on branch <code>develop</code>, 26 August 2026.
+  Where the software is changed after this date, this document should be revised alongside it.</p>
+</div>
+
+</body>
+</html>

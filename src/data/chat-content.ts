@@ -129,7 +129,7 @@ export const questions: QAPair[] = [
     id: 'contact-info',
     question: 'How can I contact Retire Well?',
     answer:
-      'You can reach us through:\n\n\u2022 Phone: +63 2 888 1234\n\u2022 Email: consult@retirewell.ph\n\u2022 Office: 123 Ayala Avenue, Makati City, Metro Manila, Philippines 1226\n\u2022 Hours: Monday \u2013 Friday, 9:00 AM \u2013 6:00 PM (PST)\n\nAlternatively, fill out the contact form on our website and we will get back to you promptly.',
+      'You can reach us through:\n\n\u2022 Phone: +63 918 367 7645\n\u2022 Email: admin.retirewellsrrv@gmail.com\n\u2022 Office: Unit 2201 22/F The Peak Bldg. 107 L.P. Leviste Street, Bel Air, Makati City\n\u2022 Hours: Monday \u2013 Friday, 9:00 AM \u2013 6:00 PM (PST)\n\nAlternatively, fill out the contact form on our website and we will get back to you promptly.',
     relatedIds: ['services-offered', 'concierge'],
     cta: { label: 'Contact Us', href: '/contact' },
   },
@@ -137,7 +137,7 @@ export const questions: QAPair[] = [
     id: 'concierge',
     question: 'Who will assist me with my application?',
     answer:
-      'Each applicant is assigned a dedicated Senior Concierge Officer who guides you from start to finish. For example:\n\n\u2022 Maria Santos, Senior Concierge Officer\n\u2022 Email: maria.santos@pra.gov.ph\n\u2022 Phone: +63 (2) 8888-1234\n\u2022 Location: PRA Main Office, Makati City\n\nYour concierge coordinates appointments, escorts you to PRA and local clinics, and ensures your application moves smoothly through every stage.',
+      'Each applicant is assigned a dedicated Senior Concierge Officer who guides you from start to finish. A sample assignment (for illustration only) looks like this:\n\n\u2022 Sample Officer Name: Maria Santos\n\u2022 Sample Email: example@retirewellsrrv.com\n\u2022 Phone: +63 918 367 7645\n\u2022 Location: RetireWell Philippines, Makati City\n\nYour concierge coordinates appointments, escorts you to PRA and local clinics, and ensures your application moves smoothly through every stage.',
     relatedIds: ['contact-info', 'services-offered'],
     cta: { label: 'Get Started', href: '/register' },
   },

@@ -71,13 +71,13 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
               <div className="w-10 h-10 bg-[#E2E8F0] rounded-xl flex items-center justify-center text-[#9E1B32]">
                 <Phone className="w-4 h-4" />
               </div>
-              <span className="font-bold text-[#0F172A] text-sm">+63 2 888 1234</span>
+              <span className="font-bold text-[#0F172A] text-sm">+63 918 367 7645</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#E2E8F0] rounded-xl flex items-center justify-center text-[#9E1B32]">
                 <Mail className="w-4 h-4" />
               </div>
-              <span className="font-bold text-[#0F172A] text-sm">consult@retirewell.ph</span>
+              <span className="font-bold text-[#0F172A] text-sm">admin.retirewellsrrv@gmail.com</span>
             </div>
           </div>
         </div>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SRRV Service Platform — Admin &amp; Super Admin Guide</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+
+  :root{
+    --brand:#8B1A2B;
+    --brand-soft:#FBF3F4;
+    --ink:#241F1E;
+    --muted:#6B625E;
+    --line:#E3DCD6;
+    --ok:#1F7A46;
+    --warn:#9A6B00;
+    --bad:#A32020;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  body{
+    font-family:"Georgia","Times New Roman",serif;
+    color:var(--ink);
+    font-size:10.2pt;
+    line-height:1.55;
+    margin:0;
+  }
+
+  h1,h2,h3,h4{ font-family:"Helvetica Neue",Arial,sans-serif; color:var(--brand); margin:0 0 .35em; line-height:1.25; }
+  h1{ font-size:20pt; }
+  h2{ font-size:15pt; border-bottom:2px solid var(--brand); padding-bottom:4px; margin-top:0; }
+  h3{ font-size:12pt; margin-top:1.2em; color:#5E1220; }
+  h4{ font-size:10.5pt; margin-top:1em; color:#3F3634; text-transform:uppercase; letter-spacing:.04em; }
+  p{ margin:.45em 0 .7em; }
+  ul,ol{ margin:.35em 0 .8em; padding-left:1.25em; }
+  li{ margin:.18em 0; }
+  code{ font-family:"Consolas","Courier New",monospace; font-size:9pt; background:#F4F1EE; padding:1px 4px; border-radius:3px; }
+
+  .page{ page-break-after:always; }
+  .page:last-child{ page-break-after:auto; }
+  section{ page-break-inside:auto; }
+  h2,h3{ page-break-after:avoid; }
+  table{ page-break-inside:auto; }
+  tr{ page-break-inside:avoid; }
+
+  /* Cover */
+  .cover{ height:245mm; display:flex; flex-direction:column; justify-content:space-between; }
+  .cover-top{ border-top:6px solid var(--brand); padding-top:14mm; }
+  .cover .eyebrow{ font-family:"Helvetica Neue",Arial,sans-serif; letter-spacing:.22em; text-transform:uppercase; font-size:9pt; color:var(--muted); }
+  .cover h1{ font-size:34pt; line-height:1.1; margin:6mm 0 3mm; }
+  .cover .sub{ font-size:13pt; color:var(--muted); font-style:italic; }
+  .cover-meta{ border-top:1px solid var(--line); padding-top:5mm; font-family:"Helvetica Neue",Arial,sans-serif; font-size:9.5pt; }
+  .cover-meta table{ width:100%; border:0; }
+  .cover-meta td{ border:0; padding:2.5px 0; background:transparent; }
+  .cover-meta tbody tr:nth-child(even) td{ background:transparent; }
+  .cover-meta td:first-child{ color:var(--muted); width:38mm; text-transform:uppercase; letter-spacing:.06em; font-size:8.5pt; }
+
+  /* Tables */
+  table{ width:100%; border-collapse:collapse; margin:.6em 0 1em; font-size:9.2pt; font-family:"Helvetica Neue",Arial,sans-serif; }
+  th{ background:var(--brand); color:#fff; text-align:left; font-weight:600; padding:5px 7px; border:1px solid var(--brand); font-size:8.8pt; letter-spacing:.02em; }
+  td{ border:1px solid var(--line); padding:5px 7px; vertical-align:top; }
+  tbody tr:nth-child(even) td{ background:#FAF8F6; }
+  td.center{ text-align:center; }
+
+  /* Callouts */
+  .note, .warn, .rule{
+    border-left:4px solid var(--brand);
+    background:var(--brand-soft);
+    padding:7px 11px;
+    margin:.7em 0 1em;
+    font-size:9.4pt;
+    page-break-inside:avoid;
+  }
+  .warn{ border-left-color:var(--warn); background:#FFF8E8; }
+  .rule{ border-left-color:var(--ok); background:#F1F8F3; }
+  .note strong, .warn strong, .rule strong{ font-family:"Helvetica Neue",Arial,sans-serif; }
+
+  /* Step list */
+  ol.steps{ counter-reset:step; list-style:none; padding-left:0; }
+  ol.steps > li{
+    counter-increment:step;
+    position:relative;
+    padding-left:9mm;
+    margin:.5em 0 .75em;
+    page-break-inside:avoid;
+  }
+  ol.steps > li::before{
+    content:counter(step);
+    position:absolute; left:0; top:.1em;
+    width:6mm; height:6mm; border-radius:50%;
+    background:var(--brand); color:#fff;
+    font-family:"Helvetica Neue",Arial,sans-serif; font-size:8.5pt; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* Badges */
+  .b{ font-family:"Helvetica Neue",Arial,sans-serif; font-size:8pt; font-weight:600; padding:1px 6px; border-radius:9px; white-space:nowrap; border:1px solid; }
+  .b-pend{ color:var(--warn); border-color:#E4CD92; background:#FFF8E8; }
+  .b-ok{ color:var(--ok); border-color:#B4D9C2; background:#F1F8F3; }
+  .b-bad{ color:var(--bad); border-color:#E6BDBD; background:#FCF2F2; }
+  .b-proc{ color:#1E5C8A; border-color:#B7D2E5; background:#F1F7FB; }
+
+  /* TOC */
+  .toc{ font-family:"Helvetica Neue",Arial,sans-serif; font-size:10pt; }
+  .toc ol{ list-style:none; padding-left:0; counter-reset:toc; }
+  .toc > ol > li{ counter-increment:toc; border-bottom:1px dotted var(--line); padding:5px 0; }
+  .toc > ol > li::before{ content:counter(toc) ". "; color:var(--brand); font-weight:700; }
+  .toc ol ol{ padding-left:7mm; margin:.25em 0 0; font-size:9.2pt; color:var(--muted); }
+  .toc ol ol li{ border:0; padding:1.5px 0; }
+  .toc ol ol li::before{ content:"— "; color:var(--line); }
+
+  .lead{ font-size:10.6pt; color:var(--muted); font-style:italic; margin-bottom:1.1em; }
+  .kicker{ font-family:"Helvetica Neue",Arial,sans-serif; text-transform:uppercase; letter-spacing:.18em; font-size:8pt; color:var(--muted); margin-bottom:2mm; }
+  hr{ border:0; border-top:1px solid var(--line); margin:1.4em 0; }
+  .small{ font-size:8.8pt; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ COVER ══════════════════════ -->
+<div class="page cover">
+  <div class="cover-top">
+    <div class="eyebrow">Retire Well &nbsp;·&nbsp; Client Turnover Documentation</div>
+    <h1>SRRV Service Platform<br>Admin &amp; Super Admin Guide</h1>
+    <div class="sub">A staff-facing walkthrough of the admin and super-admin portals — dashboards,<br>queues, decisions, roles and permissions.</div>
+  </div>
+
+  <div>
+    <div class="kicker">Companion document</div>
+    <p>This guide extracts and expands the administrator sections of the
+    <strong>SRRV-User-Manual.html</strong> (Parts B and C) into a standalone reference for staff
+    who only need the admin/super-admin side of the platform.</p>
+  </div>
+
+  <div class="cover-meta">
+    <table>
+      <tr><td>Document</td><td>Admin &amp; Super Admin Guide</td></tr>
+      <tr><td>System</td><td>Special Resident Retiree's Visa (SRRV) Service Platform</td></tr>
+      <tr><td>Audience</td><td>Administrators, Super Administrators</td></tr>
+      <tr><td>Prepared for</td><td>Client turnover / handover</td></tr>
+      <tr><td>Basis</td><td>Application behaviour as implemented on branch <code>develop</code>; extracted from SRRV-User-Manual.html</td></tr>
+      <tr><td>Revision</td><td>1.0</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════ TOC ══════════════════════ -->
+<div class="page">
+  <h2>Table of Contents</h2>
+  <div class="toc">
+    <ol>
+      <li>Roles &amp; Permissions
+        <ol>
+          <li>The three roles</li>
+          <li>How a role is determined</li>
+          <li>Route-level access</li>
+        </ol>
+      </li>
+      <li>The Administrator's Journey
+        <ol>
+          <li>Signing in and the admin dashboard</li>
+          <li>Consultations queue</li>
+          <li>Applications queue</li>
+          <li>Document review</li>
+          <li>Payments monitoring</li>
+          <li>Client profiles</li>
+          <li>Services and packages (content management)</li>
+          <li>Admin notifications</li>
+        </ol>
+      </li>
+      <li>The Super Administrator
+        <ol>
+          <li>Dashboard</li>
+          <li>Managing admin accounts</li>
+          <li>Viewing client accounts</li>
+        </ol>
+      </li>
+      <li>Reference — Statuses and Approval Conditions</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ══════════════════════ ROLES ══════════════════════ -->
+<div class="page">
+  <h2>1. Roles &amp; Permissions</h2>
+
+  <h3>1.1 The three roles</h3>
+  <table>
+    <thead><tr><th style="width:20%">Role</th><th>Can do</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Applicant</strong></td><td>Manage their own consultation, application, documents, payments and profile. No access to admin/super-admin areas.</td></tr>
+      <tr><td><strong>Admin</strong></td><td>Everything in Part B below — review consultations, applications, documents; monitor payments; manage client profiles and service/package listings. Must be <em>active</em> to sign in or receive staff notifications.</td></tr>
+      <tr><td><strong>Super Admin</strong></td><td>Everything an Admin can do, plus creating, disabling and deleting admin accounts, and a read-only register of every client. There is only ever a small, deliberately-assigned set of super admins.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.2 How a role is determined</h3>
+  <p>A user's role is <strong>not</strong> simply read off their login session — it's resolved on
+  every request by checking the database: first <code>super_admin_profiles</code> (if present, the
+  user is a super admin, full stop), then <code>admin_profiles.is_active</code> (if present and
+  active, the user is an admin), otherwise the user is an applicant. This means disabling an admin
+  (see §3.2) takes effect immediately, even if their login session is still technically valid.</p>
+
+  <h3>1.3 Route-level access</h3>
+  <p>Each portal's pages are gated at three layers: request middleware (redirects a signed-in user
+  away from a route prefix their role doesn't match), page/layout guards, and — for every action
+  staff perform (accepting a consultation, approving an application, disabling an admin) — a
+  server-side authorization check that runs before anything is written to the database. There is no
+  client-side-only enforcement anywhere in the admin/super-admin portals.</p>
+</div>
+
+<!-- ══════════════════════ PART B ══════════════════════ -->
+<div class="page">
+  <h2>2. The Administrator's Journey</h2>
+  <p class="lead">The queues, the decisions available at each stage, and the conditions the system enforces before it will let a decision be recorded.</p>
+
+  <h3>2.1 Signing in and the admin dashboard</h3>
+  <p>Admins sign in at the same <code>/login</code> page as applicants and are routed to <code>/admin/dashboard</code>. The sidebar
+  offers <strong>Dashboard</strong>, <strong>Client Profiles</strong>, <strong>Consultations</strong>, <strong>Applications</strong>,
+  <strong>Payments</strong>, <strong>Documents</strong> and <strong>Services</strong>.</p>
+  <p>The dashboard summarises the whole operation: applications by status, revenue collected and revenue by month, payments
+  succeeded, pending and refunded, documents awaiting review, consultations by status, total registered users, and lists of the
+  most recent applications, consultations and pending documents.</p>
+
+  <h3>2.2 Consultations queue — accepting or rejecting</h3>
+  <ol class="steps">
+    <li>Open <strong>Consultations</strong>. The header shows counts of total, pending, processing, accepted and rejected requests.</li>
+    <li>Filter by status or search by the applicant's name; results are paginated ten to a page, newest first. A badge marks
+    consultations that already have an application attached.</li>
+    <li>Open a request to see the applicant's name and e-mail, preferred date, mode of communication, purpose, the consultation
+    payment, and the linked application if one exists.</li>
+    <li>Set the status to <strong>Processing</strong>, <strong>Accepted</strong> or <strong>Rejected</strong>.</li>
+  </ol>
+
+  <div class="rule"><strong>Rule — payment first.</strong> A consultation cannot be set to <em>processing</em> or <em>accepted</em>
+  until its ₱50 fee has been paid. The attempt is refused with "Cannot accept: the consultation fee has not been paid yet."
+  Rejecting is always available.</div>
+
+  <div class="note"><strong>Note.</strong> Accepting stamps the record with your identity and the time of acceptance, and the detail
+  page then shows "Accepted by …". If the consultation is later moved out of <em>accepted</em>, that stamp is cleared.</div>
+
+  <div class="warn"><strong>Caution.</strong> Accepting a consultation is what unlocks the SRRV application form for that applicant.
+  Do not accept until the consultation has genuinely taken place or been agreed.</div>
+
+  <h3>2.3 Applications queue — reviewing and approving</h3>
+  <ol class="steps">
+    <li>Open <strong>Applications</strong>. Counts of total, paused, pending, approved and rejected are shown at the top.</li>
+    <li>Filter by status, or search by applicant name or application code.</li>
+    <li>Open an application to see the complete file: personal details, passport, entry visa, education, employment, dependants,
+    family background, contact and emergency contact, the linked consultation, the application payment, and every uploaded document.</li>
+    <li>Review each document (section 2.4) before deciding on the application as a whole.</li>
+    <li>Set the application status. Every change notifies the applicant in the portal and by e-mail.</li>
+  </ol>
+
+  <div class="rule"><strong>Rule — five conditions must hold before an application can be approved.</strong> The system checks each in
+  turn and names the first one that fails:
+  <ol>
+    <li>Contact details are complete — mobile number and home-country address are both present.</li>
+    <li>A successful <em>application</em> payment exists (the consultation fee does not count).</li>
+    <li>Every uploaded document carries the status <em>accepted</em>; otherwise it reports how many are outstanding.</li>
+    <li>The applicant profile section of the application is present.</li>
+    <li>Passport information is present.</li>
+  </ol></div>
+
+  <div class="rule"><strong>Rule — setting an application to <em>processing</em></strong> requires the mobile number and home-country
+  address to be present.</div>
+
+  <div class="note"><strong>Note.</strong> Approving stamps the file with the approver and the timestamp; both are cleared if the
+  application later leaves the approved state. Setting a status to the value it already holds is ignored, so the applicant is
+  never sent a duplicate notification.</div>
+</div>
+
+<div class="page">
+  <h3>2.4 Document review</h3>
+  <p>Documents can be reviewed either inside an application, or in bulk from the <strong>Documents</strong> queue, which lists every
+  uploaded file across all applications with counts by status.</p>
+
+  <ol class="steps">
+    <li>Open the document to view it. Viewing generates a temporary secure link that expires after one hour.</li>
+    <li>Set its status: <strong>pending</strong>, <strong>processing</strong>, <strong>accepted</strong>, <strong>rejected</strong> or <strong>action need</strong>.</li>
+    <li>When rejecting or asking for action, write a review note. The applicant reads this note and it is the only guidance they receive.</li>
+    <li>Where several documents share the same outcome, select them and apply the status in one operation.</li>
+  </ol>
+
+  <div class="note"><strong>Note.</strong> When an applicant re-uploads, the replacement file overwrites the old one and the status
+  returns to <em>pending</em>, so it reappears in your queue.</div>
+
+  <h3>2.5 Payments monitoring</h3>
+  <p>The <strong>Payments</strong> page lists every transaction with the client's name, amount, status, method, transaction code, fee
+  type and date, newest first. Filters cover status, method and fee type, and you can search by transaction code, client name
+  or method. Summary figures show total revenue, revenue split between application and consultation fees, counts of successful
+  and pending payments, and the number and value of refunded (cancelled) payments.</p>
+
+  <div class="note"><strong>Note.</strong> Payment records are written by the payment provider's callback, not by hand. Statuses on this
+  page are a reflection of the gateway, which is why there is no control to edit them. Refunds must be issued directly in the
+  Xendit console — there is no in-portal refund action.</div>
+
+  <h3>2.6 Client profiles</h3>
+  <p><strong>Client Profiles</strong> is the client register: name, sex, birthday, nationality, age, civil status, and the state of that
+  client's application. Opening a client shows their full record including the approved-application detail where it exists.
+  Admins may correct profile details (the no-digits rules apply here too), return an application to <em>pending</em> so it can be
+  reviewed again, and set the application status directly from the client's record.</p>
+
+  <h3>2.7 Services and packages (content management)</h3>
+  <p>The <strong>Services</strong> page maintains the service plans shown to the public on the Services and Packages pages — this is the
+  main content-management surface admins have. Admins can create a plan, edit it, delete it, mark one plan as featured
+  (highlighted), and switch a plan's availability on or off. Changes appear on the public site immediately.</p>
+  <div class="note"><strong>Note.</strong> Consultation and application <em>fee amounts</em> are not part of this screen — they're
+  hardcoded in the application source and require a code change to alter (see the Known Issues document).</div>
+
+  <h3>2.8 Admin notifications</h3>
+  <p>The bell icon collects staff notifications. Two events raise them, and they are sent to every <em>active</em> admin:</p>
+  <ul>
+    <li>A new or updated consultation request — linking to the consultations queue.</li>
+    <li>A new or re-submitted application — linking to that applicant's application.</li>
+  </ul>
+  <p>Notifications can be marked read individually or all at once, and cleared. The same two events also generate e-mails to the
+  administrative mailbox, as does a paid consultation fee.</p>
+</div>
+
+<!-- ══════════════════════ PART C ══════════════════════ -->
+<div class="page">
+  <h2>3. The Super Administrator</h2>
+  <p class="lead">The Super Admin account owns the system. It can do everything an admin can do, and is the only role that can
+  create or remove admin accounts.</p>
+
+  <h3>3.1 Dashboard</h3>
+  <p>Signing in as Super Admin lands on <code>/super-admin/dashboard</code>, with menu entries for <strong>Dashboard</strong>,
+  <strong>Admins</strong> and <strong>Clients</strong>.</p>
+
+  <h3>3.2 Managing admin accounts</h3>
+  <p>On <strong>Admins</strong> (<code>/super-admin/manage-admins</code>) every admin is listed with name, e-mail address, whether the
+  account is active, whether the e-mail has been confirmed, and the date it was created.</p>
+
+  <h4>Creating an admin</h4>
+  <ol class="steps">
+    <li>Choose <strong>New Admin</strong> and enter the name, e-mail address and an initial password.</li>
+    <li>Submit. All three fields are required and the password must be at least eight characters.</li>
+    <li>The account is created as active, and a confirmation e-mail is sent. The message "Admin created. They need to check their
+    email to confirm their account." confirms this.</li>
+    <li>The new admin clicks the link in that e-mail, then signs in at <code>/login</code>.</li>
+  </ol>
+
+  <div class="rule"><strong>Rule.</strong> If the e-mail address already belongs to a confirmed user, creation is refused with "A user
+  with this email already exists." If it belongs to an unconfirmed user, that account is updated with the new password and name
+  and the confirmation e-mail is sent again.</div>
+
+  <h4>Disabling and deleting admins</h4>
+  <ul>
+    <li><strong>Disable</strong> — switch the account to inactive. The person can no longer log in, stops receiving staff notifications,
+    and no longer appears to applicants as a concierge contact. The account and its history are retained, and it can be switched
+    back on at any time.</li>
+    <li><strong>Delete</strong> — removes the admin profile and the underlying login permanently.</li>
+  </ul>
+
+  <div class="warn"><strong>Caution.</strong> Deletion cannot be undone. Where a member of staff has simply left or is temporarily away,
+  disable the account rather than deleting it.</div>
+
+  <h3>3.3 Viewing client accounts</h3>
+  <p><strong>Clients</strong> (<code>/super-admin/manage-clients</code>) is a read-only register of every applicant: name, e-mail, nationality,
+  sex, age, civil status, the status and code of their application, and the date they registered.</p>
+</div>
+
+<!-- ══════════════════════ REFERENCE ══════════════════════ -->
+<div class="page">
+  <h2>4. Reference — Statuses and Approval Conditions</h2>
+
+  <h3>4.1 Consultation statuses</h3>
+  <table>
+    <thead><tr><th style="width:20%">Status</th><th style="width:20%">Set by</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>Applicant (on submit)</td><td>Awaiting staff. The applicant may still edit and re-submit.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>Admin</td><td>Locks the consultation form. Requires the fee to be paid.</td></tr>
+      <tr><td><span class="b b-ok">accepted</span></td><td>Admin</td><td>Locks the form and unlocks the SRRV application. Requires the fee to be paid. Records approver and time.</td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>Admin</td><td>The applicant may edit and re-submit the request.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 Application statuses</h3>
+  <table>
+    <thead><tr><th style="width:22%">Status</th><th style="width:18%">Editable by applicant</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>Yes</td><td>The state on first submission and on re-submission.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>No</td><td>Requires mobile number and home-country address to be present.</td></tr>
+      <tr><td><span class="b b-pend">paused</span></td><td>No</td><td>Review suspended.</td></tr>
+      <tr><td><span class="b b-bad">payment_failed</span></td><td>No</td><td>The application fee did not complete.</td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>Yes</td><td>The applicant can correct and re-submit.</td></tr>
+      <tr><td><span class="b b-ok">approved</span></td><td>No</td><td>All five pre-conditions in 4.5 were satisfied. Approver and time recorded.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.3 Document statuses</h3>
+  <table>
+    <thead><tr><th style="width:22%">Status</th><th style="width:26%">Applicant must act?</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>No</td><td>Awaiting review; also the status after any re-upload.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>No</td><td>Being checked.</td></tr>
+      <tr><td><span class="b b-ok">accepted</span></td><td>No</td><td>Counts towards the approval pre-condition.</td></tr>
+      <tr><td><span class="b b-bad">rejected</span></td><td>Yes — re-upload</td><td>A review note should explain why.</td></tr>
+      <tr><td><span class="b b-pend">action need</span></td><td>Yes — re-upload</td><td>Something is missing or must be corrected.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.4 Payment statuses</h3>
+  <table>
+    <thead><tr><th style="width:22%">Status</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b b-pend">pending</span></td><td>An invoice exists but has not been paid. Retrying is allowed.</td></tr>
+      <tr><td><span class="b b-ok">success</span></td><td>Paid and confirmed by the gateway. Blocks any further invoice for that fee.</td></tr>
+      <tr><td><span class="b b-bad">failed</span></td><td>Expired, declined, or superseded by a retry.</td></tr>
+      <tr><td><span class="b b-bad">cancelled</span></td><td>Voided; counted as refunded in the admin statistics.</td></tr>
+      <tr><td><span class="b b-proc">processing</span></td><td>Transitional state supported by the data model.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.5 Approval pre-conditions, in one place</h3>
+  <table>
+    <thead><tr><th style="width:34%">Action</th><th>Conditions that must all hold</th></tr></thead>
+    <tbody>
+      <tr><td>Applicant submits an application</td><td>Their consultation exists and is <em>accepted</em>; every required field passes validation; every required document is attached.</td></tr>
+      <tr><td>Applicant edits an application</td><td>Its status is <em>pending</em> or <em>rejected</em>.</td></tr>
+      <tr><td>Applicant edits a consultation</td><td>Its status is <em>pending</em> or <em>rejected</em>.</td></tr>
+      <tr><td>Admin sets a consultation to <em>processing</em> or <em>accepted</em></td><td>The consultation fee is paid.</td></tr>
+      <tr><td>Admin sets an application to <em>processing</em></td><td>Mobile number and home-country address present.</td></tr>
+      <tr><td>Admin approves an application</td><td>Contact details present; application fee paid; all documents accepted; applicant profile present; passport present.</td></tr>
+      <tr><td>Applicant retries a fee</td><td>No successful payment exists yet for that fee.</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+  <p class="small">This guide extracts and expands Parts B and C of <code>SRRV-User-Manual.html</code>, prepared from the behaviour
+  of the delivered application on branch <code>develop</code>. Where the software changes, this document should be revised
+  alongside it.</p>
+</div>
+
+</body>
+</html>
