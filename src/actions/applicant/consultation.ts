@@ -8,6 +8,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getUserServer } from "@/utils/auth/getUser";
 import { consultationFormSchema } from "@/schemas/consultation";
 import xenditClient from "@/lib/xendit";
+import { usdToPhp } from "@/lib/usd-conversion";
 import { assertPaymentRedirectsReady } from "@/lib/payment-redirect-check";
 import { voidPendingPaymentsBeforeRetry } from "@/lib/payment-void";
 import { sendConsultationEmailToAdmin } from "@/lib/mailer";
@@ -251,12 +252,12 @@ export async function submitConsultationAction(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: CONSULTATION_FEE,
+        amount: usdToPhp(CONSULTATION_FEE),
         description: "SRRV consultation fee",
         payerEmail: user.email ?? undefined,
         successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${CONSULTATION_FEE}&currency=USD`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
-        currency: "USD",
+        currency: "PHP",
         metadata: {
           consultation_id: String(savedConsultation.id),
           service_type: "consultation",
@@ -361,12 +362,12 @@ export async function retryConsultationPaymentAction(
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId,
-        amount: CONSULTATION_FEE,
+        amount: usdToPhp(CONSULTATION_FEE),
         description: "SRRV consultation fee",
         payerEmail: user.email ?? undefined,
         successRedirectUrl: `${origin}/applicant/payment/success?id=${externalId}&external_id=${externalId}&status=paid&amount=${CONSULTATION_FEE}&currency=USD`,
         failureRedirectUrl: `${origin}/applicant/payment/failed?id=${externalId}&external_id=${externalId}&status=failed`,
-        currency: "USD",
+        currency: "PHP",
         metadata: {
           consultation_id: String(consultation.id),
           service_type: "consultation",

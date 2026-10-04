@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import xenditClient from "@/lib/xendit";
+import { usdToPhp } from "@/lib/usd-conversion";
 import { createInvoiceSchema } from "@/schemas/payment";
 import { randomUUID } from "crypto";
 
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     const invoice = await xenditClient.Invoice.createInvoice({
       data: {
         externalId: `srrv-${user.id}-${randomUUID().slice(0, 8)}`,
-        amount,
+        amount: usdToPhp(amount),
         description,
         payerEmail: payerEmail ?? user.email,
         successRedirectUrl,
