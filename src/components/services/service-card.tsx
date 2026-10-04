@@ -1,5 +1,6 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { ReactNode } from "react";
+import { usdToPhp } from "@/lib/usd-conversion";
 
 // Updated to match the Supabase table columns
 export interface ServiceCardProps {
@@ -60,8 +61,11 @@ export default function ServiceCard({
             {/* Card Footer Info */}
             <div className="pt-4 border-t border-gray-100 mt-auto flex items-center justify-between">
                 <div>
-                    <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider">US$ {price.toLocaleString()}</span>
-                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Required Deposit</span>
+                    <span className="block text-lg font-bold text-[#0F172A]">USD {price.toLocaleString()}</span>
+                    <span className="block text-sm text-gray-500">
+                        Approx. PHP {usdToPhp(price).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-2">Required Deposit</span>
                     <span className="text-sm font-bold text-[#0F172A]">{depositDisplay}</span>
                 </div>
             </div>

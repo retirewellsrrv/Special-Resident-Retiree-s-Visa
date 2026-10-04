@@ -7,6 +7,7 @@ import AccordionCard from '@/components/faqs/accordion-card';
 import ConsultationModal from '@/components/faqs/consultation-modal';
 import { useRouter } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
+import { usdToPhp } from '@/lib/usd-conversion';
 
 const FAQ_CATEGORIES = [
   { id: 'eligibility', label: 'SRRV Eligibility & Family Dependents' },
@@ -89,12 +90,12 @@ const FAQ_DATA: Record<string, { value: string; trigger: string; content: string
     {
       value: 'fin-2',
       trigger: 'How do your company fees work, and what is the difference between the $50 and $350 services?',
-      content: 'We split our services into two distinct phases so you only pay for the level of support you need:\n\nThe $50 Consultation Fee: Covers all remote preparation. We pre-vet your documents from your home country, guide your Apostille process, and track your secure bank remittance before you travel.\n\nThe $350 Concierge Service Fee: Covers premium, on-the-ground physical support once you arrive in Manila. We handle your local immigration clearances, NBI tracking (if required), visa extensions, document translations, and physically escort you to your medical exams, ID biometrics, and the final PRA induction ceremony.\n\nNote: These fees do not include official government-mandated PRA processing fees ($1,500) or your actual visa bank deposit.',
+      content: 'We split our services into two distinct phases so you only pay for the level of support you need:\n\nThe $50 Consultation Fee (Approx. PHP {usdToPhp(50).toLocaleString()}): Covers all remote preparation. We pre-vet your documents from your home country, guide your Apostille process, and track your secure bank remittance before you travel.\n\nThe $350 Concierge Service Fee (Approx. PHP {usdToPhp(350).toLocaleString()}): Covers premium, on-the-ground physical support once you arrive in Manila. We handle your local immigration clearances, NBI tracking (if required), visa extensions, document translations, and physically escort you to your medical exams, ID biometrics, and the final PRA induction ceremony.\n\nNote: These fees do not include official government-mandated PRA processing fees ($1,500, Approx. PHP {usdToPhp(1500).toLocaleString()}) or your actual visa bank deposit.',
     },
     {
       value: 'fin-3',
       trigger: 'Can I complete the medical exam and PRA processing on my own?',
-      content: 'Yes, the PRA does allow independent walk-ins. However, doing so means navigating busy Manila transit, managing multiple appointments at separate diagnostic clinics and government offices, and handling complex paperwork entirely on your own. For just $300, our VIP Concierge service turns a stressful, multi-day logistical puzzle into a seamless, fully escorted experience. We handle the stress, so you can enjoy the arrival.',
+      content: 'Yes, the PRA does allow independent walk-ins. However, doing so means navigating busy Manila transit, managing multiple appointments at separate diagnostic clinics and government offices, and handling complex paperwork entirely on your own. For just $300 (Approx. PHP {usdToPhp(300).toLocaleString()}), our VIP Concierge service turns a stressful, multi-day logistical puzzle into a seamless, fully escorted experience. We handle the stress, so you can enjoy the arrival.',
     },
   ],
   'money-taxation': [
@@ -150,7 +151,7 @@ const FAQ_DATA: Record<string, { value: string; trigger: string; content: string
     {
       value: 'exit-3',
       trigger: 'How often do I have to renew my SRRV card, and can I do it from abroad?',
-      content: 'Your physical PRA ID card must be renewed either annually or every three years. While the renewal fee is standard ($360 for a family of three), the renewal must be processed inside the Philippines. If you are traveling abroad when your card expires, Retire Well can assist you in filing for a specialized renewal clearance so you can re-enter the country smoothly without paying tourist penalties.',
+      content: 'Your physical PRA ID card must be renewed either annually or every three years. While the renewal fee is standard ($360 for a family of three, Approx. PHP {usdToPhp(360).toLocaleString()}), the renewal must be processed inside the Philippines. If you are traveling abroad when your card expires, Retire Well can assist you in filing for a specialized renewal clearance so you can re-enter the country smoothly without paying tourist penalties.',
     },
     {
       value: 'exit-4',
@@ -167,7 +168,7 @@ const FAQ_DATA: Record<string, { value: string; trigger: string; content: string
     {
       value: 'rw-1',
       trigger: 'Is the US$50 consultation fee waivable?',
-      content: 'Yes. Your US$50 consultation fee is fully credited toward our Full VIP SRRV Concierge Service. If you proceed with our concierge package, you will only pay the remaining balance.',
+      content: 'Yes. Your US$50 consultation fee (Approx. PHP {usdToPhp(50).toLocaleString()}) is fully credited toward our Full VIP SRRV Concierge Service. If you proceed with our concierge package, you will only pay the remaining balance.',
     },
     {
       value: 'rw-2',
@@ -339,7 +340,7 @@ const documentsData = [
     sections: [
       {
         heading: 'Application Fee',
-        details: 'Principal Applicant: Starting from US$1,500. Each Dependent: US$300.',
+        details: 'Principal Applicant: Starting from US$1,500 (Approx. PHP {usdToPhp(1500).toLocaleString()}). Each Dependent: US$300 (Approx. PHP {usdToPhp(300).toLocaleString()}).',
       },
       {
         heading: 'Annual PRA Fee',
