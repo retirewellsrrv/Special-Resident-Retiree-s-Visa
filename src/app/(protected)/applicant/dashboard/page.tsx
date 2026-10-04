@@ -29,6 +29,7 @@ import type { DashboardData, RetryPaymentState } from "@/actions/applicant/appli
 import { retryConsultationPaymentAction } from "@/actions/applicant/consultation";
 import type { RetryConsultationPaymentState } from "@/actions/applicant/consultation";
 import { Button } from "@/components/ui/button";
+import { usdToPhp } from "@/lib/usd-conversion";
 
 const APPLICATION_STEPS = [
   { id: 1, label: "Initiation" },
@@ -488,7 +489,10 @@ function DashboardContent() {
                           Amount Paid
                         </p>
                         <p className="text-lg font-bold text-brand-neutral-800 mt-0.5">
-                          ₱{Number(payment.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                          USD {Number(payment.amount).toLocaleString()}
+                        </p>
+                        <p className="text-sm text-brand-neutral-500">
+                          Approx. PHP {usdToPhp(Number(payment.amount)).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                     </div>
@@ -559,7 +563,10 @@ function DashboardContent() {
                           Amount Paid
                         </p>
                         <p className="text-base font-bold text-brand-neutral-800 mt-0.5">
-                          ₱{Number(consultationPayment.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                          USD {Number(consultationPayment.amount).toLocaleString()}
+                        </p>
+                        <p className="text-sm text-brand-neutral-500">
+                          Approx. PHP {usdToPhp(Number(consultationPayment.amount)).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                     </div>

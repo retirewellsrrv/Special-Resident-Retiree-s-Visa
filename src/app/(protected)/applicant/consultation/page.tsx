@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { ArrowRight, Loader2, Pencil, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { usdToPhp } from "@/lib/usd-conversion";
 import {
   Combobox,
   ComboboxInput,
@@ -29,6 +30,7 @@ import type {
   MyConsultation,
   SubmitConsultationState,
 } from "@/actions/applicant/consultation";
+import { PaymentSummaryModal } from "@/components/applicant/consultation/payment-summary-modal";
 
 const MODES = [
   { value: "zoom_meeting", label: "Video Call (Zoom)" },
@@ -57,6 +59,8 @@ export default function ConsultationRequestPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string> | null>(
     null,
   );
+  const [showSummary, setShowSummary] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     getMyConsultation().then((consultationData) => {
@@ -157,13 +161,22 @@ export default function ConsultationRequestPage() {
 
                   <div className="border-t border-neutral-200 mb-6" />
 
+                  <div className="mb-6 p-4 rounded-lg bg-brand-neutral-50 border border-brand-neutral-200">
+                    <p className="text-sm text-brand-neutral-600">
+                      <span className="font-semibold">Consultation Fee:</span> $50 USD
+                      <span className="text-brand-neutral-400 ml-2">
+                        (Approx. ₱{usdToPhp(50).toLocaleString("en-PH", { minimumFractionDigits: 2 })} PHP)
+                      </span>
+                    </p>
+                  </div>
+
                   {state.error && (
                     <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
                       {state.error}
                     </div>
                   )}
 
-                  <form action={formAction} className="space-y-6">
+                  <form ref={formRef} action={formAction} className="space-y-6">
                     <div>
                       <Label className={LABEL_CLASS}>
                         Mode of Communication
@@ -260,31 +273,38 @@ export default function ConsultationRequestPage() {
 
                     <div className="flex justify-end pt-2">
                       <Button
-                        type="submit"
+                        type="button"
+                        onClick={() => setShowSummary(true)}
                         disabled={isSubmitting}
                         className="bg-[#8B1A2B] hover:bg-[#6f1522] text-white px-7 py-2.5 rounded-md font-semibold flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isSubmitting ? (
+                        {existing ? (
                           <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Submitting...
+                            <Pencil className="w-4 h-4" />
+                            Update Consultation
                           </>
                         ) : (
                           <>
-                            {existing ? (
-                              <Pencil className="w-4 h-4" />
-                            ) : (
-                              <>
-                                Submit Request
-                                <ArrowRight className="w-4 h-4" />
-                              </>
-                            )}
-                            {existing && "Update Consultation"}
+                            Submit Request
+                            <ArrowRight className="w-4 h-4" />
                           </>
                         )}
                       </Button>
                     </div>
                   </form>
+
+                  <PaymentSummaryModal
+                    isOpen={showSummary}
+                    onClose={() => setShowSummary(false)}
+                    onConfirm={() => {
+                      setShowSummary(false);
+                      formRef.current?.requestSubmit();
+                    }}
+                    mode={MODE_LABELS[mode as string] ?? mode}
+                    date={date}
+                    purpose={purpose}
+                    isSubmitting={isSubmitting}
+                  />
                 </>
               )}
             </CardContent>

@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
 import Hero from '@/components/public/Hero';
+import { usdToPhp } from '@/lib/usd-conversion';
 
 type PlanTier = {
     ageRange: string;
@@ -139,13 +140,23 @@ export default function Services() {
                                 <div className="py-3.5 border-b border-gray-100 first:pt-0">
                                     <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
                                         <dt className="text-sm text-gray-600">Principal</dt>
-                                        <dd className="text-sm font-bold text-[#0F172A]">USD 1,500.00</dd>
+                                        <dd className="text-sm font-bold text-[#0F172A]">
+                                            USD 1,500.00
+                                            <span className="block text-xs text-gray-500 font-normal">
+                                                Approx. PHP {usdToPhp(1500).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                                            </span>
+                                        </dd>
                                     </div>
                                 </div>
                                 <div className="py-3.5 border-b border-gray-100">
                                     <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5">
                                         <dt className="text-sm text-gray-600">Dependent</dt>
-                                        <dd className="text-sm font-bold text-[#0F172A]">USD 300.00</dd>
+                                        <dd className="text-sm font-bold text-[#0F172A]">
+                                            USD 300.00
+                                            <span className="block text-xs text-gray-500 font-normal">
+                                                Approx. PHP {usdToPhp(300).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                                            </span>
+                                        </dd>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-1 sm:text-right">each dependent</p>
                                 </div>
@@ -162,6 +173,9 @@ export default function Services() {
                                         <p className="text-gray-900">
                                             <span className="font-bold">SRRV Classic</span> — USD 360.00
                                         </p>
+                                        <p className="text-xs text-gray-500">
+                                            Approx. PHP {usdToPhp(360).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                                        </p>
                                         <p className="text-sm text-gray-500 italic">
                                             (Additional USD 100.00 for each dependent in excess of two)
                                         </p>
@@ -173,6 +187,9 @@ export default function Services() {
                                         <p className="text-gray-900">
                                             <span className="font-bold">SRRV Courtesy for Foreign Nationals</span> — USD 100.00
                                         </p>
+                                        <p className="text-xs text-gray-500">
+                                            Approx. PHP {usdToPhp(100).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                                        </p>
                                         <p className="text-sm text-gray-500 italic">
                                             (Additional USD 10.00 for each dependent in excess of two)
                                         </p>
@@ -183,6 +200,9 @@ export default function Services() {
                                     <div>
                                         <p className="text-gray-900">
                                             <span className="font-bold">SRRV Courtesy for Former Filipinos</span> — USD 50.00
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            Approx. PHP {usdToPhp(50).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                                         </p>
                                         <p className="text-sm text-gray-500 italic">
                                             (Additional USD 10.00 for each dependent in excess of two)
